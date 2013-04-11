@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Net;
-using System.Web;
-using System.IO;
 using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Text;
 
 namespace TestIntelReporter {
     /// <summary>
@@ -40,29 +39,33 @@ namespace TestIntelReporter {
         ///     The content body returned from the server.
         /// </returns>
         private static string SendRequest(IDictionary<string, string> parameters) {
-            // TODO: Escapes ' ' as "%20" instead of '+'.   Don't know how the server
-            // will interpret that.
-            var requestText = String.Join("&",
-                parameters
-                    .Select(x => x.Key + '=' + Uri.EscapeDataString(x.Value)));
-            Trace.Write("<<" + requestText + '\n');
-            var requestBody = Encoding.UTF8.GetBytes(requestText);
+            try {
+                // TODO: Escapes ' ' as "%20" instead of '+'.   Don't know how the server
+                // will interpret that.
+                var requestText = String.Join("&",
+                    parameters
+                        .Select(x => x.Key + '=' + Uri.EscapeDataString(x.Value)));
+                Trace.Write("<<" + requestText + '\n');
+                var requestBody = Encoding.UTF8.GetBytes(requestText);
 
-            var request = WebRequest.Create(ReportUri);
-            request.Method = MethodPost;
-            request.ContentType = ContentType;
-            request.ContentLength = requestBody.Length;
+                var request = WebRequest.Create(ReportUri);
+                request.Method = MethodPost;
+                request.ContentType = ContentType;
+                request.ContentLength = requestBody.Length;
 
-            using (var stream = request.GetRequestStream()) {
-                stream.Write(requestBody, 0, requestBody.Length);
-            }
-
-            using (var response = request.GetResponse()) {
-                using (var reader = new StreamReader(response.GetResponseStream())) {
-                    var responseBody = reader.ReadToEnd();
-                    Trace.Write(">>" + responseBody + '\n');
-                    return responseBody;
+                using (var stream = request.GetRequestStream()) {
+                    stream.Write(requestBody, 0, requestBody.Length);
                 }
+
+                using (var response = request.GetResponse()) {
+                    using (var reader = new StreamReader(response.GetResponseStream())) {
+                        var responseBody = reader.ReadToEnd();
+                        Trace.Write(">>" + responseBody + '\n');
+                        return responseBody;
+                    }
+                }
+            } catch(WebException e) {
+                throw new IntelException(e.Message, e);
             }
         }
 
@@ -73,15 +76,19 @@ namespace TestIntelReporter {
         ///     Array of channel names.
         /// </returns>
         public static string[] GetChannelList() {
-            var request = WebRequest.Create(ChannelsUri);
-            using (var response = request.GetResponse()) {
-                using (var reader = new StreamReader(response.GetResponseStream())) {
-                    return reader
-                        .ReadToEnd()
-                        .Split(Newlines, StringSplitOptions.RemoveEmptyEntries)
-                        .Select(x => x.Split(FieldSeparators, 2).First())
-                        .ToArray();
+            try {
+                var request = WebRequest.Create(ChannelsUri);
+                using (var response = request.GetResponse()) {
+                    using (var reader = new StreamReader(response.GetResponseStream())) {
+                        return reader
+                            .ReadToEnd()
+                            .Split(Newlines, StringSplitOptions.RemoveEmptyEntries)
+                            .Select(x => x.Split(FieldSeparators, 2).First())
+                            .ToArray();
+                    }
                 }
+            } catch (WebException e) {
+                throw new IntelException(e.Message, e);
             }
         }
 
@@ -106,12 +113,16 @@ namespace TestIntelReporter {
                 { "version", Version }
             });
             var decode = payload.Split(Whitespace, 4);
-            // TODO: Create an exception just for us
+
             if (decode[0] != "200") {
-                throw new Exception(payload);
+                throw new IntelAuthorizationException(payload);
             }
-            // TODO: Should avoid an exception if decode[3] doesn't decode properly
-            return new Tuple<string, int>(decode[2], int.Parse(decode[3]));
+
+            try {
+                return new Tuple<string, int>(decode[2], int.Parse(decode[3]));
+            } catch (FormatException e) {
+                throw new IntelException(e.Message, e);
+            }
         }
 
         /// <summary>
@@ -130,10 +141,10 @@ namespace TestIntelReporter {
                 { "session", session },
                 { "action", "LOGOFF" },
             });
+
             var decode = payload.Split(Whitespace, 3);
-            // TODO: Create an exception just for us
             if (decode[0] != "201") {
-                throw new Exception(payload);
+                throw new IntelSessionException(payload);
             }
         }
 
@@ -152,13 +163,17 @@ namespace TestIntelReporter {
                 { "session", session },
                 { "action", "ALIVE" },
             });
+
             var decode = payload.Split(Whitespace, 4);
-            // TODO: Create an exception just for us
             if (decode[0] != "203") {
-                throw new Exception(payload);
+                throw new IntelSessionException(payload);
             }
-            // TODO: Should avoid an exception if decode[3] doesn't decode properly
-            return int.Parse(decode[3]);
+
+            try {
+                return int.Parse(decode[3]);
+            } catch (IntelException e) {
+                throw new IntelException(e.Message, e);
+            }
         }
 
         /// <summary>
@@ -185,10 +200,10 @@ namespace TestIntelReporter {
                 { "region", region },
                 { "intel", intel }
             });
+
             var decode = payload.Split(Whitespace, 3);
-            // TODO: Create an exception just for us
             if (decode[0] != "202") {
-                throw new Exception(payload);
+                throw new IntelSessionException(payload);
             }
         }
     }

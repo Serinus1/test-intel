@@ -59,5 +59,14 @@ namespace TestIntelReporter.Properties {
                 resourceCulture = value;
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An unknown error occured contacting the intel map server..
+        /// </summary>
+        internal static string IntelException {
+            get {
+                return ResourceManager.GetString("IntelException", resourceCulture);
+            }
+        }
     }
 }
