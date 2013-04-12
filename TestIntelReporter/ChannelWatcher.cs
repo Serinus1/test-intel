@@ -46,7 +46,9 @@ namespace TestIntelReporter {
             }
         }
 
-        public void Tick() {
+        public int Tick() {
+            int reports = 0;
+
             try {
                 if (reader != null) {
                     for (var line = reader.ReadLine(); line != null;
@@ -71,6 +73,7 @@ namespace TestIntelReporter {
                             Message = match.Groups[7].Value
                         };
 
+                        ++reports;
                         var handler = Message;
                         if (handler != null) {
                             handler(this, args);
@@ -108,6 +111,8 @@ namespace TestIntelReporter {
             } catch (IOException) {
                 reader = null;
             }
+
+            return reports;
         }
 
         public event EventHandler<IntelEventArgs> Message;
