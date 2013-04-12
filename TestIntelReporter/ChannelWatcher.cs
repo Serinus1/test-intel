@@ -10,6 +10,7 @@ namespace TestIntelReporter {
         private StreamReader reader;
         private DateTime lastMessage;
         private string filename;
+        private string logDirectory;
 
         private static readonly Regex Parser = new Regex(
             @"\[\s*(\d{4})\.(\d{2})\.(\d{2})\s+(\d{2}):(\d{2}):(\d{2})\s*\](.*)$",
@@ -24,7 +25,19 @@ namespace TestIntelReporter {
 
         public string ChannelName { get; private set; }
 
-        public string LogDirectory { get; set; }
+        public string LogDirectory {
+            get { return logDirectory; }
+            set {
+                if (logDirectory != value) {
+                    logDirectory = value;
+                    if (reader != null) {
+                        reader.Close();
+                        reader = null;
+                        lastMessage = DateTime.MinValue;
+                    }
+                }
+            }
+        }
 
         public void Dispose() {
             if (reader != null) {
@@ -71,7 +84,7 @@ namespace TestIntelReporter {
 
             try {
                 var now = DateTime.UtcNow;
-                if ((now - lastMessage) > Recheck) {
+                if ((logDirectory != null) && ((now - lastMessage) > Recheck)) {
                     var dir = new DirectoryInfo(LogDirectory);
                     var recent = dir.EnumerateFiles(ChannelName + "_*.txt")
                         .OrderByDescending(x => x.LastWriteTimeUtc)
