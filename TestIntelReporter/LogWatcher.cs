@@ -146,6 +146,11 @@ namespace TestIntelReporter {
                 // TODO: Use a filesystem watcher object
                 signal.WaitOne(TimeSpan.FromSeconds(5));
             }
+
+            if (session != null) {
+                session.Dispose();
+                session = null;
+            }
         }
 
         private void watchers_message(object sender, IntelEventArgs e) {
