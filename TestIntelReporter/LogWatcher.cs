@@ -50,6 +50,12 @@ namespace TestIntelReporter {
 
         public int IntelReported { get; private set; }
 
+        public bool IsRunning { get { return (thread != null); } }
+
+        public bool IsConnected { get { return (session != null); } }
+
+        public bool BadPassword { get { return loginRejected; } }
+
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string Username {
             get { return username; }
@@ -115,6 +121,8 @@ namespace TestIntelReporter {
         }
 
         private void ThreadStart() {
+            onStatusChanged(EventArgs.Empty);
+
             while (running) {
                 // Make sure we have the channel list
                 if (channelList == null) {
@@ -145,10 +153,12 @@ namespace TestIntelReporter {
                     // Maintain the session by pinging every minute or so
                     if (session.KeepAlive()) {
                         lastKeepAlive = now;
+                        onStatusChanged(EventArgs.Empty);
                     } else if (!session.IsOpen) {
                         // Session expired (or something)
                         session.Dispose();
                         session = null;
+                        onStatusChanged(EventArgs.Empty);
                     } else {
                         // Error contacting the server, try again in a few minutes
                         lastKeepAlive += TimeSpan.FromMinutes(1);
@@ -172,9 +182,11 @@ namespace TestIntelReporter {
                     if (loginRejected)
                         return;
                     session = new IntelSession(username, password);
+                    onStatusChanged(EventArgs.Empty);
                 } catch (IntelAuthorizationException) {
                     // Server rejected our authentication
                     loginRejected = true;
+                    onStatusChanged(EventArgs.Empty);
                     return;
                 } catch (IntelException) {
                     // Something happened, try again later
@@ -188,10 +200,21 @@ namespace TestIntelReporter {
                     e.Message)) {
                 lastMessage = e.Timestamp;
                 ++IntelReported;
+                onStatusChanged(EventArgs.Empty);
             } else if (!session.IsOpen) {
                 session.Dispose();
                 session = null;
+                onStatusChanged(EventArgs.Empty);
             }
         }
+
+        private void onStatusChanged(EventArgs e) {
+            var handler = StatusChanged;
+            if (handler != null) {
+                handler(this, e);
+            }
+        }
+
+        public event EventHandler StatusChanged;
     }
 }

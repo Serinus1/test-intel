@@ -27,6 +27,12 @@ namespace TestIntelReporter {
                 logWatcher.LogDirectory = settings.LogDirectory;
             }
             textLogDirectory.Text = logWatcher.LogDirectory;
+
+            // Update the status
+            if (!String.IsNullOrEmpty(settings.Username)
+                    && !String.IsNullOrEmpty(settings.PasswordHash)) {
+                logWatcher.Start();
+            }
         }
 
         private void textUsername_TextChanged(object sender, EventArgs e) {
@@ -105,6 +111,38 @@ namespace TestIntelReporter {
 
         private void quitToolStripMenuItem_Click(object sender, EventArgs e) {
             Application.Exit();
+        }
+
+        private void logWatcher_StatusChanged(object sender, EventArgs e) {
+            if (!this.IsHandleCreated)
+                return;
+
+            this.BeginInvoke((MethodInvoker) delegate {
+                toolStripStatusIntel.Text = string.Format(
+                    (logWatcher.IntelReported == 1)
+                        ? Properties.Resources.OneIntelReported
+                        : Properties.Resources.MultiIntelReported,
+                    logWatcher.IntelReported);
+                toolStripStatusUsers.Text = string.Format(
+                    (logWatcher.Users == 1)
+                        ? Properties.Resources.OneUserReporting
+                        : Properties.Resources.MultiUserReporting,
+                    logWatcher.Users);
+
+                if (logWatcher.IsConnected) {
+                    toolStripStatus.Text = Properties.Resources.AppConnected;
+                    toolStripStatusUsers.Visible = true;
+                } else if (logWatcher.BadPassword) {
+                    toolStripStatus.Text = Properties.Resources.AppAuthenticateFailed;
+                    toolStripStatusUsers.Visible = false;
+                } else if (logWatcher.IsRunning) {
+                    toolStripStatus.Text = Properties.Resources.AppIdle;
+                    toolStripStatusUsers.Visible = false;
+                } else {
+                    toolStripStatus.Text = Properties.Resources.AppConfigure;
+                    toolStripStatusUsers.Visible = false;
+                }
+            });
         }
     }
 }

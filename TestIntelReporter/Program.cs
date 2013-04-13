@@ -14,7 +14,8 @@ namespace TestIntelReporter {
                 if (createdMutex) {
                     Application.EnableVisualStyles();
                     Application.SetCompatibleTextRenderingDefault(false);
-                    Application.Run(new MainForm());
+                    var mainform = new MainForm();
+                    Application.Run();
                     GC.KeepAlive(mutex);
                 }
             }

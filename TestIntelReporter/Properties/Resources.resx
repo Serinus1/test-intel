@@ -121,10 +121,34 @@
   <data name="AboutImage" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\middlemanagementdino.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="AppAuthenticateFailed" xml:space="preserve">
+    <value>Authentication with Map Server Failed.</value>
+  </data>
+  <data name="AppConfigure" xml:space="preserve">
+    <value>Application is not yet Configured.</value>
+  </data>
+  <data name="AppConnected" xml:space="preserve">
+    <value>Sending Intel to Server...</value>
+  </data>
   <data name="AppIcon" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\middlemanagementdino.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="AppIdle" xml:space="preserve">
+    <value>Waiting for EVE to Start...</value>
+  </data>
   <data name="IntelException" xml:space="preserve">
     <value>An unknown error occured contacting the intel map server.</value>
+  </data>
+  <data name="MultiIntelReported" xml:space="preserve">
+    <value>{0} Sent</value>
+  </data>
+  <data name="MultiUserReporting" xml:space="preserve">
+    <value>{0} Users</value>
+  </data>
+  <data name="OneIntelReported" xml:space="preserve">
+    <value>{0} Sent</value>
+  </data>
+  <data name="OneUserReporting" xml:space="preserve">
+    <value>{0} Sent</value>
   </data>
 </root>

@@ -71,6 +71,33 @@ namespace TestIntelReporter.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Authentication with Map Server Failed..
+        /// </summary>
+        internal static string AppAuthenticateFailed {
+            get {
+                return ResourceManager.GetString("AppAuthenticateFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Application is not yet Configured..
+        /// </summary>
+        internal static string AppConfigure {
+            get {
+                return ResourceManager.GetString("AppConfigure", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sending Intel to Server....
+        /// </summary>
+        internal static string AppConnected {
+            get {
+                return ResourceManager.GetString("AppConnected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
         /// </summary>
         internal static System.Drawing.Icon AppIcon {
@@ -81,11 +108,56 @@ namespace TestIntelReporter.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Waiting for EVE to Start....
+        /// </summary>
+        internal static string AppIdle {
+            get {
+                return ResourceManager.GetString("AppIdle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to An unknown error occured contacting the intel map server..
         /// </summary>
         internal static string IntelException {
             get {
                 return ResourceManager.GetString("IntelException", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} Sent.
+        /// </summary>
+        internal static string MultiIntelReported {
+            get {
+                return ResourceManager.GetString("MultiIntelReported", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} Users.
+        /// </summary>
+        internal static string MultiUserReporting {
+            get {
+                return ResourceManager.GetString("MultiUserReporting", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} Sent.
+        /// </summary>
+        internal static string OneIntelReported {
+            get {
+                return ResourceManager.GetString("OneIntelReported", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} Sent.
+        /// </summary>
+        internal static string OneUserReporting {
+            get {
+                return ResourceManager.GetString("OneUserReporting", resourceCulture);
             }
         }
     }
