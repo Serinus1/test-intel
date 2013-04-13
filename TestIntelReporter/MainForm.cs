@@ -6,6 +6,7 @@ using System.Windows.Forms;
 namespace TestIntelReporter {
     public partial class MainForm : Form {
         Properties.Settings settings;
+        bool closing;
 
         public MainForm() {
             InitializeComponent();
@@ -27,6 +28,9 @@ namespace TestIntelReporter {
                 logWatcher.LogDirectory = settings.LogDirectory;
             }
             textLogDirectory.Text = logWatcher.LogDirectory;
+            checkAutostart.Checked = settings.AutoStart;
+            checkMinimizeOnClose.Checked = settings.HideOnClose;
+            checkHideMinimized.Checked = settings.HideOnMinimize;
 
             // Update the status
             if (!String.IsNullOrEmpty(settings.Username)
@@ -44,21 +48,6 @@ namespace TestIntelReporter {
             textUsername_TextChanged(sender, e);
         }
 
-        private void buttonBrowse_Click(object sender, EventArgs e) {
-            folderBrowserDialog.SelectedPath = textLogDirectory.Text;
-            switch (folderBrowserDialog.ShowDialog(this)) {
-            case DialogResult.OK:
-                textLogDirectory.Text = folderBrowserDialog.SelectedPath;
-                buttonApply.Enabled = true;
-                break;
-            }
-        }
-
-        private void checkAutostart_CheckedChanged(object sender, EventArgs e) {
-            settings.AutoStart = checkAutostart.Checked;
-            settings.Save();
-        }
-
         private void buttonApply_Click(object sender, EventArgs e) {
             settings.Username = logWatcher.Username = textUsername.Text.Trim();
             logWatcher.PasswordHash = settings.PasswordHash
@@ -71,6 +60,31 @@ namespace TestIntelReporter {
             textPassword.Text = "";
         }
 
+        private void buttonBrowse_Click(object sender, EventArgs e) {
+            folderBrowserDialog.SelectedPath = textLogDirectory.Text;
+            switch (folderBrowserDialog.ShowDialog(this)) {
+            case DialogResult.OK:
+                textLogDirectory.Text = folderBrowserDialog.SelectedPath;
+                buttonApply.Enabled = true;
+                break;
+            }
+        }
+
+        private void checkMinimizeOnClose_CheckedChanged(object sender, EventArgs e) {
+            settings.HideOnClose = checkMinimizeOnClose.Checked;
+            settings.Save();
+        }
+
+        private void checkHideMinimized_CheckedChanged(object sender, EventArgs e) {
+            settings.HideOnMinimize = checkHideMinimized.Checked;
+            settings.Save();
+        }
+
+        private void checkAutostart_CheckedChanged(object sender, EventArgs e) {
+            settings.AutoStart = checkAutostart.Checked;
+            settings.Save();
+        }
+
         private void linkTestMap_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e) {
             linkTestMap.LinkVisited = true;
             System.Diagnostics.Process.Start("http://maps.pleaseignore.com/");
@@ -79,7 +93,10 @@ namespace TestIntelReporter {
         private void MainForm_Resize(object sender, EventArgs e) {
             switch (this.WindowState) {
             case FormWindowState.Minimized:
-                this.Hide();
+                // Hide the form instead of minimizing it
+                if (settings.HideOnMinimize) {
+                    this.Hide();
+                }
                 break;
             }
         }
@@ -88,8 +105,15 @@ namespace TestIntelReporter {
             switch (e.CloseReason) {
             case CloseReason.UserClosing:
                 // Hide the form if the user is trying to close us
-                this.Hide();
-                e.Cancel = true;
+                if (!closing && settings.HideOnClose) {
+                    this.Hide();
+                    e.Cancel = true;
+                } else {
+                    Application.Exit();
+                }
+                break;
+            default:
+                Application.Exit();
                 break;
             }
         }
@@ -110,7 +134,13 @@ namespace TestIntelReporter {
         }
 
         private void quitToolStripMenuItem_Click(object sender, EventArgs e) {
-            Application.Exit();
+            closing = true;
+            if (this.Created) {
+                this.Close();
+            } else {
+                this.Dispose();
+                Application.Exit();
+            }
         }
 
         private void logWatcher_StatusChanged(object sender, EventArgs e) {

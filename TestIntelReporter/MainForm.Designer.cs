@@ -41,6 +41,8 @@
             this.textLogDirectory = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
             this.checkAutostart = new System.Windows.Forms.CheckBox();
+            this.checkMinimizeOnClose = new System.Windows.Forms.CheckBox();
+            this.checkHideMinimized = new System.Windows.Forms.CheckBox();
             this.aboutPage = new System.Windows.Forms.TabPage();
             this.aboutLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
             this.aboutImage = new System.Windows.Forms.PictureBox();
@@ -107,18 +109,21 @@
             this.configLayoutPanel.Controls.Add(this.buttonBrowse, 2, 3);
             this.configLayoutPanel.Controls.Add(this.textLogDirectory, 1, 3);
             this.configLayoutPanel.Controls.Add(this.label2, 0, 3);
-            this.configLayoutPanel.Controls.Add(this.checkAutostart, 0, 4);
+            this.configLayoutPanel.Controls.Add(this.checkAutostart, 0, 6);
+            this.configLayoutPanel.Controls.Add(this.checkMinimizeOnClose, 0, 4);
+            this.configLayoutPanel.Controls.Add(this.checkHideMinimized, 0, 5);
             this.configLayoutPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.configLayoutPanel.Location = new System.Drawing.Point(3, 3);
             this.configLayoutPanel.Margin = new System.Windows.Forms.Padding(0);
             this.configLayoutPanel.Name = "configLayoutPanel";
-            this.configLayoutPanel.RowCount = 5;
+            this.configLayoutPanel.RowCount = 7;
+            this.configLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.configLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.configLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.configLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.configLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.configLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.configLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.configLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
             this.configLayoutPanel.Size = new System.Drawing.Size(370, 208);
             this.configLayoutPanel.TabIndex = 0;
             // 
@@ -216,7 +221,7 @@
             // 
             this.checkAutostart.AutoSize = true;
             this.configLayoutPanel.SetColumnSpan(this.checkAutostart, 2);
-            this.checkAutostart.Location = new System.Drawing.Point(3, 113);
+            this.checkAutostart.Location = new System.Drawing.Point(3, 159);
             this.checkAutostart.Margin = new System.Windows.Forms.Padding(3, 6, 3, 3);
             this.checkAutostart.Name = "checkAutostart";
             this.checkAutostart.Size = new System.Drawing.Size(204, 17);
@@ -224,6 +229,30 @@
             this.checkAutostart.Text = "Automatically &Start on Windows Login";
             this.checkAutostart.UseVisualStyleBackColor = true;
             this.checkAutostart.CheckedChanged += new System.EventHandler(this.checkAutostart_CheckedChanged);
+            // 
+            // checkMinimizeOnClose
+            // 
+            this.checkMinimizeOnClose.AutoSize = true;
+            this.configLayoutPanel.SetColumnSpan(this.checkMinimizeOnClose, 3);
+            this.checkMinimizeOnClose.Location = new System.Drawing.Point(3, 110);
+            this.checkMinimizeOnClose.Name = "checkMinimizeOnClose";
+            this.checkMinimizeOnClose.Size = new System.Drawing.Size(205, 17);
+            this.checkMinimizeOnClose.TabIndex = 8;
+            this.checkMinimizeOnClose.Text = "Keep &Running When Dialog Is Closed";
+            this.checkMinimizeOnClose.UseVisualStyleBackColor = true;
+            this.checkMinimizeOnClose.CheckedChanged += new System.EventHandler(this.checkMinimizeOnClose_CheckedChanged);
+            // 
+            // checkHideMinimized
+            // 
+            this.checkHideMinimized.AutoSize = true;
+            this.configLayoutPanel.SetColumnSpan(this.checkHideMinimized, 3);
+            this.checkHideMinimized.Location = new System.Drawing.Point(3, 133);
+            this.checkHideMinimized.Name = "checkHideMinimized";
+            this.checkHideMinimized.Size = new System.Drawing.Size(129, 17);
+            this.checkHideMinimized.TabIndex = 9;
+            this.checkHideMinimized.Text = "&Hide When Minimized";
+            this.checkHideMinimized.UseVisualStyleBackColor = true;
+            this.checkHideMinimized.CheckedChanged += new System.EventHandler(this.checkHideMinimized_CheckedChanged);
             // 
             // aboutPage
             // 
@@ -467,6 +496,8 @@
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatus;
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusUsers;
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusIntel;
+        private System.Windows.Forms.CheckBox checkMinimizeOnClose;
+        private System.Windows.Forms.CheckBox checkHideMinimized;
     }
 }
 

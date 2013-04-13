@@ -70,5 +70,29 @@ namespace TestIntelReporter.Properties {
                 this["AutoStart"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool HideOnClose {
+            get {
+                return ((bool)(this["HideOnClose"]));
+            }
+            set {
+                this["HideOnClose"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool HideOnMinimize {
+            get {
+                return ((bool)(this["HideOnMinimize"]));
+            }
+            set {
+                this["HideOnMinimize"] = value;
+            }
+        }
     }
 }
