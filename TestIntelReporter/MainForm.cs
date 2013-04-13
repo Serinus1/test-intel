@@ -43,6 +43,8 @@ namespace TestIntelReporter {
             this.UpdateStatus();
         }
 
+        public bool HasConfig { get { return logWatcher.IsRunning; } }
+
         private void UpdateAutoRun() {
             try {
                 using (var key = Registry.CurrentUser.OpenSubKey(AutoRunKey, true)) {

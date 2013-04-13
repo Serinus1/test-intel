@@ -15,7 +15,11 @@ namespace TestIntelReporter {
                     Application.EnableVisualStyles();
                     Application.SetCompatibleTextRenderingDefault(false);
                     var mainform = new MainForm();
-                    Application.Run();
+                    if (mainform.HasConfig) {
+                        Application.Run();
+                    } else {
+                        Application.Run(mainform);
+                    }
                     GC.KeepAlive(mutex);
                 }
             }
