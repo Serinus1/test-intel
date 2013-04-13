@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Windows.Forms;
 
 namespace TestIntelReporter {
@@ -8,9 +9,15 @@ namespace TestIntelReporter {
         /// </summary>
         [STAThread]
         static void Main() {
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new MainForm());
+            bool createdMutex;
+            using (var mutex = new Mutex(true, "{8E5BA95B-79CC-4F9A-9CF1-88297BD8FEA7}", out createdMutex)) {
+                if (createdMutex) {
+                    Application.EnableVisualStyles();
+                    Application.SetCompatibleTextRenderingDefault(false);
+                    Application.Run(new MainForm());
+                    GC.KeepAlive(mutex);
+                }
+            }
         }
     }
 }

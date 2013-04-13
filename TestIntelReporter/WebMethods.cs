@@ -44,7 +44,7 @@ namespace TestIntelReporter {
                 // will interpret that.
                 var requestText = String.Join("&",
                     parameters
-                        .Select(x => x.Key + '=' + Uri.EscapeDataString(x.Value)));
+                        .Select(x => x.Key + '=' + Uri.EscapeDataString(x.Value).Replace("%20", "+")));
                 Trace.Write("<<" + requestText + '\n');
                 var requestBody = Encoding.UTF8.GetBytes(requestText);
 
@@ -198,7 +198,8 @@ namespace TestIntelReporter {
                 { "inteltime", reportTime.ToString("F0") },
                 { "action", "INTEL" },
                 { "region", region },
-                { "intel", intel }
+                // XXX: The \r is to make our report match the perl version EXACTLY
+                { "intel", intel + '\r' }
             });
 
             var decode = payload.Split(Whitespace, 3);
