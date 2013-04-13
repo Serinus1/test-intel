@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Linq;
+using System.Reflection;
 using System.Windows.Forms;
 
 namespace TestIntelReporter {
@@ -11,6 +13,8 @@ namespace TestIntelReporter {
             // Initialize additional properties
             this.Icon = Properties.Resources.AppIcon;
             this.settings = Properties.Settings.Default;
+            labelAppName.Text = String.Format(labelAppVersion.Text, Application.ProductName);
+            labelAppVersion.Text = String.Format(labelAppVersion.Text, Application.ProductVersion);
             notifyIcon.Icon = Properties.Resources.AppIcon;
             notifyIcon.Visible = true;
 
