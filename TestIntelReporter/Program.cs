@@ -8,16 +8,9 @@ namespace TestIntelReporter {
         /// </summary>
         [STAThread]
         static void Main() {
-            using (var watcher = new LogWatcher()) {
-                watcher.LogDirectory = @"C:\Users\mcgee\Documents\EVE\logs\Chatlogs";
-                watcher.Username = "testuser";
-                watcher.Password = "blahblahblah";
-                watcher.Start();
-
-                Application.EnableVisualStyles();
-                Application.SetCompatibleTextRenderingDefault(false);
-                Application.Run(new MainForm());
-            }
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
+            Application.Run(new MainForm());
         }
     }
 }

@@ -40,23 +40,22 @@
             this.buttonBrowse = new System.Windows.Forms.Button();
             this.label2 = new System.Windows.Forms.Label();
             this.textLogDirectory = new System.Windows.Forms.TextBox();
+            this.buttonApply = new System.Windows.Forms.Button();
             this.aboutPage = new System.Windows.Forms.TabPage();
             this.aboutLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
             this.aboutImage = new System.Windows.Forms.PictureBox();
             this.labelAppName = new System.Windows.Forms.Label();
             this.labelAppVersion = new System.Windows.Forms.Label();
+            this.linkTestMap = new System.Windows.Forms.LinkLabel();
+            this.labelMapAuthor = new System.Windows.Forms.Label();
+            this.labelAppAuthor = new System.Windows.Forms.Label();
             this.notifyIcon = new System.Windows.Forms.NotifyIcon(this.components);
             this.notifyIconMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.configurationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.quitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.folderBrowserDialog = new System.Windows.Forms.FolderBrowserDialog();
             this.logWatcher = new TestIntelReporter.LogWatcher(this.components);
-            this.linkTestMap = new System.Windows.Forms.LinkLabel();
-            this.labelMapAuthor = new System.Windows.Forms.Label();
-            this.labelAppAuthor = new System.Windows.Forms.Label();
-            this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
-            this.buttonApply = new System.Windows.Forms.Button();
-            this.buttonReset = new System.Windows.Forms.Button();
             this.tabControl.SuspendLayout();
             this.configurationPage.SuspendLayout();
             this.configLayoutPanel.SuspendLayout();
@@ -64,7 +63,6 @@
             this.aboutLayoutPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.aboutImage)).BeginInit();
             this.notifyIconMenu.SuspendLayout();
-            this.tableLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
             // tabControl
@@ -103,7 +101,7 @@
             this.configLayoutPanel.Controls.Add(this.buttonBrowse, 2, 2);
             this.configLayoutPanel.Controls.Add(this.label2, 0, 2);
             this.configLayoutPanel.Controls.Add(this.textLogDirectory, 1, 2);
-            this.configLayoutPanel.Controls.Add(this.tableLayoutPanel1, 0, 4);
+            this.configLayoutPanel.Controls.Add(this.buttonApply, 0, 4);
             this.configLayoutPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.configLayoutPanel.Location = new System.Drawing.Point(3, 3);
             this.configLayoutPanel.Margin = new System.Windows.Forms.Padding(0);
@@ -136,6 +134,7 @@
             this.textUsername.Name = "textUsername";
             this.textUsername.Size = new System.Drawing.Size(258, 20);
             this.textUsername.TabIndex = 1;
+            this.textUsername.TextChanged += new System.EventHandler(this.textUsername_TextChanged);
             // 
             // labelPassword
             // 
@@ -154,8 +153,10 @@
             this.configLayoutPanel.SetColumnSpan(this.textPassword, 2);
             this.textPassword.Location = new System.Drawing.Point(109, 29);
             this.textPassword.Name = "textPassword";
+            this.textPassword.PasswordChar = '*';
             this.textPassword.Size = new System.Drawing.Size(258, 20);
             this.textPassword.TabIndex = 3;
+            this.textPassword.TextChanged += new System.EventHandler(this.textPassword_TextChanged);
             // 
             // checkAutostart
             // 
@@ -168,6 +169,7 @@
             this.checkAutostart.TabIndex = 7;
             this.checkAutostart.Text = "Automatically &Start on Windows Login";
             this.checkAutostart.UseVisualStyleBackColor = true;
+            this.checkAutostart.CheckedChanged += new System.EventHandler(this.checkAutostart_CheckedChanged);
             // 
             // buttonBrowse
             // 
@@ -181,6 +183,7 @@
             this.buttonBrowse.TabIndex = 6;
             this.buttonBrowse.Text = "...";
             this.buttonBrowse.UseVisualStyleBackColor = true;
+            this.buttonBrowse.Click += new System.EventHandler(this.buttonBrowse_Click);
             // 
             // label2
             // 
@@ -201,6 +204,19 @@
             this.textLogDirectory.ReadOnly = true;
             this.textLogDirectory.Size = new System.Drawing.Size(232, 20);
             this.textLogDirectory.TabIndex = 5;
+            // 
+            // buttonApply
+            // 
+            this.buttonApply.Anchor = System.Windows.Forms.AnchorStyles.Top;
+            this.configLayoutPanel.SetColumnSpan(this.buttonApply, 3);
+            this.buttonApply.Enabled = false;
+            this.buttonApply.Location = new System.Drawing.Point(147, 107);
+            this.buttonApply.Name = "buttonApply";
+            this.buttonApply.Size = new System.Drawing.Size(75, 23);
+            this.buttonApply.TabIndex = 0;
+            this.buttonApply.Text = "&Apply";
+            this.buttonApply.UseVisualStyleBackColor = true;
+            this.buttonApply.Click += new System.EventHandler(this.buttonApply_Click);
             // 
             // aboutPage
             // 
@@ -273,44 +289,6 @@
             this.labelAppVersion.TabIndex = 2;
             this.labelAppVersion.Text = "Version {0}";
             // 
-            // notifyIcon
-            // 
-            this.notifyIcon.ContextMenuStrip = this.notifyIconMenu;
-            this.notifyIcon.Text = "TEST Intel Reporting Tool";
-            this.notifyIcon.Visible = true;
-            // 
-            // notifyIconMenu
-            // 
-            this.notifyIconMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.configurationToolStripMenuItem,
-            this.aboutToolStripMenuItem,
-            this.quitToolStripMenuItem});
-            this.notifyIconMenu.Name = "notifyIconMenu";
-            this.notifyIconMenu.Size = new System.Drawing.Size(158, 70);
-            // 
-            // configurationToolStripMenuItem
-            // 
-            this.configurationToolStripMenuItem.Name = "configurationToolStripMenuItem";
-            this.configurationToolStripMenuItem.Size = new System.Drawing.Size(157, 22);
-            this.configurationToolStripMenuItem.Text = "&Configuration...";
-            // 
-            // aboutToolStripMenuItem
-            // 
-            this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
-            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(157, 22);
-            this.aboutToolStripMenuItem.Text = "&About...";
-            // 
-            // quitToolStripMenuItem
-            // 
-            this.quitToolStripMenuItem.Name = "quitToolStripMenuItem";
-            this.quitToolStripMenuItem.Size = new System.Drawing.Size(157, 22);
-            this.quitToolStripMenuItem.Text = "&Quit";
-            // 
-            // logWatcher
-            // 
-            this.logWatcher.LogDirectory = null;
-            this.logWatcher.Username = null;
-            // 
             // linkTestMap
             // 
             this.linkTestMap.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
@@ -323,6 +301,7 @@
             this.linkTestMap.TabIndex = 3;
             this.linkTestMap.TabStop = true;
             this.linkTestMap.Text = "TEST Alliance Intel Map";
+            this.linkTestMap.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkTestMap_LinkClicked);
             // 
             // labelMapAuthor
             // 
@@ -346,46 +325,42 @@
             this.labelAppAuthor.TabIndex = 5;
             this.labelAppAuthor.Text = "Reporting App by Ranisa Kazuko";
             // 
-            // tableLayoutPanel1
+            // notifyIcon
             // 
-            this.tableLayoutPanel1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.tableLayoutPanel1.AutoSize = true;
-            this.tableLayoutPanel1.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.tableLayoutPanel1.ColumnCount = 2;
-            this.configLayoutPanel.SetColumnSpan(this.tableLayoutPanel1, 3);
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel1.Controls.Add(this.buttonApply, 0, 0);
-            this.tableLayoutPanel1.Controls.Add(this.buttonReset, 1, 0);
-            this.tableLayoutPanel1.Location = new System.Drawing.Point(3, 107);
-            this.tableLayoutPanel1.Name = "tableLayoutPanel1";
-            this.tableLayoutPanel1.RowCount = 1;
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(364, 29);
-            this.tableLayoutPanel1.TabIndex = 8;
+            this.notifyIcon.ContextMenuStrip = this.notifyIconMenu;
+            this.notifyIcon.Text = "TEST Intel Reporting Tool";
+            this.notifyIcon.Visible = true;
+            this.notifyIcon.DoubleClick += new System.EventHandler(this.notifyIcon_DoubleClick);
             // 
-            // buttonApply
+            // notifyIconMenu
             // 
-            this.buttonApply.Anchor = System.Windows.Forms.AnchorStyles.Right;
-            this.buttonApply.Enabled = false;
-            this.buttonApply.Location = new System.Drawing.Point(104, 3);
-            this.buttonApply.Name = "buttonApply";
-            this.buttonApply.Size = new System.Drawing.Size(75, 23);
-            this.buttonApply.TabIndex = 0;
-            this.buttonApply.Text = "&Apply";
-            this.buttonApply.UseVisualStyleBackColor = true;
+            this.notifyIconMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.configurationToolStripMenuItem,
+            this.aboutToolStripMenuItem,
+            this.quitToolStripMenuItem});
+            this.notifyIconMenu.Name = "notifyIconMenu";
+            this.notifyIconMenu.Size = new System.Drawing.Size(158, 70);
             // 
-            // buttonReset
+            // configurationToolStripMenuItem
             // 
-            this.buttonReset.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.buttonReset.Enabled = false;
-            this.buttonReset.Location = new System.Drawing.Point(185, 3);
-            this.buttonReset.Name = "buttonReset";
-            this.buttonReset.Size = new System.Drawing.Size(75, 23);
-            this.buttonReset.TabIndex = 1;
-            this.buttonReset.Text = "&Cancel";
-            this.buttonReset.UseVisualStyleBackColor = true;
+            this.configurationToolStripMenuItem.Name = "configurationToolStripMenuItem";
+            this.configurationToolStripMenuItem.Size = new System.Drawing.Size(157, 22);
+            this.configurationToolStripMenuItem.Text = "&Configuration...";
+            this.configurationToolStripMenuItem.Click += new System.EventHandler(this.configurationToolStripMenuItem_Click);
+            // 
+            // aboutToolStripMenuItem
+            // 
+            this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
+            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(157, 22);
+            this.aboutToolStripMenuItem.Text = "&About...";
+            this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
+            // 
+            // quitToolStripMenuItem
+            // 
+            this.quitToolStripMenuItem.Name = "quitToolStripMenuItem";
+            this.quitToolStripMenuItem.Size = new System.Drawing.Size(157, 22);
+            this.quitToolStripMenuItem.Text = "&Quit";
+            this.quitToolStripMenuItem.Click += new System.EventHandler(this.quitToolStripMenuItem_Click);
             // 
             // MainForm
             // 
@@ -397,6 +372,8 @@
             this.MaximizeBox = false;
             this.Name = "MainForm";
             this.Text = "TEST Intel Reporting Tool";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
+            this.Resize += new System.EventHandler(this.MainForm_Resize);
             this.tabControl.ResumeLayout(false);
             this.configurationPage.ResumeLayout(false);
             this.configLayoutPanel.ResumeLayout(false);
@@ -406,7 +383,6 @@
             this.aboutLayoutPanel.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.aboutImage)).EndInit();
             this.notifyIconMenu.ResumeLayout(false);
-            this.tableLayoutPanel1.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -438,9 +414,8 @@
         private System.Windows.Forms.LinkLabel linkTestMap;
         private System.Windows.Forms.Label labelMapAuthor;
         private System.Windows.Forms.Label labelAppAuthor;
-        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.Button buttonApply;
-        private System.Windows.Forms.Button buttonReset;
+        private System.Windows.Forms.FolderBrowserDialog folderBrowserDialog;
     }
 }
 

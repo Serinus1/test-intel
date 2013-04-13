@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Security.Cryptography;
+using System.IO;
 
 namespace TestIntelReporter {
     public sealed class LogWatcher : Component {
@@ -21,6 +22,12 @@ namespace TestIntelReporter {
         private DateTime lastKeepAlive;
         private volatile bool loginRejected;
 
+        public readonly static string DefaultPath = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+            "EVE",
+            "logs",
+            "ChatLogs");
+
         private static readonly TimeSpan KeepAlivePeriod
             = TimeSpan.FromMinutes(1);
         private static readonly TimeSpan IdlePeriod
@@ -28,6 +35,7 @@ namespace TestIntelReporter {
 
         public LogWatcher() {
             signal = new AutoResetEvent(false);
+            logDirectory = DefaultPath;
         }
 
         public LogWatcher(IContainer container) : this() {
@@ -42,6 +50,7 @@ namespace TestIntelReporter {
 
         public int IntelReported { get; private set; }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string Username {
             get { return username; }
             set {
@@ -51,6 +60,7 @@ namespace TestIntelReporter {
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string PasswordHash {
             set {
                 this.password = value;
@@ -59,6 +69,7 @@ namespace TestIntelReporter {
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string Password {
             set {
                 if (value == null) throw new ArgumentNullException("value");
@@ -66,6 +77,7 @@ namespace TestIntelReporter {
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string LogDirectory {
             get { return logDirectory; }
             set {
