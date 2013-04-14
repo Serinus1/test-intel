@@ -1,16 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.Contracts;
-using System.Linq;
+using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Net;
-using System.Security;
+using System.Security.Authentication;
 using System.Security.Cryptography;
 using System.Text;
-using System.Diagnostics;
-using System.Security.Authentication;
 using System.Text.RegularExpressions;
-using System.Globalization;
 
 namespace PleaseIgnore.IntelMap {
     /// <summary>
@@ -30,13 +29,10 @@ namespace PleaseIgnore.IntelMap {
 
         // Field separators for the channel list
         private static readonly char[] ChannelSeparators = new char[] { ',' };
-        // Field separators for the server response
-        private static readonly char[] FieldSeparators = new char[] { ' ' };
 
         // API response parsers
         private static readonly Regex ErrorResponse  = new Regex(@"^(50?) ERROR (.*)");
         private static readonly Regex AuthResponse   = new Regex(@"^200 AUTH ([\s]+) (\d+)");
-        private static readonly Regex LogOffResponse = new Regex(@"^201 AUTH .*");
         private static readonly Regex IntelResponse  = new Regex(@"^202 INTEL .*");
         private static readonly Regex AliveResponse  = new Regex(@"^203 ALIVE OK (\d+)");
 
@@ -115,7 +111,7 @@ namespace PleaseIgnore.IntelMap {
         ///     Occurs when this session with the server is closed, either
         ///     through a call to <see cref="Close"/> or timing out.
         /// </summary>
-        public EventHandler Closed;
+        public event EventHandler Closed;
 
         /// <summary>
         ///     Sends a keep-alive to the intel reporting server, preserving
@@ -144,7 +140,9 @@ namespace PleaseIgnore.IntelMap {
             Match match;
             if ((match = AliveResponse.Match(response)).Success) {
                 // Successful ping of the server
-                this.Users = int.Parse(match.Groups[1].Value);
+                this.Users = int.Parse(
+                    match.Groups[1].Value,
+                    CultureInfo.InvariantCulture);
                 return true;
             } else if ((match = ErrorResponse.Match(response)).Success) {
                 if (match.Groups[1].Value == "502") {
@@ -183,7 +181,8 @@ namespace PleaseIgnore.IntelMap {
 
             var response = SendRequest(new Dictionary<string, string>() {
                 { "session", session },
-                { "inteltime", ToUnixTime(timestamp).ToString("F0") },
+                { "inteltime", ToUnixTime(timestamp)
+                    .ToString("F0", CultureInfo.InvariantCulture) },
                 { "action", "INTEL" },
                 { "region", channel },
                 // XXX: The \r is to make our report match the perl version EXACTLY
@@ -234,6 +233,7 @@ namespace PleaseIgnore.IntelMap {
         /// <inheritdoc/>
         public override string ToString() {
             return String.Format(
+                CultureInfo.InvariantCulture,
                 this.disposed
                     ? Properties.Resources.IntelSession_Disposed
                     : Properties.Resources.IntelSession_Connected,

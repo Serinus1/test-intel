@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics.Contracts;
+using System.Globalization;
 
 namespace PleaseIgnore.IntelMap {
     /// <summary>
@@ -54,7 +55,9 @@ namespace PleaseIgnore.IntelMap {
 
         /// <inheritdoc/>
         public override string ToString() {
-            return string.Format("{0}: [{1} - {2:u}] {3}",
+            return string.Format(
+                CultureInfo.CurrentCulture,
+                "{0}: [{1} - {2:u}] {3}",
                 GetType().Name,
                 this.Channel.Name,
                 this.Timestamp,
