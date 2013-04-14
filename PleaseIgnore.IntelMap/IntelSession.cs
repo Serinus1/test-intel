@@ -60,6 +60,9 @@ namespace PleaseIgnore.IntelMap {
         /// <exception cref="AuthenticationException">
         ///     The authentication failed.
         /// </exception>
+        /// <exception cref="IntelException">
+        ///     Unexpected response returned from the server.
+        /// </exception>
         /// <exception cref="WebException">
         ///     Failed to contact the web server.
         /// </exception>
@@ -122,6 +125,12 @@ namespace PleaseIgnore.IntelMap {
         ///     <see langword="true"/> if our session is still valid;
         ///     otherwise, <see langword="false"/>.
         /// </returns>
+        /// <exception cref="IntelException">
+        ///     Unexpected response returned from the server.
+        /// </exception>
+        /// <exception cref="WebException">
+        ///     Failed to contact the web server.
+        /// </exception>
         public bool KeepAlive() {
             Contract.Ensures(Contract.Result<bool>() == this.IsConnected);
             if (disposed)
@@ -159,6 +168,12 @@ namespace PleaseIgnore.IntelMap {
         ///     <see langword="true"/> if our session is still valid;
         ///     otherwise, <see langword="false"/>.
         /// </returns>
+        /// <exception cref="IntelException">
+        ///     Unexpected response returned from the server.
+        /// </exception>
+        /// <exception cref="WebException">
+        ///     Failed to contact the web server.
+        /// </exception>
         public bool Report(string channel, DateTime timestamp, string message) {
             Contract.Requires<ArgumentException>(!String.IsNullOrEmpty(channel));
             Contract.Requires<ArgumentException>(!String.IsNullOrEmpty(message));

@@ -3,8 +3,8 @@ using System.Runtime.Serialization;
 
 namespace PleaseIgnore.IntelMap {
     /// <summary>
-    ///     Thrown by <see cref="WebMethods"/> when there is a problem contacting
-    ///     the remote server.
+    ///     Thrown by <see cref="IntelSession"/> when there is a problem
+    ///     contacting the remote server.
     /// </summary>
     [Serializable]
     public class IntelException : Exception {
