@@ -65,7 +65,7 @@ namespace TestIntelReporter {
 
             var sha = new SHA1CryptoServiceProvider();
             var hash = sha.ComputeHash(Encoding.UTF8.GetBytes(password));
-            return BitConverter.ToString(hash).Replace("-", "");
+            return BitConverter.ToString(hash).ToLowerInvariant().Replace("-", "");
         }
     }
 }
