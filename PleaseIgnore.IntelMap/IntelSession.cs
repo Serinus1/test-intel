@@ -87,14 +87,43 @@ namespace PleaseIgnore.IntelMap {
                 // Authentication failed
                 throw new AuthenticationException(match.Groups[2].Value);
             } else {
-                // TODO: The server responded with something unexpected
-                throw new Exception();
+                // The server responded with something unexpected
+                throw new IntelException();
             }
         }
 
+        /// <summary>
+        ///     Gets a flag indicating whether our session with the intel
+        ///     reporting server is still valid.
+        /// </summary>
+        public bool IsConnected { get { return !this.disposed; } }
+
+        /// <summary>
+        ///     Gets the number of users currently connected to the server.
+        /// </summary>
         public int Users { get; private set; }
 
+        /// <summary>
+        ///     Gets the number of intel reports sent to the server.
+        /// </summary>
+        public int ReportsSent { get; private set; }
+
+        /// <summary>
+        ///     Occurs when this session with the server is closed, either
+        ///     through a call to <see cref="Close"/> or timing out.
+        /// </summary>
+        public EventHandler Closed;
+
+        /// <summary>
+        ///     Sends a keep-alive to the intel reporting server, preserving
+        ///     our session.
+        /// </summary>
+        /// <returns>
+        ///     <see langword="true"/> if our session is still valid;
+        ///     otherwise, <see langword="false"/>.
+        /// </returns>
         public bool KeepAlive() {
+            Contract.Ensures(Contract.Result<bool>() == this.IsConnected);
             if (disposed)
                 return false;
 
@@ -111,25 +140,35 @@ namespace PleaseIgnore.IntelMap {
             } else if ((match = ErrorResponse.Match(response)).Success) {
                 if (match.Groups[1].Value == "502") {
                     // Our session has expired
-                    this.disposed = true;
+                    this.OnClosed();
                     return false;
                 } else {
-                    // TODO: The server responded with something unexpected
-                    throw new Exception();
+                    // The server responded with something unexpected
+                    throw new IntelException();
                 }
             } else {
-                // TODO: The server responded with something unexpected
-                throw new Exception();
+                // The server responded with something unexpected
+                throw new IntelException();
             }
         }
 
+        /// <summary>
+        ///     Sends a log entry to the intel reporting server.
+        /// </summary>
+        /// <returns>
+        ///     <see langword="true"/> if our session is still valid;
+        ///     otherwise, <see langword="false"/>.
+        /// </returns>
         public bool Report(string channel, DateTime timestamp, string message) {
+            Contract.Requires<ArgumentException>(!String.IsNullOrEmpty(channel));
+            Contract.Requires<ArgumentException>(!String.IsNullOrEmpty(message));
+            Contract.Ensures(Contract.Result<bool>() == this.IsConnected);
             if (disposed)
                 return false;
 
             var response = SendRequest(new Dictionary<string, string>() {
                 { "session", session },
-                { "inteltime", timestamp.ToString("F0") },
+                { "inteltime", ToUnixTime(timestamp).ToString("F0") },
                 { "action", "INTEL" },
                 { "region", channel },
                 // XXX: The \r is to make our report match the perl version EXACTLY
@@ -139,26 +178,31 @@ namespace PleaseIgnore.IntelMap {
             Match match;
             if ((match = IntelResponse.Match(response)).Success) {
                 // Successful ping of the server
-                this.Users = int.Parse(match.Groups[1].Value);
+                ++this.ReportsSent;
                 return true;
             } else if ((match = ErrorResponse.Match(response)).Success) {
                 if (match.Groups[1].Value == "502") {
                     // Our session has expired
-                    this.disposed = true;
+                    this.OnClosed();
                     return false;
                 } else {
-                    // TODO: The server responded with something unexpected
-                    throw new Exception();
+                    // The server responded with something unexpected
+                    throw new IntelException();
                 }
             } else {
-                // TODO: The server responded with something unexpected
-                throw new Exception();
+                // The server responded with something unexpected
+                throw new IntelException();
             }
         }
 
+        /// <summary>
+        ///     Closes this session with the intel reporting server.
+        /// </summary>
         public void Dispose() {
+            Contract.Ensures(this.IsConnected == false);
             if (disposed)
                 return;
+
             try {
                 SendRequest(new Dictionary<string, string>() {
                     { "username", this.username },
@@ -166,19 +210,44 @@ namespace PleaseIgnore.IntelMap {
                     { "action", "LOGOFF" },
                 });
             } catch (WebException) {
+                // We don't actually care...
             } finally {
-                disposed = true;
+                this.OnClosed();
             }
         }
 
         /// <inheritdoc/>
         public override string ToString() {
-            return base.ToString();
+            return String.Format(
+                this.disposed
+                    ? Properties.Resources.IntelSession_Disposed
+                    : Properties.Resources.IntelSession_Connected,
+                this.GetType().Name,
+                this.Users,
+                this.ReportsSent);
+        }
+
+        /// <summary>
+        ///     Raises the <see cref="Closed"/> event when the session is
+        ///     closed.
+        /// </summary>
+        private void OnClosed() {
+            Contract.Ensures(this.IsConnected == false);
+            this.disposed = true;
+            this.Users = 0;
+
+            var handler = this.Closed;
+            this.Closed = null;
+
+            if (handler != null) {
+                handler(this, EventArgs.Empty);
+            }
         }
 
         [ContractInvariantMethod]
         private void ObjectInvariant() {
             Contract.Invariant(this.Users >= 0);
+            Contract.Invariant(this.ReportsSent >= 0);
         }
 
         /// <summary>

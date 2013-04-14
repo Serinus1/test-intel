@@ -9,7 +9,7 @@ namespace PleaseIgnore.IntelMap {
     [Serializable]
     public class IntelException : Exception {
         public IntelException()
-            : base() {
+            : base(Properties.Resources.IntelException) {
         }
 
         public IntelException(string message)

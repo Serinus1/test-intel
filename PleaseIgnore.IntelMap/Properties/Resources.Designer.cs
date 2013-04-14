@@ -59,5 +59,32 @@ namespace PleaseIgnore.IntelMap.Properties {
                 resourceCulture = value;
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An unknown error has occured communicating with the intel reporting server..
+        /// </summary>
+        internal static string IntelException {
+            get {
+                return ResourceManager.GetString("IntelException", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}: Connected ({1} Users; {2} Reports Sent).
+        /// </summary>
+        internal static string IntelSession_Connected {
+            get {
+                return ResourceManager.GetString("IntelSession_Connected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}: Disposed ({2} Reports Sent).
+        /// </summary>
+        internal static string IntelSession_Disposed {
+            get {
+                return ResourceManager.GetString("IntelSession_Disposed", resourceCulture);
+            }
+        }
     }
 }
