@@ -13,14 +13,19 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Code Analysis|Any CPU = Code Analysis|Any CPU
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8A11D8A0-4617-453C-AE27-3D7F3A4B2BA7}.Code Analysis|Any CPU.ActiveCfg = Code Analysis|Any CPU
+		{8A11D8A0-4617-453C-AE27-3D7F3A4B2BA7}.Code Analysis|Any CPU.Build.0 = Code Analysis|Any CPU
 		{8A11D8A0-4617-453C-AE27-3D7F3A4B2BA7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{8A11D8A0-4617-453C-AE27-3D7F3A4B2BA7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8A11D8A0-4617-453C-AE27-3D7F3A4B2BA7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8A11D8A0-4617-453C-AE27-3D7F3A4B2BA7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D1E7409E-4ECF-4D2B-B523-94A40BE248D8}.Code Analysis|Any CPU.ActiveCfg = Code Analysis|Any CPU
+		{D1E7409E-4ECF-4D2B-B523-94A40BE248D8}.Code Analysis|Any CPU.Build.0 = Code Analysis|Any CPU
 		{D1E7409E-4ECF-4D2B-B523-94A40BE248D8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{D1E7409E-4ECF-4D2B-B523-94A40BE248D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D1E7409E-4ECF-4D2B-B523-94A40BE248D8}.Release|Any CPU.ActiveCfg = Release|Any CPU

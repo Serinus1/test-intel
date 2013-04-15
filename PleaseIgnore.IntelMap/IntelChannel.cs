@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.IO;
 using System.Diagnostics.Contracts;
+using System.Globalization;
 
 namespace PleaseIgnore.IntelMap {
     /// <summary>
@@ -84,10 +85,117 @@ namespace PleaseIgnore.IntelMap {
         /// </summary>
         public FileInfo LogFile { get; private set; }
 
+        internal void OnCreate(FileSystemEventArgs e) {
+            Contract.Requires(e != null);
+            if (Matches(e.Name)) {
+                this.lastEvent = e;
+            }
+        }
+
+        internal void OnChange(FileSystemEventArgs e) {
+            Contract.Requires(e != null);
+            if (Matches(e.Name)) {
+                this.lastEvent = e;
+            }
+        }
+
+        internal int Tick() {
+            Contract.Ensures(Contract.Result<int>() >= 0);
+
+            // Parse the currently selected file, looking for fresh intel
+            int linesRead = 0;
+            int intelRead = 0;
+            if (activeFile != null) {
+                try {
+                    string line;
+                    while ((line = this.activeFile.ReadLine()) != null) {
+                        ++linesRead;
+                        var match = Parser.Match(line);
+                        if (match.Success) {
+                            var timestamp = new DateTime(
+                                int.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture),
+                                int.Parse(match.Groups[2].Value, CultureInfo.InvariantCulture),
+                                int.Parse(match.Groups[3].Value, CultureInfo.InvariantCulture),
+                                int.Parse(match.Groups[4].Value, CultureInfo.InvariantCulture),
+                                int.Parse(match.Groups[5].Value, CultureInfo.InvariantCulture),
+                                int.Parse(match.Groups[6].Value, CultureInfo.InvariantCulture),
+                                DateTimeKind.Utc);
+                            var e = new IntelEventArgs(this, timestamp, match.Groups[7].Value);
+                            ++intelRead;
+                            // TODO: Report!
+                        }
+                    }
+                } catch (IOException) {
+                    this.Close();
+                }
+            }
+
+            // Do we need to switch files?
+            if ((linesRead == 0) && (this.lastEvent != null)) {
+                SwitchTo(new FileInfo(this.lastEvent.FullPath));
+            }
+
+            return intelRead;
+        }
+
+        internal void Close() {
+            if (activeFile != null) {
+                try {
+                    activeFile.Close();
+                } catch (IOException) {
+                } finally {
+                    this.activeFile = null;
+                    this.LogFile = null;
+                }
+            }
+        }
+
         /// <summary>
-        ///     Occurs when a report is made in this <see cref="IntelChannel"/>.
+        ///     Tests the filename of a log file to see if it corresponds to
+        ///     the channel we are watching.
         /// </summary>
-        public event EventHandler<IntelEventArgs> IntelReported;
+        private bool Matches(string filename) {
+            Contract.Requires(filename != null);
+            return filename.StartsWith(this.Name + '_',
+                StringComparison.InvariantCultureIgnoreCase);
+        }
+
+        /// <summary>
+        ///     Switches the actively scanned log to the specified log file.
+        /// </summary>
+        private void SwitchTo(FileInfo file) {
+            Contract.Ensures(this.LogFile == file);
+            
+            // Drop any sort of reopen-on-tick
+            this.Close();
+            this.lastEvent = null;
+
+            // Open the new file
+            if ((file != null) && file.Exists) {
+                FileStream stream = null;
+                StreamReader reader = null;
+                try {
+                    stream = file.Open(FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                    reader = new StreamReader(stream, true);
+                    stream.Seek(0, SeekOrigin.End);
+                    reader.DiscardBufferedData();
+                    
+                    this.LogFile = file;
+                    this.activeFile = reader;
+                } catch (IOException) {
+                    // Failed to open the log file, just clean up and abort
+                    try {
+                        if (reader != null) {
+                            reader.Close();
+                        } else if (stream != null) {
+                            stream.Close();
+                        }
+                    } catch (IOException) {
+                    }
+                } catch (UnauthorizedAccessException) {
+                }
+            }
+        }
 
         [ContractInvariantMethod]
         private void ObjectInvariant() {
