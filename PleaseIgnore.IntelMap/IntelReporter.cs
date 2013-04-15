@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Security.Authentication;
 using System.Threading;
@@ -28,6 +29,8 @@ namespace PleaseIgnore.IntelMap {
         private Thread thread;
         // List of active IntelChannels
         private List<IntelChannel> channels;
+        // Last time the channel list was updated
+        private DateTime channelTimestamp;
         // File system event queue
         private ConcurrentQueue<FileSystemEventArgs> watcherEvents;
         // The intel reporting server session
@@ -48,6 +51,8 @@ namespace PleaseIgnore.IntelMap {
             "EVE",
             "logs",
             "Chatlogs");
+        // The keep-alive period for the intel session
+        private static readonly TimeSpan keepalivePeriod = new TimeSpan(0, 1, 0);
         
         /// <summary>
         ///     Initializes a new instance of the <see cref="IntelReporter"/>
@@ -57,6 +62,7 @@ namespace PleaseIgnore.IntelMap {
             this.signal = new AutoResetEvent(false);
             this.watcherEvents = new ConcurrentQueue<FileSystemEventArgs>();
             this.syncObject = new object();
+            this.channels = new List<IntelChannel>();
 
             this.ChannelUpdatePeriod = new TimeSpan(24, 0, 0);
             this.ChannelScanFrequency = new TimeSpan(0, 0, 5);
@@ -273,8 +279,15 @@ namespace PleaseIgnore.IntelMap {
         private void ThreadMain() {
             try {
                 this.Status = IntelStatus.Idle;
+                channels.ForEach(x => x.Close());
                 signal.Reset();
                 using (var container = new Container()) {
+                    // Try an initial login so the UI can notify immediately
+                    // of bad credentials
+                    this.CreateSession();
+                    // The age of the session
+                    var sessionTimestamp = DateTime.UtcNow;
+
                     // Configure the File Watcher
                     var watcher = new FileSystemWatcher();
                     watcher.BeginInit();
@@ -295,33 +308,91 @@ namespace PleaseIgnore.IntelMap {
                         if (resetDirectory) {
                             resetDirectory = false;
                             watcher.Path = this.LogDirectory;
-                            // TODO: Reset children
+                            channels.ForEach(x => x.Close());
                         }
+
+                        // Keep the channel list up to date
+                        this.UpdateChannels();
 
                         // Change the login credentials
                         if (authenticate) {
-                            authenticate = false;
                             if (this.Status == IntelStatus.AuthenticationFailure) {
-                                // TODO: Might want a different state
-                                this.Status = IntelStatus.Idle;
+                                this.Status = channels.Any(x => x.LogFile != null)
+                                    ? IntelStatus.Running
+                                    : IntelStatus.Idle;
                             }
                             if (session != null) {
                                 session.Dispose();
                                 session = null;
                             }
-                            CreateSession();
+                            // Only clear the authentication flag once we've actually
+                            // attempted to reauthenticate
+                            if (CreateSession()) {
+                                this.authenticate = false;
+                                sessionTimestamp = DateTime.UtcNow;
+                            } else if (this.Status == IntelStatus.AuthenticationFailure) {
+                                this.authenticate = false;
+                            }
                         }
 
-                        // We've been notified of a directory change
+                        // Check for directory changes
                         FileSystemEventArgs args;
                         while (watcherEvents.TryDequeue(out args)) {
-                            // TODO: Notify children
+                            channels.ForEach(x => x.OnFileEvent(args));
                         }
 
-                        // TODO: Have all children rescan their log files
+                        // Have all children rescan their log files
+                        channels.ForEach(x => x.Tick());
+
+                        // Update Idle/Running status
+                        switch (this.Status) {
+                        case IntelStatus.NetworkFailure:
+                        case IntelStatus.ServerFailure:
+                            if (DateTime.UtcNow - lastFailure > this.RetryPeriod) {
+                                // Basically a fall through
+                                goto case IntelStatus.Idle;
+                            }
+                            break;
+                        case IntelStatus.Running:
+                        case IntelStatus.Idle:
+                            this.Status = channels.Any(x => x.LogFile != null)
+                                ? IntelStatus.Running
+                                : IntelStatus.Idle;
+                            break;
+                        }
+
+                        // Ping the session for keep alive
+                        if (this.session != null) {
+                            switch (this.Status) {
+                            case IntelStatus.Idle:
+                                this.session.Dispose();
+                                this.session = null;
+                                break;
+                            case IntelStatus.Running:
+                                if (DateTime.UtcNow - sessionTimestamp >= keepalivePeriod) {
+                                    try {
+                                        if (!this.session.KeepAlive()) {
+                                            this.session.Dispose();
+                                            this.session = null;
+                                        }
+                                    } catch (WebException) {
+                                        this.Status = IntelStatus.NetworkFailure;
+                                        this.lastFailure = DateTime.UtcNow;
+                                    } catch (IntelException) {
+                                        this.Status = IntelStatus.ServerFailure;
+                                        this.lastFailure = DateTime.UtcNow;
+                                    }
+                                }
+                                break;
+                            }
+                        }
 
                         // Wait for another event
-                        signal.WaitOne(this.ChannelScanFrequency);
+                        if (this.Status != IntelStatus.Idle) {
+                            signal.WaitOne(this.ChannelScanFrequency);
+                        } else {
+                            signal.WaitOne();
+                        }
                     }
 
                     // Terminate the session before disconnecting
@@ -330,9 +401,12 @@ namespace PleaseIgnore.IntelMap {
                         this.session = null;
                     }
                 } //using (var container = new Container()) {
+
                 this.Status = IntelStatus.Stopped;
+                channels.ForEach(x => x.Close());
             } catch {
                 this.Status = IntelStatus.FatalError;
+                this.session = null;
             }
         }
 
@@ -344,7 +418,7 @@ namespace PleaseIgnore.IntelMap {
         ///     reporting server; otherwise, <see langword="false"/>.
         /// </returns>
         internal bool OnIntelReported(IntelEventArgs e) {
-            Contract.Requires<ArgumentNullException>(e != null, "e");
+            Contract.Requires(e != null);
 
             // Send into the ThreadPool so not to interfere with our processing
             var handler = this.IntelReported;
@@ -355,16 +429,10 @@ namespace PleaseIgnore.IntelMap {
             // See if it's worth trying again
             switch (this.Status) {
             case IntelStatus.AuthenticationFailure:
-                ++this.IntelDropped;
-                return false;
             case IntelStatus.NetworkFailure:
             case IntelStatus.ServerFailure:
-                var now = DateTime.UtcNow;
-                if (now - lastFailure < this.RetryPeriod) {
-                    ++this.IntelDropped;
-                    return false;
-                }
-                break;
+                ++this.IntelDropped;
+                return false;
             }
 
             // First, try an already existing session
@@ -381,6 +449,39 @@ namespace PleaseIgnore.IntelMap {
             // Try again after (re)openning the session
             this.CreateSession();
             return this.SendReport(e, true);
+        }
+
+        private void UpdateChannels() {
+            // Check for network problems
+            switch (this.Status) {
+            case IntelStatus.NetworkFailure:
+            case IntelStatus.ServerFailure:
+                break;
+            }
+
+            // Check for expiration
+            var now = DateTime.UtcNow;
+            if (now - this.channelTimestamp > this.ChannelUpdatePeriod) {
+                return;
+            }
+
+            // Get the list of channels
+            try {
+                var list = IntelSession.GetIntelChannels();
+                // Look for channels to remove
+                channels.RemoveAll(x => !list.Any(y => x.Name == y));
+                // Look for channels to add
+                channels.AddRange(list
+                    .Where(x => !channels.Any(y => y.Name == x))
+                    .Select(x => new IntelChannel(this, x))
+                    .ToArray());
+                // Update timestamp
+                this.channelTimestamp = now;
+            } catch (WebException) {
+                // Failed to download the list
+                this.lastFailure = now;
+                this.Status = IntelStatus.NetworkFailure;
+            }
         }
 
         private bool CreateSession() {
