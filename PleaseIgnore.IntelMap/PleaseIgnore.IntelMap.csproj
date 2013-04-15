@@ -161,6 +161,9 @@
     <Compile Include="IntelChannel.cs" />
     <Compile Include="IntelEventArgs.cs" />
     <Compile Include="IntelException.cs" />
+    <Compile Include="IntelReporter.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="IntelSession.cs" />
     <Compile Include="IntelSessionException.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

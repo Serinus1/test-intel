@@ -1,11 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.IO;
 using System.Diagnostics.Contracts;
 using System.Globalization;
+using System.IO;
+using System.Text.RegularExpressions;
 
 namespace PleaseIgnore.IntelMap {
     /// <summary>
@@ -64,10 +61,18 @@ namespace PleaseIgnore.IntelMap {
         /// <summary>
         ///     Initializes a new instance of the <see cref="IntelChannel"/> class.
         /// </summary>
-        internal IntelChannel(string name) {
+        internal IntelChannel(IntelReporter reporter, string name) {
+            Contract.Requires<ArgumentNullException>(reporter != null, "reporter");
             Contract.Requires<ArgumentException>(!String.IsNullOrWhiteSpace(name));
             this.Name = name;
+            this.IntelReporter = reporter;
         }
+
+        /// <summary>
+        ///     Gets the instance of <see cref="IntelReporter"/> that is managing
+        ///     and reporting the events from this <see cref="IntelChannel"/>.
+        /// </summary>
+        public IntelReporter IntelReporter { get; private set; }
 
         /// <summary>
         ///     Gets the channel name of this <see cref="IntelChannel"/>
@@ -85,14 +90,7 @@ namespace PleaseIgnore.IntelMap {
         /// </summary>
         public FileInfo LogFile { get; private set; }
 
-        internal void OnCreate(FileSystemEventArgs e) {
-            Contract.Requires(e != null);
-            if (Matches(e.Name)) {
-                this.lastEvent = e;
-            }
-        }
-
-        internal void OnChange(FileSystemEventArgs e) {
+        internal void OnFileEvent(FileSystemEventArgs e) {
             Contract.Requires(e != null);
             if (Matches(e.Name)) {
                 this.lastEvent = e;
@@ -120,9 +118,9 @@ namespace PleaseIgnore.IntelMap {
                                 int.Parse(match.Groups[5].Value, CultureInfo.InvariantCulture),
                                 int.Parse(match.Groups[6].Value, CultureInfo.InvariantCulture),
                                 DateTimeKind.Utc);
-                            var e = new IntelEventArgs(this, timestamp, match.Groups[7].Value);
+                            var args = new IntelEventArgs(this, timestamp, match.Groups[7].Value);
                             ++intelRead;
-                            // TODO: Report!
+                            this.IntelReporter.OnIntelReported(args);
                         }
                     }
                 } catch (IOException) {
@@ -201,6 +199,7 @@ namespace PleaseIgnore.IntelMap {
         private void ObjectInvariant() {
             Contract.Invariant(!String.IsNullOrWhiteSpace(this.Name));
             Contract.Invariant(this.IntelCount >= 0);
+            Contract.Invariant(this.IntelReporter != null);
         }
     }
 }
