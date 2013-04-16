@@ -87,6 +87,8 @@ namespace PleaseIgnore.IntelMap {
         ///     <see cref="IntelReporter"/> actively parsing and reporting
         ///     data from the log files.
         /// </summary>
+        /// <seealso cref="Start"/>
+        /// <seealso cref="Stop"/>
         [DefaultValue(false), Category("Behavior")]
         public bool Enabled {
             get {
@@ -124,7 +126,17 @@ namespace PleaseIgnore.IntelMap {
         /// <summary>
         ///     Gets or sets the TEST Alliance AUTH username.
         /// </summary>
-        [DefaultValue(""), Category("Behavior")]
+        /// <remarks>
+        ///     Changing the username or password will force a reauthentication
+        ///     against the intel reporting server if the monitoring service is
+        ///     running.  This means that changing both may force two separate
+        ///     authentications.  Use <see cref="Authenticate"/> to change the
+        ///     username and password once the service has already started.
+        /// </remarks>
+        /// <see cref="Authenticate"/>
+        /// <see cref="Password"/>
+        /// <see cref="PasswordHash"/>
+        [DefaultValue((String)null), Category("Behavior")]
         public string Username {
             get {
                 return this.username;
@@ -141,7 +153,17 @@ namespace PleaseIgnore.IntelMap {
         /// <summary>
         ///     Gets or sets the hashed services password for the user.
         /// </summary>
-        [DefaultValue(""), Category("Behavior")]
+        /// <remarks>
+        ///     Changing the username or password will force a reauthentication
+        ///     against the intel reporting server if the monitoring service is
+        ///     running.  This means that changing both may force two separate
+        ///     authentications.  Use <see cref="Authenticate"/> to change the
+        ///     username and password once the service has already started.
+        /// </remarks>
+        /// <see cref="Authenticate"/>
+        /// <see cref="Password"/>
+        /// <see cref="Username"/>
+        [DefaultValue((String)null), Category("Behavior")]
         public string PasswordHash {
             get {
                 return this.password;
@@ -159,6 +181,16 @@ namespace PleaseIgnore.IntelMap {
         ///     Sets the hashed password by automatically hashing and storing the
         ///     plaintext password.
         /// </summary>
+        /// <remarks>
+        ///     Changing the username or password will force a reauthentication
+        ///     against the intel reporting server if the monitoring service is
+        ///     running.  This means that changing both may force two separate
+        ///     authentications.  Use <see cref="Authenticate"/> to change the
+        ///     username and password once the service has already started.
+        /// </remarks>
+        /// <see cref="Authenticate"/>
+        /// <see cref="PasswordHash"/>
+        /// <see cref="Username"/>
         [Browsable(false)]
         public string Password {
             set {
@@ -170,7 +202,7 @@ namespace PleaseIgnore.IntelMap {
         /// <summary>
         ///     Gets or sets the directory path to find EVE chat logs.
         /// </summary>
-        [AmbientValue(""), DefaultValue(""), Category("Behavior")]
+        [AmbientValue((String)null), DefaultValue((String)null), Category("Behavior")]
         public string LogDirectory {
             get {
                 Contract.Ensures(!String.IsNullOrEmpty(Contract.Result<string>()));
@@ -207,6 +239,22 @@ namespace PleaseIgnore.IntelMap {
         public IntelStatus Status { get; private set;  }
 
         /// <summary>
+        ///     Gets the number of users currently reporting intelligence.
+        /// </summary>
+        /// <value>
+        ///     The number of users reporting intelligence.  The value is
+        ///     undefined if we are not currently connected to the server.
+        /// </value>
+        [Browsable(false)]
+        public int Users {
+            get {
+                Contract.Ensures(Contract.Result<int>() >= 0);
+                var session = this.session;
+                return (session != null) ? session.Users : 0;
+            }
+        }
+
+        /// <summary>
         ///     Raised when a new intel report has been parsed from a log file.
         /// </summary>
         /// <remarks>
@@ -216,10 +264,30 @@ namespace PleaseIgnore.IntelMap {
         /// </remarks>
         public event EventHandler<IntelEventArgs> IntelReported;
 
+        /// <summary>
+        ///     Signals the <see cref="IntelReporter"/> that initialization is
+        ///     starting.
+        /// </summary>
+        /// <remarks>
+        ///     Service startup is delayed until after initialization completes.
+        ///     This allows events and properties to be safely configured
+        ///     without concern for race conditions.
+        /// </remarks>
+        /// <seealso cref="EndInit"/>
         public void BeginInit() {
             this.initializing = true;
         }
 
+        /// <summary>
+        ///     Signals the <see cref="IntelReporter"/> that initialization has
+        ///     completed.
+        /// </summary>
+        /// <remarks>
+        ///     Service startup is delayed until after initialization completes.
+        ///     This allows events and properties to be safely configured
+        ///     without concern for race conditions.
+        /// </remarks>
+        /// <seealso cref="BeginInit"/>
         public void EndInit() {
             this.initializing = false;
             if (this.running) {
@@ -227,13 +295,49 @@ namespace PleaseIgnore.IntelMap {
             }
         }
 
+        /// <summary>
+        ///     Updates the user's credentials and forces the service to
+        ///     reauthenticate with the reporting service.
+        /// </summary>
+        /// <param name="username">
+        ///     The TEST auth username.
+        /// </param>
+        /// <param name="password">
+        ///     The plaintext TEST services password.  It will be hashed
+        ///     automatically.
+        /// </param>
+        /// <remarks>
+        ///     Changing the username or password will force a reauthentication
+        ///     against the intel reporting server if the monitoring service is
+        ///     running.  This means that changing both may force two separate
+        ///     authentications.  Use <see cref="Authenticate"/> to change the
+        ///     username and password once the service has already started.
+        /// </remarks>
+        /// <see cref="Password"/>
+        /// <see cref="PasswordHash"/>
+        /// <see cref="Username"/>
         public void Authenticate(string username, string password) {
+            Contract.Requires<ArgumentException>(!String.IsNullOrEmpty(username));
+            Contract.Requires<ArgumentException>(!String.IsNullOrEmpty(password));
+            Contract.Ensures(this.Username == username);
+            Contract.Ensures(!String.IsNullOrEmpty(this.PasswordHash));
+
             this.username = username;
             this.password = IntelSession.HashPassword(password);
             this.authenticate = true;
             signal.Set();
+            // TODO: Probably want to report success/failure
         }
 
+        /// <summary>
+        ///     Starts the intel reporting service.
+        /// </summary>
+        /// <remarks>
+        ///     This is equivalent to setting <see cref="Enabled"/> to
+        ///     <see langword="true"/>.
+        /// </remarks>
+        /// <see cref="Enabled"/>
+        /// <see cref="Stop"/>
         public void Start() {
             Contract.Ensures(this.Enabled == true);
             lock (this.syncObject) {
@@ -245,6 +349,15 @@ namespace PleaseIgnore.IntelMap {
             }
         }
 
+        /// <summary>
+        ///     Stops the intel reporting service.
+        /// </summary>
+        /// <remarks>
+        ///     This is equivalent to setting <see cref="Enabled"/> to
+        ///     <see langword="false"/>.
+        /// </remarks>
+        /// <see cref="Enabled"/>
+        /// <see cref="Start"/>
         public void Stop() {
             Contract.Ensures(this.Enabled == false);
             lock (this.syncObject) {
@@ -274,7 +387,7 @@ namespace PleaseIgnore.IntelMap {
         }
 
         /// <summary>
-        ///     Entry point for the 
+        ///     Entry point for the core processing thread.
         /// </summary>
         private void ThreadMain() {
             try {
@@ -316,14 +429,12 @@ namespace PleaseIgnore.IntelMap {
 
                         // Change the login credentials
                         if (authenticate) {
+                            // CreateSession() will ignore us if the authentication
+                            // failure flag is set.
                             if (this.Status == IntelStatus.AuthenticationFailure) {
                                 this.Status = channels.Any(x => x.LogFile != null)
                                     ? IntelStatus.Running
                                     : IntelStatus.Idle;
-                            }
-                            if (session != null) {
-                                session.Dispose();
-                                session = null;
                             }
                             // Only clear the authentication flag once we've actually
                             // attempted to reauthenticate
@@ -451,6 +562,15 @@ namespace PleaseIgnore.IntelMap {
             return this.SendReport(e, true);
         }
 
+        /// <summary>
+        ///     Checks the expiration date on the channel list and downloads
+        ///     an updated list if stale.
+        /// </summary>
+        /// <remarks>
+        ///     <see cref="UpdateChannels"/> will fetch the channel observation
+        ///     list and create/dispose instances of <see cref="IntelChannel"/>
+        ///     to match that list.
+        /// </remarks>
         private void UpdateChannels() {
             // Check for network problems
             switch (this.Status) {
@@ -468,13 +588,22 @@ namespace PleaseIgnore.IntelMap {
             // Get the list of channels
             try {
                 var list = IntelSession.GetIntelChannels();
+
                 // Look for channels to remove
-                channels.RemoveAll(x => !list.Any(y => x.Name == y));
+                foreach (var x in channels.Where(x => !list.Any(y => x.Name == y)).ToArray()) {
+                    x.Close();
+                    channels.Remove(x);
+                }
+
                 // Look for channels to add
                 channels.AddRange(list
                     .Where(x => !channels.Any(y => y.Name == x))
                     .Select(x => new IntelChannel(this, x))
                     .ToArray());
+
+                // Appeal to my OCD
+                channels.Sort((x, y) => String.Compare(x.Name, y.Name,
+                    StringComparison.OrdinalIgnoreCase));
                 // Update timestamp
                 this.channelTimestamp = now;
             } catch (WebException) {
@@ -484,9 +613,26 @@ namespace PleaseIgnore.IntelMap {
             }
         }
 
+        /// <summary>
+        ///     Creates a new connection to the intel reporting server.
+        /// </summary>
+        /// <returns>
+        ///     <see langword="true"/> if a connection was successfully made to
+        ///     the server; otherwise, <see langword="false"/>.
+        /// </returns>
+        /// <remarks>
+        ///     If a session already exists, it will be closed before the new
+        ///     session is created.
+        /// </remarks>
         private bool CreateSession() {
-            Contract.Requires(this.session == null);
-            Contract.Ensures(this.session != null);
+            Contract.Ensures((this.session != null) || !Contract.Result<bool>());
+            Contract.Ensures((this.session == null) ||  Contract.Result<bool>());
+
+            // Close any currently open session
+            if (this.session != null) {
+                this.session.Dispose();
+                this.session = null;
+            }
 
             // Once authentication fails, don't try again until the user fixes it
             if (this.Status == IntelStatus.AuthenticationFailure) {
@@ -512,6 +658,23 @@ namespace PleaseIgnore.IntelMap {
             return false;
         }
 
+        /// <summary>
+        ///     Forwards an event received from an <see cref="IntelChannel"/>
+        ///     to the intel reporting service, incrementing the sent or
+        ///     dropped counter as appropriate.
+        /// </summary>
+        /// <param name="e">
+        ///     Event data to forward.
+        /// </param>
+        /// <param name="lastTry">
+        ///     <see langword="true"/> if this is our last attempt to submit
+        ///     the data, so increment the failure count for conditions that
+        ///     would normally lead to a retry.
+        /// </param>
+        /// <returns>
+        ///     <see langword="true"/> if the intel was successfully reported
+        ///     to the intel service; otherwise, <see langword="false"/>.
+        /// </returns>
         private bool SendReport(IntelEventArgs e, bool lastTry) {
             // Require a session to send the attempt
             if (this.session == null) {
