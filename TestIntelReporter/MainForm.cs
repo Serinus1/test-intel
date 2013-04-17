@@ -1,5 +1,7 @@
 ﻿using Microsoft.Win32;
+using PleaseIgnore.IntelMap;
 using System;
+using System.ComponentModel;
 using System.Security;
 using System.Windows.Forms;
 
@@ -36,14 +38,11 @@ namespace TestIntelReporter {
             this.UpdateAutoRun();
 
             // Update the status
-            if (!String.IsNullOrEmpty(settings.Username)
-                    && !String.IsNullOrEmpty(settings.PasswordHash)) {
-                logWatcher.Start();
-            }
             this.UpdateStatus();
+            logWatcher.Start();
         }
 
-        public bool HasConfig { get { return logWatcher.IsRunning; } }
+        public bool HasConfig { get { return true; } }
 
         private void UpdateAutoRun() {
             try {
@@ -64,28 +63,33 @@ namespace TestIntelReporter {
 
         private void UpdateStatus() {
             toolStripStatusIntel.Text = string.Format(
-                (logWatcher.IntelReported == 1)
+                (logWatcher.IntelSent == 1)
                     ? Properties.Resources.OneIntelReported
                     : Properties.Resources.MultiIntelReported,
-                logWatcher.IntelReported);
+                logWatcher.IntelSent);
             toolStripStatusUsers.Text = string.Format(
                 (logWatcher.Users == 1)
                     ? Properties.Resources.OneUserReporting
                     : Properties.Resources.MultiUserReporting,
                 logWatcher.Users);
 
-            if (logWatcher.IsConnected) {
-                toolStripStatus.Text = Properties.Resources.AppConnected;
-                toolStripStatusUsers.Visible = true;
-            } else if (logWatcher.BadPassword) {
+            switch (logWatcher.Status) {
+            case IntelStatus.AuthenticationFailure:
                 toolStripStatus.Text = Properties.Resources.AppAuthenticateFailed;
                 toolStripStatusUsers.Visible = false;
-            } else if (logWatcher.IsRunning) {
+                break;
+            case IntelStatus.Running:
+                toolStripStatus.Text = Properties.Resources.AppConnected;
+                toolStripStatusUsers.Visible = true;
+                break;
+            case IntelStatus.Idle:
                 toolStripStatus.Text = Properties.Resources.AppIdle;
                 toolStripStatusUsers.Visible = false;
-            } else {
+                break;
+            default:
                 toolStripStatus.Text = Properties.Resources.AppConfigure;
                 toolStripStatusUsers.Visible = false;
+                break;
             }
         }
 
@@ -194,7 +198,7 @@ namespace TestIntelReporter {
             }
         }
 
-        private void logWatcher_StatusChanged(object sender, EventArgs e) {
+        private void logWatcher_PropertyChanged(object sender, PropertyChangedEventArgs e) {
             if (!this.IsHandleCreated) {
                 this.UpdateStatus();
             } else {

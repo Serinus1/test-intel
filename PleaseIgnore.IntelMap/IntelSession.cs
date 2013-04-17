@@ -32,7 +32,7 @@ namespace PleaseIgnore.IntelMap {
 
         // API response parsers
         private static readonly Regex ErrorResponse  = new Regex(@"^(50?) ERROR (.*)");
-        private static readonly Regex AuthResponse   = new Regex(@"^200 AUTH ([\s]+) (\d+)");
+        private static readonly Regex AuthResponse   = new Regex(@"^200 AUTH ([^\s]+) (\d+)");
         private static readonly Regex IntelResponse  = new Regex(@"^202 INTEL .*");
         private static readonly Regex AliveResponse  = new Regex(@"^203 ALIVE OK (\d+)");
 
@@ -78,10 +78,8 @@ namespace PleaseIgnore.IntelMap {
             if ((match = AuthResponse.Match(response)).Success) {
                 // Successfully authenticated
                 this.username = username;
-                this.session  = match.Groups[3].Value;
-                Contract.Assume(match.Groups[4].Value.Length > 0);
-                Contract.Assume(Contract.ForAll(match.Groups[4].Value, x => Char.IsDigit(x)));
-                this.Users = int.Parse(match.Groups[4].Value, CultureInfo.InvariantCulture);
+                this.session  = match.Groups[1].Value;
+                this.Users = int.Parse(match.Groups[2].Value, CultureInfo.InvariantCulture);
             } else if ((match = ErrorResponse.Match(response)).Success) {
                 // Authentication failed
                 throw new AuthenticationException(match.Groups[2].Value);

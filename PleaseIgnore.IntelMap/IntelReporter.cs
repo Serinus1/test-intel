@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
@@ -11,7 +12,8 @@ using System.Threading;
 
 namespace PleaseIgnore.IntelMap {
     [DefaultEvent("IntelReported")]
-    public sealed class IntelReporter : Component, ISupportInitialize {
+    public sealed class IntelReporter : Component, ISupportInitialize,
+            INotifyPropertyChanged {
         // Signals that the component is currently initializing
         private bool initializing;
         // Signaling the worker thread to start/stop
@@ -274,6 +276,17 @@ namespace PleaseIgnore.IntelMap {
         public event EventHandler<IntelEventArgs> IntelReported;
 
         /// <summary>
+        ///     Occurs when a property value changes.
+        /// </summary>
+        /// <remarks>
+        ///     The <see cref="PropertyChanged"/> event can indicate all properties
+        ///     on the object have changed by using either <see langword="null"/> or
+        ///     <see cref="String.Empty"/> as the property name in the
+        ///     <see cref="PropertyChangedEventArgs"/>.
+        /// </remarks>
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        /// <summary>
         ///     Signals the <see cref="IntelReporter"/> that initialization is
         ///     starting.
         /// </summary>
@@ -429,9 +442,14 @@ namespace PleaseIgnore.IntelMap {
                     while (this.running) {
                         // Update the 'last downtime' estimate
                         var now = DateTime.UtcNow;
-                        this.LastDownTime = (now.TimeOfDay > downtimeStart)
+                        var downTime = (now.TimeOfDay > downtimeStart)
                             ? (now.Date + downtimeStart)
                             : (now.Date + downtimeStart - TimeSpan.FromDays(1));
+                        if (this.LastDownTime != downTime) {
+                            this.LastDownTime = downTime;
+                            channels.ForEach(x => x.Close());
+                            this.OnPropertyChanged("LastDownTime");
+                        }
 
                         // Start scanning from a different log directory
                         if (resetDirectory) {
@@ -502,6 +520,8 @@ namespace PleaseIgnore.IntelMap {
                                         if (!this.session.KeepAlive()) {
                                             this.session.Dispose();
                                             this.session = null;
+                                        } else {
+                                            sessionTimestamp = DateTime.UtcNow;
                                         }
                                     } catch (WebException) {
                                         this.Status = IntelStatus.NetworkFailure;
@@ -551,7 +571,7 @@ namespace PleaseIgnore.IntelMap {
             // Send into the ThreadPool so not to interfere with our processing
             var handler = this.IntelReported;
             if (handler != null) {
-                ThreadPool.QueueUserWorkItem(args => handler(this, (IntelEventArgs)args), e);
+                ThreadPool.QueueUserWorkItem(x => handler(this, e));
             }
 
             // See if it's worth trying again
@@ -560,6 +580,7 @@ namespace PleaseIgnore.IntelMap {
             case IntelStatus.NetworkFailure:
             case IntelStatus.ServerFailure:
                 ++this.IntelDropped;
+                this.OnPropertyChanged("IntelDropped");
                 return false;
             }
 
@@ -625,6 +646,7 @@ namespace PleaseIgnore.IntelMap {
                 // Failed to download the list
                 this.lastFailure = now;
                 this.Status = IntelStatus.NetworkFailure;
+                this.OnPropertyChanged("Status");
             }
         }
 
@@ -650,13 +672,20 @@ namespace PleaseIgnore.IntelMap {
             }
 
             // Once authentication fails, don't try again until the user fixes it
-            if (this.Status == IntelStatus.AuthenticationFailure) {
+            switch (this.Status) {
+            case IntelStatus.AuthenticationFailure:
+            case IntelStatus.NetworkFailure:
+            case IntelStatus.ServerFailure:
                 return false;
-            } else if (String.IsNullOrEmpty(this.username)) {
+            }
+
+            if (String.IsNullOrEmpty(this.username)) {
                 this.Status = IntelStatus.AuthenticationFailure;
+                this.OnPropertyChanged("Status");
                 return false;
             } else if (String.IsNullOrEmpty(this.password)) {
                 this.Status = IntelStatus.AuthenticationFailure;
+                this.OnPropertyChanged("Status");
                 return false;
             }
 
@@ -676,6 +705,7 @@ namespace PleaseIgnore.IntelMap {
             }
 
             this.lastFailure = DateTime.UtcNow;
+            this.OnPropertyChanged("Status");
             return false;
         }
 
@@ -699,7 +729,10 @@ namespace PleaseIgnore.IntelMap {
         private bool SendReport(IntelEventArgs e, bool lastTry) {
             // Require a session to send the attempt
             if (this.session == null) {
-                this.IntelSent += lastTry ? 1 : 0;
+                if (lastTry) {
+                    ++this.IntelDropped;
+                    this.OnPropertyChanged("IntelDropped");
+                }
                 return false;
             }
 
@@ -708,11 +741,15 @@ namespace PleaseIgnore.IntelMap {
                 if (this.session.Report(e.Channel.Name, e.Timestamp, e.Message)) {
                     // Successfully sent
                     ++this.IntelSent;
+                    this.OnPropertyChanged("IntelSent");
                     return true;
                 } else {
                     // Session expired
                     this.session = null;
-                    this.IntelSent += lastTry ? 1 : 0;
+                    if (lastTry) {
+                        ++this.IntelDropped;
+                        this.OnPropertyChanged("IntelDropped");
+                    }
                     return false;
                 }
             } catch (WebException) {
@@ -724,8 +761,27 @@ namespace PleaseIgnore.IntelMap {
             }
             
             ++this.IntelDropped;
+            this.OnPropertyChanged("IntelDropped");
             this.lastFailure = DateTime.UtcNow;
             return false;
+        }
+
+        /// <summary>
+        ///     Raises the <see cref="PropertyChanged"/> event.
+        /// </summary>
+        private void OnPropertyChanged(string propertyName) {
+#if DEBUG
+            // Verify that propertyName actually exists
+            if (!String.IsNullOrEmpty(propertyName)) {
+                Debug.Assert(this.GetType().GetProperty(propertyName) != null);
+            }
+#endif
+
+            var handler = this.PropertyChanged;
+            if (handler != null) {
+                ThreadPool.QueueUserWorkItem(x => handler(this,
+                    new PropertyChangedEventArgs(propertyName)));
+            }
         }
 
         /// <summary>

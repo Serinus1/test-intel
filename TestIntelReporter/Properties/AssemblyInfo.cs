@@ -1,20 +1,12 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Reflection;
 using System.Resources;
 using System.Runtime.InteropServices;
 
-[assembly: AssemblyTitle("TestIntelReporter")]
-[assembly: AssemblyDescription("TEST Intelligence Reporting Tool")]
-[assembly: AssemblyProduct("TEST Intelligence Reporting Tool")]
-[assembly: AssemblyCompany("TEST Alliance Please Ignore")]
-[assembly: AssemblyCopyright("Copyright © 2013 Something-or-other")]
-[assembly: AssemblyTrademark("")]
+[assembly: AssemblyTitle("TEST Alliance Intel Map Reporting Tool")]
+[assembly: AssemblyDescription("Scans the EVE client chat logs and "
+    + "forwards intel to the TEST Alliance Intel Map")]
 [assembly: AssemblyCulture("")]
-[assembly: AssemblyVersion("0.1.0.0")]
-[assembly: AssemblyInformationalVersion("0.1.0.1")]
-#if DEBUG
-[assembly: AssemblyConfiguration("Debug")]
-#else
-[assembly: AssemblyConfiguration("Release")]
-#endif
 [assembly: NeutralResourcesLanguage("en-US")]
 [assembly: ComVisible(false)]
+[assembly: Guid("23c55c96-3331-498f-9419-37bf726a2702")]

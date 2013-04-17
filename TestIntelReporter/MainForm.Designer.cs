@@ -61,7 +61,7 @@
             this.toolStripStatus = new System.Windows.Forms.ToolStripStatusLabel();
             this.toolStripStatusUsers = new System.Windows.Forms.ToolStripStatusLabel();
             this.toolStripStatusIntel = new System.Windows.Forms.ToolStripStatusLabel();
-            this.logWatcher = new TestIntelReporter.LogWatcher(this.components);
+            this.logWatcher = new PleaseIgnore.IntelMap.IntelReporter(this.components);
             this.tabControl.SuspendLayout();
             this.configurationPage.SuspendLayout();
             this.configLayoutPanel.SuspendLayout();
@@ -70,6 +70,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.aboutImage)).BeginInit();
             this.notifyIconMenu.SuspendLayout();
             this.statusStrip.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.logWatcher)).BeginInit();
             this.SuspendLayout();
             // 
             // tabControl
@@ -432,7 +433,11 @@
             // 
             // logWatcher
             // 
-            this.logWatcher.StatusChanged += new System.EventHandler(this.logWatcher_StatusChanged);
+            this.logWatcher.ChannelUpdatePeriod = System.TimeSpan.Parse("1.00:00:00");
+            this.logWatcher.LogDirectory = "C:\\Users\\mcgee\\Documents\\EVE\\logs\\Chatlogs";
+            this.logWatcher.PasswordHash = "";
+            this.logWatcher.Username = "";
+            this.logWatcher.PropertyChanged += new System.ComponentModel.PropertyChangedEventHandler(this.logWatcher_PropertyChanged);
             // 
             // MainForm
             // 
@@ -458,6 +463,7 @@
             this.notifyIconMenu.ResumeLayout(false);
             this.statusStrip.ResumeLayout(false);
             this.statusStrip.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.logWatcher)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -479,7 +485,7 @@
         private System.Windows.Forms.ToolStripMenuItem configurationToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem quitToolStripMenuItem;
-        private LogWatcher logWatcher;
+        private PleaseIgnore.IntelMap.IntelReporter logWatcher;
         private System.Windows.Forms.Button buttonBrowse;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.TextBox textLogDirectory;
