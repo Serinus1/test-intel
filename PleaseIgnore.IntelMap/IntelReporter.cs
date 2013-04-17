@@ -354,6 +354,7 @@ namespace PleaseIgnore.IntelMap {
                 if (!this.initializing && !this.DesignMode
                         && (this.thread == null)) {
                     this.thread = new Thread(this.ThreadMain);
+                    this.thread.Start();
                 }
             }
         }
@@ -597,7 +598,7 @@ namespace PleaseIgnore.IntelMap {
 
             // Check for expiration
             var now = DateTime.UtcNow;
-            if (now - this.channelTimestamp > this.ChannelUpdatePeriod) {
+            if (now - this.channelTimestamp < this.ChannelUpdatePeriod) {
                 return;
             }
 
