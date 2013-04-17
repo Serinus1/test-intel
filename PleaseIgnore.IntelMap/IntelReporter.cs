@@ -53,6 +53,8 @@ namespace PleaseIgnore.IntelMap {
             "Chatlogs");
         // The keep-alive period for the intel session
         private static readonly TimeSpan keepalivePeriod = new TimeSpan(0, 1, 0);
+        // The time each day when downtime starts
+        private static readonly TimeSpan downtimeStart = new TimeSpan(11, 0, 0);
         
         /// <summary>
         ///     Initializes a new instance of the <see cref="IntelReporter"/>
@@ -122,6 +124,13 @@ namespace PleaseIgnore.IntelMap {
         /// </summary>
         [DefaultValue(typeof(TimeSpan), "00:10:00"), Category("Behavior")]
         public TimeSpan RetryPeriod { get; set; }
+
+        /// <summary>
+        ///     Gets the date and time of the most recent Tranquility cluster
+        ///     downtime.
+        /// </summary>
+        [Browsable(false)]
+        public DateTime LastDownTime { get; private set; }
 
         /// <summary>
         ///     Gets or sets the TEST Alliance AUTH username.
@@ -417,11 +426,18 @@ namespace PleaseIgnore.IntelMap {
 
                     // The main loop
                     while (this.running) {
+                        // Update the 'last downtime' estimate
+                        var now = DateTime.UtcNow;
+                        this.LastDownTime = (now.TimeOfDay > downtimeStart)
+                            ? (now.Date + downtimeStart)
+                            : (now.Date + downtimeStart - TimeSpan.FromDays(1));
+
                         // Start scanning from a different log directory
                         if (resetDirectory) {
                             resetDirectory = false;
                             watcher.Path = this.LogDirectory;
                             channels.ForEach(x => x.Close());
+                            channels.ForEach(x => x.Rescan());
                         }
 
                         // Keep the channel list up to date
@@ -596,14 +612,12 @@ namespace PleaseIgnore.IntelMap {
                 }
 
                 // Look for channels to add
-                channels.AddRange(list
-                    .Where(x => !channels.Any(y => y.Name == x))
-                    .Select(x => new IntelChannel(this, x))
-                    .ToArray());
+                foreach (var x in list.Where(x => !channels.Any(y => y.Name == x)).ToArray()) {
+                    var channel = new IntelChannel(this, x);
+                    channel.Rescan();
+                    channels.Add(channel);
+                }
 
-                // Appeal to my OCD
-                channels.Sort((x, y) => String.Compare(x.Name, y.Name,
-                    StringComparison.OrdinalIgnoreCase));
                 // Update timestamp
                 this.channelTimestamp = now;
             } catch (WebException) {
@@ -636,6 +650,12 @@ namespace PleaseIgnore.IntelMap {
 
             // Once authentication fails, don't try again until the user fixes it
             if (this.Status == IntelStatus.AuthenticationFailure) {
+                return false;
+            } else if (String.IsNullOrEmpty(this.username)) {
+                this.Status = IntelStatus.AuthenticationFailure;
+                return false;
+            } else if (String.IsNullOrEmpty(this.password)) {
+                this.Status = IntelStatus.AuthenticationFailure;
                 return false;
             }
 

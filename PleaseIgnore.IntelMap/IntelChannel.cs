@@ -2,6 +2,7 @@
 using System.Diagnostics.Contracts;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace PleaseIgnore.IntelMap {
@@ -57,6 +58,10 @@ namespace PleaseIgnore.IntelMap {
         private static readonly Regex Parser = new Regex(
             @"\[\s*(\d{4})\.(\d{2})\.(\d{2})\s+(\d{2}):(\d{2}):(\d{2})\s*\](.*)$",
             RegexOptions.CultureInvariant);
+        // Regular Expression used to extract the timestamp from the filename.
+        private static readonly Regex FilenameParser = new Regex(
+            @"_(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})\.txt$",
+            RegexOptions.CultureInvariant);
 
         /// <summary>
         ///     Initializes a new instance of the <see cref="IntelChannel"/> class.
@@ -90,6 +95,10 @@ namespace PleaseIgnore.IntelMap {
         /// </summary>
         public FileInfo LogFile { get; private set; }
 
+        /// <summary>
+        ///     Called by <see cref="IntelReporter"/> to notify us of changes to
+        ///     the filesystem.
+        /// </summary>
         internal void OnFileEvent(FileSystemEventArgs e) {
             Contract.Requires(e != null);
             if (Matches(e.Name)) {
@@ -97,6 +106,13 @@ namespace PleaseIgnore.IntelMap {
             }
         }
 
+        /// <summary>
+        ///     Call this periodically to rescan the log file for new log
+        ///     entries.
+        /// </summary>
+        /// <returns>
+        ///     Number of intel reports parsed from the log file.
+        /// </returns>
         internal int Tick() {
             Contract.Ensures(Contract.Result<int>() >= 0);
 
@@ -136,6 +152,10 @@ namespace PleaseIgnore.IntelMap {
             return intelRead;
         }
 
+        /// <summary>
+        ///     Called by <see cref="IntelReporter"/> to force us to close our
+        ///     log file.
+        /// </summary>
         internal void Close() {
             if (activeFile != null) {
                 try {
@@ -149,9 +169,56 @@ namespace PleaseIgnore.IntelMap {
         }
 
         /// <summary>
+        ///     Called by <see cref="IntelReporter"/> to force us to scan the
+        ///     log directory for new log files.
+        /// </summary>
+        internal void Rescan() {
+            try {
+                var logDir = this.IntelReporter.LogDirectory;
+                if (logDir == null) {
+                    return;
+                }
+
+                var infoDir = new DirectoryInfo(logDir);
+                var infoLog = infoDir.GetFiles(this.Name + "_*.txt")
+                    .Select(x => new { File = x, Timestamp = ParseTimeStamp(x) })
+                    .Where(x => x.Timestamp > this.IntelReporter.LastDownTime)
+                    .OrderByDescending(x => x.Timestamp)
+                    .Select(x => x.File)
+                    .FirstOrDefault();
+                if (infoLog != null) {
+                    SwitchTo(infoLog);
+                }
+            } catch (IOException) {
+            }
+        }
+
+        /// <summary>
+        ///     Extracts the timestamp from a log's filename.
+        /// </summary>
+        [Pure]
+        private static DateTime ParseTimeStamp(FileInfo file) {
+            Contract.Requires(file != null);
+            var match = FilenameParser.Match(file.Name);
+            if (match.Success) {
+                return new DateTime(
+                    int.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture),
+                    int.Parse(match.Groups[2].Value, CultureInfo.InvariantCulture),
+                    int.Parse(match.Groups[3].Value, CultureInfo.InvariantCulture),
+                    int.Parse(match.Groups[4].Value, CultureInfo.InvariantCulture),
+                    int.Parse(match.Groups[5].Value, CultureInfo.InvariantCulture),
+                    int.Parse(match.Groups[6].Value, CultureInfo.InvariantCulture),
+                    DateTimeKind.Utc);
+            } else {
+                return DateTime.MinValue;
+            }
+        }
+
+        /// <summary>
         ///     Tests the filename of a log file to see if it corresponds to
         ///     the channel we are watching.
         /// </summary>
+        [Pure]
         private bool Matches(string filename) {
             Contract.Requires(filename != null);
             return filename.StartsWith(this.Name + '_',
