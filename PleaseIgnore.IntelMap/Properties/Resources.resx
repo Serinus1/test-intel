@@ -117,13 +117,19 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="ArgumentException_WrongObject" xml:space="preserve">
+    <value>IAsyncResult object did not come from the corresponding async method on this type.</value>
+  </data>
   <data name="IntelException" xml:space="preserve">
-    <value>An unknown error has occured communicating with the intel reporting server.</value>
+    <value>The TEST Intel Map server responded in an expected manner.</value>
   </data>
   <data name="IntelSession_Connected" xml:space="preserve">
     <value>{0}: Connected ({1} Users; {2} Reports Sent)</value>
   </data>
   <data name="IntelSession_Disposed" xml:space="preserve">
     <value>{0}: Disposed ({2} Reports Sent)</value>
+  </data>
+  <data name="InvalidOperation_MultipleCalls" xml:space="preserve">
+    <value>{0} can only be called once for each asynchronous operation.</value>
   </data>
 </root>

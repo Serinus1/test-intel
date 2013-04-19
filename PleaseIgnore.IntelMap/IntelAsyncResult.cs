@@ -23,14 +23,12 @@ namespace PleaseIgnore.IntelMap {
         private readonly object state;
         // The object that created this IntelAsyncResult
         private readonly TOwner owner;
-        // Set to true to prevent multiple invocations of End*()
-        private bool disposed;
+        // Number of waits made on End*()
+        private int waitCount;
         // Set to true once the asynchronous execution has completed
         private bool completed;
         // Set to true if the execution was completed synchronously
         private bool synchronous;
-        // Set to true if we have entered End*() and are waiting for completion
-        private bool waiting;
         // The return value of a successful asynchronous execution
         private TResult result;
         // The exception object for an unsuccessful asychronous execution
@@ -54,7 +52,7 @@ namespace PleaseIgnore.IntelMap {
         ///     The value of <see cref="AsyncState"/>.  This can be
         ///     <see langword="null"/>.
         /// </param>
-        internal IntelAsyncResult(TOwner owner, AsyncCallback callback, object state) {
+        protected IntelAsyncResult(TOwner owner, AsyncCallback callback, object state) {
             Contract.Requires(owner != null);
             this.owner = owner;
             this.callback = callback;
@@ -85,16 +83,26 @@ namespace PleaseIgnore.IntelMap {
         /// </summary>
         public WaitHandle AsyncWaitHandle {
             get {
-                lock (this) {
-                    if (this.disposed) {
-                        throw new InvalidOperationException();
-                    } else if (this.waitHandle == null) {
-                        this.waitHandle = new ManualResetEvent(this.completed);
-                    }
-                    return this.waitHandle;
+                var handle = new ManualResetEvent(false);
+                var oldhandle = Interlocked.CompareExchange(
+                    ref this.waitHandle,
+                    handle,
+                    null);
+                if (this.completed) {
+                    this.waitHandle.Set();
                 }
+                if (oldhandle != null) {
+                    handle.Close();
+                }
+                return this.waitHandle;
             }
         }
+
+        /// <summary>
+        ///     Gets the instance of <see cref="TOwner"/> executing this
+        ///     <see cref="IAsyncResult"/>.
+        /// </summary>
+        protected TOwner Owner { get { return this.owner; } }
 
         /// <summary>
         ///     Signals that the asychronous operation has completed
@@ -108,18 +116,17 @@ namespace PleaseIgnore.IntelMap {
         ///     initialization, it will be queued onto the
         ///     <see cref="ThreadPool"/>.
         /// </remarks>
-        internal void AsyncComplete(TResult result) {
-            lock (this) {
-                Debug.Assert(!this.completed);
-                this.completed = true;
-                this.result = result;
-                if (this.waitHandle != null) {
-                    this.waitHandle.Set();
-                }
+        protected void AsyncComplete(TResult result) {
+            Debug.Assert(!this.completed);
+            this.completed = true;
+            this.result = result;
+            Thread.MemoryBarrier();
+            if (this.waitHandle != null) {
+                this.waitHandle.Set();
             }
 
-            if (callback != null) {
-                ThreadPool.QueueUserWorkItem(x => callback(this));
+            if (this.callback != null) {
+                ThreadPool.QueueUserWorkItem(this.UserCallback);
             }
         }
 
@@ -135,19 +142,18 @@ namespace PleaseIgnore.IntelMap {
         ///     initialization, it will be queued onto the
         ///     <see cref="ThreadPool"/>.
         /// </remarks>
-        internal void AsyncComplete(Exception exception) {
+        protected void AsyncComplete(Exception exception) {
             Contract.Requires(exception != null);
-            lock (this) {
-                Debug.Assert(!this.completed);
-                this.completed = true;
-                this.exception = exception;
-                if (this.waitHandle != null) {
-                    this.waitHandle.Set();
-                }
+            Debug.Assert(!this.completed);
+            this.completed = true;
+            this.exception = exception;
+            Thread.MemoryBarrier();
+            if (this.waitHandle != null) {
+                this.waitHandle.Set();
             }
 
             if (callback != null) {
-                ThreadPool.QueueUserWorkItem(x => callback(this));
+                ThreadPool.QueueUserWorkItem(this.UserCallback);
             }
         }
 
@@ -162,13 +168,14 @@ namespace PleaseIgnore.IntelMap {
         ///     If a callback was provided at <see cref="IntelAsyncResult"/>
         ///     initialization, it will be called immediately.
         /// </remarks>
-        internal void SyncComplete(TResult result) {
-            lock (this) {
-                Debug.Assert(this.waitHandle == null);
-                Debug.Assert(!this.completed);
-                this.completed = true;
-                this.result = result;
-                this.synchronous = true;
+        protected void SyncComplete(TResult result) {
+            Debug.Assert(!this.completed);
+            this.completed = true;
+            this.synchronous = true;
+            this.result = result;
+            Thread.MemoryBarrier();
+            if (this.waitHandle != null) {
+                this.waitHandle.Set();
             }
 
             if (callback != null) {
@@ -187,14 +194,15 @@ namespace PleaseIgnore.IntelMap {
         ///     If a callback was provided at <see cref="IntelAsyncResult"/>
         ///     initialization, it will be called immediately.
         /// </remarks>
-        internal void SyncComplete(Exception exception) {
+        protected void SyncComplete(Exception exception) {
             Contract.Requires(exception != null);
-            lock (this) {
-                Debug.Assert(this.waitHandle == null);
-                Debug.Assert(!this.completed);
-                this.completed = true;
-                this.exception = exception;
-                this.synchronous = true;
+            Debug.Assert(!this.completed);
+            this.completed = true;
+            this.synchronous = true;
+            this.exception = exception;
+            Thread.MemoryBarrier();
+            if (this.waitHandle != null) {
+                this.waitHandle.Set();
             }
 
             if (callback != null) {
@@ -210,33 +218,21 @@ namespace PleaseIgnore.IntelMap {
         ///     The value provided to <see cref="AsyncComplete(TResult)"/> or
         ///     <see cref="SyncComplete(TResult)"/>.
         /// </returns>
-        internal TResult Wait(TOwner owner) {
+        protected TResult Wait(TOwner owner, string methodName) {
             if (this.owner != owner) {
-                throw new ArgumentException();
+                throw new ArgumentException(Properties.Resources
+                    .ArgumentException_WrongObject);
             }
 
-            WaitHandle handle = null;
-            lock (this) {
-                if (this.disposed) {
-                    throw new InvalidOperationException();
-                } else if (this.waiting) {
-                    throw new InvalidOperationException();
-                } else if (!this.completed) {
-                    handle = this.AsyncWaitHandle;
-                }
-                this.waiting = true;
+            var old = Interlocked.CompareExchange(ref waitCount, 1, 0);
+            if (old != 0) {
+                throw new InvalidOperationException(string.Format(
+                    Properties.Resources.InvalidOperation_MultipleCalls,
+                    methodName));
             }
 
-            if (handle != null) {
-                handle.WaitOne();
-            }
-
-            lock (this) {
-                this.disposed = true;
-                this.waitHandle = null;
-                if (handle != null) {
-                    handle.Dispose();
-                }
+            if (!this.completed) {
+                this.AsyncWaitHandle.WaitOne();
             }
 
             if (this.exception != null) {
@@ -244,6 +240,13 @@ namespace PleaseIgnore.IntelMap {
             } else {
                 return this.result;
             }
+        }
+
+        /// <summary>
+        ///     ThreadPool callback.
+        /// </summary>
+        private void UserCallback(object state) {
+            this.callback(this);
         }
     }
 }

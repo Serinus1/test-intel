@@ -61,7 +61,16 @@ namespace PleaseIgnore.IntelMap.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to An unknown error has occured communicating with the intel reporting server..
+        ///   Looks up a localized string similar to IAsyncResult object did not come from the corresponding async method on this type..
+        /// </summary>
+        internal static string ArgumentException_WrongObject {
+            get {
+                return ResourceManager.GetString("ArgumentException_WrongObject", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The TEST Intel Map server responded in an expected manner..
         /// </summary>
         internal static string IntelException {
             get {
@@ -84,6 +93,15 @@ namespace PleaseIgnore.IntelMap.Properties {
         internal static string IntelSession_Disposed {
             get {
                 return ResourceManager.GetString("IntelSession_Disposed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} can only be called once for each asynchronous operation..
+        /// </summary>
+        internal static string InvalidOperation_MultipleCalls {
+            get {
+                return ResourceManager.GetString("InvalidOperation_MultipleCalls", resourceCulture);
             }
         }
     }
