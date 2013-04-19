@@ -61,6 +61,15 @@ namespace PleaseIgnore.IntelMap.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The directory {0} does not exist..
+        /// </summary>
+        internal static string ArgumentException_DirNotExist {
+            get {
+                return ResourceManager.GetString("ArgumentException_DirNotExist", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to IAsyncResult object did not come from the corresponding async method on this type..
         /// </summary>
         internal static string ArgumentException_WrongObject {

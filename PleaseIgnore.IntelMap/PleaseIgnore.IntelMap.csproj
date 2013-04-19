@@ -158,6 +158,7 @@
     <Compile Include="..\ProductInfo.cs">
       <Link>Properties\ProductInfo.cs</Link>
     </Compile>
+    <Compile Include="IntelChannelCollection.cs" />
     <Compile Include="IntelAsyncResult.cs" />
     <Compile Include="IntelChannel.cs" />
     <Compile Include="IntelEventArgs.cs" />

@@ -1,83 +1,53 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
+using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Security.Authentication;
 using System.Threading;
 
 namespace PleaseIgnore.IntelMap {
+    /// <summary>
+    ///     Provides a component to monitor EVE log files and report new
+    ///     entries to the TEST Intel Map for distribution.
+    /// </summary>
     [DefaultEvent("IntelReported")]
     public sealed class IntelReporter : Component, ISupportInitialize,
             INotifyPropertyChanged {
+        #region Lifecycle
         // Signals that the component is currently initializing
         private bool initializing;
-        // Signaling the worker thread to start/stop
-        private volatile bool running;
-        // Signaling the worker thread to reset the logDirectory
-        private volatile bool resetDirectory;
-        // Signaling the worker thread to reauthenticate
-        private volatile bool authenticate;
-        // Signals the worker thread to process a signal
-        private AutoResetEvent signal;
-        // Synchronization object
-        private object syncObject;
 
-        // Thread used for enternal monitoring
-        private Thread thread;
-        // List of active IntelChannels
-        private List<IntelChannel> channels;
-        // Last time the channel list was updated
-        private DateTime channelTimestamp;
-        // File system event queue
-        private ConcurrentQueue<FileSystemEventArgs> watcherEvents;
-        // The intel reporting server session
-        private IntelSession session;
-        // The last time we failed to contact the server
-        private DateTime lastFailure;
-
-        // The overridden file directory for EVE logs
-        private volatile string logDirectory;
-        // The AUTH username
-        private volatile string username;
-        // The hashed services password
-        private volatile string password;
-        
-        // The default file directory for EVE logs
-        private static readonly string defaultLogDirectory = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-            "EVE",
-            "logs",
-            "Chatlogs");
-        // The keep-alive period for the intel session
-        private static readonly TimeSpan keepalivePeriod = new TimeSpan(0, 1, 0);
-        // The time each day when downtime starts
-        private static readonly TimeSpan downtimeStart = new TimeSpan(11, 0, 0);
-        
         /// <summary>
         ///     Initializes a new instance of the <see cref="IntelReporter"/>
         ///     class.
         /// </summary>
         public IntelReporter() {
-            this.signal = new AutoResetEvent(false);
-            this.watcherEvents = new ConcurrentQueue<FileSystemEventArgs>();
-            this.syncObject = new object();
-            this.channels = new List<IntelChannel>();
+            Contract.Ensures(this.Container == null);
 
-            this.ChannelUpdatePeriod = new TimeSpan(24, 0, 0);
-            this.ChannelScanFrequency = new TimeSpan(0, 0, 5);
-            this.RetryPeriod = new TimeSpan(0, 10, 0);
-            this.username = String.Empty;
-            this.password = String.Empty;
+            this.ChannelDownloadPeriod = TimeSpan.Parse(
+                defaultChannelDownloadPeriod,
+                CultureInfo.InvariantCulture);
+            this.KeepAlivePeriod = TimeSpan.Parse(
+                defaultKeepAlivePeriod,
+                CultureInfo.InvariantCulture);
+            this.ChannelScanPeriod = TimeSpan.Parse(
+                defaultChannelScanPeriod,
+                CultureInfo.InvariantCulture);
+            this.RetryPeriod = TimeSpan.Parse(
+                defaultRetryPeriod,
+                CultureInfo.InvariantCulture);
+            this.UpdateDowntime(false);
+
+            this.channels = new IntelChannelCollection(this);
         }
 
         /// <summary>
         ///     Initializes a new instance of the <see cref="IntelReporter"/>
-        ///     class with the specified <see cref="Container"/>.
+        ///     class and adds it to the specified <see cref="Container"/>.
         /// </summary>
         public IntelReporter(IContainer container) : this() {
             Contract.Ensures(this.Container == container);
@@ -85,206 +55,6 @@ namespace PleaseIgnore.IntelMap {
                 container.Add(this);
             }
         }
-
-        /// <summary>
-        ///     Gets or sets a value indicating whether the
-        ///     <see cref="IntelReporter"/> actively parsing and reporting
-        ///     data from the log files.
-        /// </summary>
-        /// <seealso cref="Start"/>
-        /// <seealso cref="Stop"/>
-        [DefaultValue(false), Category("Behavior")]
-        public bool Enabled {
-            get {
-                return this.running;
-            }
-            set {
-                Contract.Ensures(this.Enabled == value);
-                if (value) {
-                    Start();
-                } else {
-                    Stop();
-                }
-            }
-        }
-
-        /// <summary>
-        ///     Gets or sets the time between updates of the intel channel list.
-        /// </summary>
-        [DefaultValue(typeof(TimeSpan), "24:00:00"), Category("Behavior")]
-        public TimeSpan ChannelUpdatePeriod { get; set; }
-
-        /// <summary>
-        ///     Gets or sets the time between scans of the chat logs for new intel.
-        /// </summary>
-        [DefaultValue(typeof(TimeSpan), "00:00:05"), Category("Behavior")]
-        public TimeSpan ChannelScanFrequency { get; set; }
-
-        /// <summary>
-        ///     Gets or sets the time to back off attempting to contact the server
-        ///     again if networking problems prevent communication.
-        /// </summary>
-        [DefaultValue(typeof(TimeSpan), "00:10:00"), Category("Behavior")]
-        public TimeSpan RetryPeriod { get; set; }
-
-        /// <summary>
-        ///     Gets the date and time of the most recent Tranquility cluster
-        ///     downtime.
-        /// </summary>
-        [Browsable(false)]
-        public DateTime LastDownTime { get; private set; }
-
-        /// <summary>
-        ///     Gets or sets the TEST Alliance AUTH username.
-        /// </summary>
-        /// <remarks>
-        ///     Changing the username or password will force a reauthentication
-        ///     against the intel reporting server if the monitoring service is
-        ///     running.  This means that changing both may force two separate
-        ///     authentications.  Use <see cref="Authenticate"/> to change the
-        ///     username and password once the service has already started.
-        /// </remarks>
-        /// <see cref="Authenticate"/>
-        /// <see cref="Password"/>
-        /// <see cref="PasswordHash"/>
-        [DefaultValue((String)null), Category("Behavior")]
-        public string Username {
-            get {
-                return this.username;
-            }
-            set {
-                if (this.username != null) {
-                    this.username = value;
-                    this.authenticate = true;
-                    signal.Set();
-                }
-            }
-        }
-
-        /// <summary>
-        ///     Gets or sets the hashed services password for the user.
-        /// </summary>
-        /// <remarks>
-        ///     Changing the username or password will force a reauthentication
-        ///     against the intel reporting server if the monitoring service is
-        ///     running.  This means that changing both may force two separate
-        ///     authentications.  Use <see cref="Authenticate"/> to change the
-        ///     username and password once the service has already started.
-        /// </remarks>
-        /// <see cref="Authenticate"/>
-        /// <see cref="Password"/>
-        /// <see cref="Username"/>
-        [DefaultValue((String)null), Category("Behavior")]
-        public string PasswordHash {
-            get {
-                return this.password;
-            }
-            set {
-                if (this.password != value) {
-                    this.password = value;
-                    this.authenticate = true;
-                    signal.Set();
-                }
-            }
-        }
-
-        /// <summary>
-        ///     Sets the hashed password by automatically hashing and storing the
-        ///     plaintext password.
-        /// </summary>
-        /// <remarks>
-        ///     Changing the username or password will force a reauthentication
-        ///     against the intel reporting server if the monitoring service is
-        ///     running.  This means that changing both may force two separate
-        ///     authentications.  Use <see cref="Authenticate"/> to change the
-        ///     username and password once the service has already started.
-        /// </remarks>
-        /// <see cref="Authenticate"/>
-        /// <see cref="PasswordHash"/>
-        /// <see cref="Username"/>
-        [Browsable(false)]
-        public string Password {
-            set {
-                Contract.Requires<ArgumentNullException>(value != null, "value");
-                this.PasswordHash = IntelSession.HashPassword(value);
-            }
-        }
-
-        /// <summary>
-        ///     Gets or sets the directory path to find EVE chat logs.
-        /// </summary>
-        [AmbientValue((String)null), DefaultValue((String)null), Category("Behavior")]
-        public string LogDirectory {
-            get {
-                Contract.Ensures(!String.IsNullOrEmpty(Contract.Result<string>()));
-                return String.IsNullOrEmpty(this.logDirectory)
-                    ? defaultLogDirectory
-                    : this.logDirectory;
-            }
-            set {
-                if (this.logDirectory != value) {
-                    this.logDirectory = value;
-                    this.resetDirectory = true;
-                    signal.Set();
-                }
-            }
-        }
-
-        /// <summary>
-        ///     Gets the number of events sent to the intel reporting server.
-        /// </summary>
-        [Browsable(false)]
-        public int IntelSent { get; private set; }
-
-        /// <summary>
-        ///     Gets the number of events that were dropped because of network
-        ///     or server errors.
-        /// </summary>
-        [Browsable(false)]
-        public int IntelDropped { get; private set; }
-
-        /// <summary>
-        ///     Gets the current state of the intel reporting engine.
-        /// </summary>
-        [Browsable(false)]
-        public IntelStatus Status { get; private set;  }
-
-        /// <summary>
-        ///     Gets the number of users currently reporting intelligence.
-        /// </summary>
-        /// <value>
-        ///     The number of users reporting intelligence.  The value is
-        ///     undefined if we are not currently connected to the server.
-        /// </value>
-        [Browsable(false)]
-        public int Users {
-            get {
-                Contract.Ensures(Contract.Result<int>() >= 0);
-                var session = this.session;
-                return (session != null) ? session.Users : 0;
-            }
-        }
-
-        /// <summary>
-        ///     Raised when a new intel report has been parsed from a log file.
-        /// </summary>
-        /// <remarks>
-        ///     This call will be made from the <see cref="ThreadPool"/>.  The
-        ///     consumer will need synchronize to their local threads as
-        ///     appropriate.
-        /// </remarks>
-        public event EventHandler<IntelEventArgs> IntelReported;
-
-        /// <summary>
-        ///     Occurs when a property value changes.
-        /// </summary>
-        /// <remarks>
-        ///     The <see cref="PropertyChanged"/> event can indicate all properties
-        ///     on the object have changed by using either <see langword="null"/> or
-        ///     <see cref="String.Empty"/> as the property name in the
-        ///     <see cref="PropertyChangedEventArgs"/>.
-        /// </remarks>
-        public event PropertyChangedEventHandler PropertyChanged;
 
         /// <summary>
         ///     Signals the <see cref="IntelReporter"/> that initialization is
@@ -317,6 +87,238 @@ namespace PleaseIgnore.IntelMap {
             }
         }
 
+        /// <inheritdoc/>
+        protected override void Dispose(bool disposing) {
+            if (disposing) {
+                Stop();
+                signal.Dispose();
+            }
+            base.Dispose(disposing);
+        }
+        #endregion
+
+        #region Worker Thread
+        // Signaling the worker thread to start/stop
+        [ContractPublicPropertyName("Enabled")]
+        private volatile bool running;
+        // Signals the worker thread to leave sleep and process its queues
+        private readonly AutoResetEvent signal = new AutoResetEvent(false);
+        // Queue of asynchronous actions to execute on the worker thread
+        private readonly ConcurrentQueue<Action> actionQueue = new ConcurrentQueue<Action>();
+        // Worker thread used for server communications and file monitoring
+        private Thread thread;
+        // Synchronization object for manipulating the thread state
+        private readonly object syncRoot = new object();
+
+        /// <summary>
+        ///     Gets or sets a value indicating whether the
+        ///     <see cref="IntelReporter"/> actively parsing and reporting
+        ///     data from the log files.
+        /// </summary>
+        /// <seealso cref="Start"/>
+        /// <seealso cref="Stop"/>
+        [DefaultValue(false), Category("Behavior")]
+        public bool Enabled {
+            get {
+                return this.running;
+            }
+            set {
+                Contract.Ensures(this.Enabled == value);
+                if (value) {
+                    Start();
+                } else {
+                    Stop();
+                }
+            }
+        }
+
+        /// <summary>
+        ///     Starts the worker thread (if not already running) and begins
+        ///     reporting log entries.  This is equivalent to setting
+        ///     <see cref="Enabled"/> to <param langword="true"/>.
+        /// </summary>
+        public void Start() {
+            Contract.Ensures(this.Enabled == true);
+
+            lock (syncRoot) {
+                this.running = true;
+                if ((thread == null) && !this.initializing && !this.DesignMode) {
+                    this.thread = new Thread(this.ThreadMain);
+                    this.thread.Start();
+                }
+            }
+        }
+
+        /// <summary>
+        ///     Stops the worker thread and ceases all activity within
+        ///     <see cref="IntelReporter"/>. This is equivalent to setting
+        ///     <see cref="Enabled"/> to <param langword="false"/>.
+        /// </summary>
+        public void Stop() {
+            Contract.Ensures(this.Enabled == false);
+
+            lock (syncRoot) {
+                this.running = false;
+                if (thread != null) {
+                    signal.Set();
+                    thread.Join();
+                    thread = null;
+                }
+            }
+        }
+
+        /// <summary>
+        ///     Worker thread main loop.
+        /// </summary>
+        private void ThreadMain() {
+            try {
+                // Initialize I/O
+                channels.RescanAll();
+                this.CreateFileWatcher();
+
+                while (this.running) {
+                    // Check for downtime changes
+                    this.UpdateDowntime(true);
+
+                    // Execute deferred actions
+                    Action action;
+                    while (actionQueue.TryDequeue(out action)) {
+                        action();
+                    }
+
+                    // Rummage through the log files
+                    channels.Tick();
+
+                    // Sleep until we have something to do
+                    signal.WaitOne(this.ChannelScanPeriod);
+                }
+            } finally {
+                this.DestroyFileWatcher();
+                channels.CloseAll();
+                this.CloseSession();
+            }
+        }
+        #endregion
+
+        #region Authentication
+        /// <summary>
+        ///     Gets or sets the TEST Alliance AUTH username.
+        /// </summary>
+        /// <remarks>
+        ///     Changing the username or password will force a reauthentication
+        ///     against the intel reporting server if the monitoring service is
+        ///     running.  This means that changing both may force two separate
+        ///     authentications.  Use <see cref="Authenticate"/> to change the
+        ///     username and password once the service has already started.
+        /// </remarks>
+        [DefaultValue((String)null), Category("Behavior")]
+        public string Username { get; set; }
+
+        /// <summary>
+        ///     Gets or sets the <em>hashed</em> services password for the user.
+        /// </summary>
+        [DefaultValue((String)null), Category("Behavior")]
+        public string PasswordHash { get; set; }
+
+        /// <summary>
+        ///     Sets the hashed password by automatically hashing and storing the
+        ///     plaintext password.
+        /// </summary>
+        [Browsable(false)]
+        public string Password {
+            set {
+                this.PasswordHash = !String.IsNullOrEmpty(value)
+                    ? IntelSession.HashPassword(value)
+                    : null;
+            }
+        }
+
+        /// <summary>
+        ///     Provides the asynchronous implementation of Authenticate()
+        /// </summary>
+        private class AuthenticateAsyncResult : IntelAsyncResult<IntelReporter, bool> {
+            private readonly string username;
+            private readonly string password;
+
+            public AuthenticateAsyncResult(IntelReporter owner, AsyncCallback callback,
+                    object state, string username, string password)
+                    : base(owner, callback, state) {
+                Contract.Requires(username != null);
+                Contract.Requires(password != null);
+                this.username = username;
+                this.password = IntelSession.HashPassword(password);
+            }
+
+            public void Execute() {
+                // TODO: Implement
+            }
+        }
+
+        /// <summary>
+        ///     Requests that we authenticate with the server under new
+        ///     credentials, reporting the results asynchronously.
+        /// </summary>
+        /// <param name="username">
+        ///     The TEST auth username.
+        /// </param>
+        /// <param name="password">
+        ///     The plaintext TEST services password.  It will be hashed
+        ///     automatically.
+        /// </param>
+        /// <param name="callback">
+        ///     An optional delegate to call upon completion of the authentication
+        ///     request.
+        /// </param>
+        /// <param name="state">
+        ///     A user-provided object to provide to <paramref name="callback"/>
+        ///     when reporting authentication completion.
+        /// </param>
+        /// <returns>
+        ///     An instance of <see cref="IAsyncResult"/> to provide to
+        ///     <see cref="EndAuthenticate"/> to receive the results of this
+        ///     operation.
+        /// </returns>
+        public IAsyncResult BeginAuthenticate(string username, string password,
+                AsyncCallback callback, object state) {
+            Contract.Requires<ArgumentException>(!string.IsNullOrEmpty(username));
+            Contract.Requires<ArgumentException>(!string.IsNullOrEmpty(password));
+            Contract.Ensures(Contract.Result<IAsyncResult>() != null);
+
+            // TODO: Handle case when worker isn't running
+            var asyncResult = new AuthenticateAsyncResult(this, callback,
+                state, username, password);
+            actionQueue.Enqueue(asyncResult.Execute);
+            signal.Set();
+            return asyncResult;
+        }
+
+        /// <summary>
+        ///     Reports the outcome of the authentication process started by
+        ///     <see cref="BeginAuthenticate"/>.
+        /// </summary>
+        /// <param name="asyncResult">
+        ///     Instance of <see cref="IAsyncResult"/> returned by a previous
+        ///     call to <see cref="BeginAuthenticate"/>.
+        /// </param>
+        /// <remarks>
+        ///     If <see cref="IAsyncResult.IsCompleted"/> is <see langword="false"/>,
+        ///     <see cref="EndAuthenticate"/> will block until the operation is
+        ///     completed.  Authentication errors will be reported with an exception.
+        /// </remarks>
+        /// <exception cref="AuthenticationException">
+        ///     The credentials provided by the user are incorrect.
+        /// </exception>
+        public bool EndAuthenticate(IAsyncResult asyncResult) {
+            Contract.Requires<ArgumentNullException>(asyncResult != null, "asyncResult");
+
+            var localResult = asyncResult as AuthenticateAsyncResult;
+            if (localResult == null) {
+                throw new ArgumentException(Properties.Resources.ArgumentException_WrongObject);
+            }
+
+            return localResult.Wait(this, "EndAuthenticate");
+        }
+
         /// <summary>
         ///     Updates the user's credentials and forces the service to
         ///     reauthenticate with the reporting service.
@@ -328,235 +330,174 @@ namespace PleaseIgnore.IntelMap {
         ///     The plaintext TEST services password.  It will be hashed
         ///     automatically.
         /// </param>
-        /// <remarks>
-        ///     Changing the username or password will force a reauthentication
-        ///     against the intel reporting server if the monitoring service is
-        ///     running.  This means that changing both may force two separate
-        ///     authentications.  Use <see cref="Authenticate"/> to change the
-        ///     username and password once the service has already started.
-        /// </remarks>
-        /// <see cref="Password"/>
-        /// <see cref="PasswordHash"/>
-        /// <see cref="Username"/>
-        public void Authenticate(string username, string password) {
-            Contract.Requires<ArgumentException>(!String.IsNullOrEmpty(username));
-            Contract.Requires<ArgumentException>(!String.IsNullOrEmpty(password));
-            Contract.Ensures(this.Username == username);
-            Contract.Ensures(!String.IsNullOrEmpty(this.PasswordHash));
-
-            this.username = username;
-            this.password = IntelSession.HashPassword(password);
-            this.authenticate = true;
-            signal.Set();
-            // TODO: Probably want to report success/failure
+        /// <exception cref="AuthenticationException">
+        ///     The credentials provided by the user are incorrect.
+        /// </exception>
+        public bool Authenticate(string username, string password) {
+            return EndAuthenticate(BeginAuthenticate(username, password, null, null));
         }
+        #endregion
+
+        #region File Monitoring
+        // The overridden file directory for EVE logs
+        private string logDirectory;
+        // Instance of FileSystemWatcher used to monitor changes to logs
+        private FileSystemWatcher fileSystemWatcher;
+        // The default file directory for EVE logs
+        private static readonly string defaultLogDirectory = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+            "EVE",
+            "logs",
+            "Chatlogs");
 
         /// <summary>
-        ///     Starts the intel reporting service.
+        ///     Gets or sets the directory path to find EVE chat logs.
         /// </summary>
-        /// <remarks>
-        ///     This is equivalent to setting <see cref="Enabled"/> to
-        ///     <see langword="true"/>.
-        /// </remarks>
-        /// <see cref="Enabled"/>
-        /// <see cref="Stop"/>
-        public void Start() {
-            Contract.Ensures(this.Enabled == true);
-            lock (this.syncObject) {
-                this.running = true;
-                if (!this.initializing && !this.DesignMode
-                        && (this.thread == null)) {
-                    this.thread = new Thread(this.ThreadMain);
-                    this.thread.Start();
+        /// <exception cref="ArgumentException">
+        ///     The specified directory does not exist.
+        /// </exception>
+        [AmbientValue((string)null), DefaultValue((string)null), Category("Behavior")]
+        public string LogDirectory {
+            get {
+                if (!String.IsNullOrEmpty(this.logDirectory)) {
+                    return this.logDirectory;
+                } else if (this.DesignMode) {
+                    return null;
+                } else {
+                    return defaultLogDirectory;
+                }
+            }
+            set {
+                if (this.logDirectory != value) {
+                    if (!String.IsNullOrEmpty(value) && !Directory.Exists(value)) {
+                        throw new ArgumentException(string.Format(
+                            Properties.Resources.ArgumentException_DirNotExist,
+                            value));
+                    }
+                    
+                    this.logDirectory = value;
+                    if (this.thread != null) {
+                        actionQueue.Enqueue(OnLogDirectory);
+                        signal.Set();
+                    }
                 }
             }
         }
 
         /// <summary>
-        ///     Stops the intel reporting service.
+        ///     Initializes the instance of <see cref="FileSystemWatcher"/>
+        ///     used to watch for changes in the file system.
         /// </summary>
-        /// <remarks>
-        ///     This is equivalent to setting <see cref="Enabled"/> to
-        ///     <see langword="false"/>.
-        /// </remarks>
-        /// <see cref="Enabled"/>
-        /// <see cref="Start"/>
-        public void Stop() {
-            Contract.Ensures(this.Enabled == false);
-            lock (this.syncObject) {
-                this.running = false;
-                if (this.thread != null) {
-                    this.thread.Join();
-                    this.thread = null;
-                }
-            }
-        }
-
-        /// <inheritdoc/>
-        public override string ToString() {
-            return base.ToString();
-        }
-
-        /// <inheritdoc/>
-        protected override void Dispose(bool disposing) {
-            if (disposing) {
-                Stop();
-                if (this.signal != null) {
-                    this.signal.Dispose();
-                    this.signal = null;
-                }
-            }
-            base.Dispose(disposing);
-        }
-
-        /// <summary>
-        ///     Entry point for the core processing thread.
-        /// </summary>
-        private void ThreadMain() {
+        private void CreateFileWatcher() {
+            this.DestroyFileWatcher();
+            FileSystemWatcher watcher = null;
             try {
-                this.Status = IntelStatus.Idle;
-                channels.ForEach(x => x.Close());
-                signal.Reset();
-                using (var container = new Container()) {
-                    // Try an initial login so the UI can notify immediately
-                    // of bad credentials
-                    this.CreateSession();
-                    // The age of the session
-                    var sessionTimestamp = DateTime.UtcNow;
+                watcher = new FileSystemWatcher();
 
-                    // Configure the File Watcher
-                    var watcher = new FileSystemWatcher();
-                    watcher.BeginInit();
-                    // TODO: Fails if the path doesn't exist
-                    watcher.Path = this.LogDirectory;
-                    watcher.Filter = "*.txt";
-                    watcher.Created += watcher_Created;
-                    watcher.Changed += watcher_Changed;
-                    watcher.NotifyFilter = NotifyFilters.LastWrite
-                        | NotifyFilters.Size;
-                    container.Add(watcher);
-                    watcher.EnableRaisingEvents = true;
-                    watcher.EndInit();
+                watcher.BeginInit();
+                watcher.Path = this.LogDirectory;
+                watcher.Filter = "*.txt";
+                watcher.Created += OnFileEvent;
+                watcher.Changed += OnFileEvent;
+                watcher.NotifyFilter = NotifyFilters.LastWrite
+                    | NotifyFilters.Size;
+                watcher.EnableRaisingEvents = true;
+                watcher.EndInit();
 
-                    // The main loop
-                    while (this.running) {
-                        // Update the 'last downtime' estimate
-                        var now = DateTime.UtcNow;
-                        var downTime = (now.TimeOfDay > downtimeStart)
-                            ? (now.Date + downtimeStart)
-                            : (now.Date + downtimeStart - TimeSpan.FromDays(1));
-                        if (this.LastDownTime != downTime) {
-                            this.LastDownTime = downTime;
-                            channels.ForEach(x => x.Close());
-                            this.OnPropertyChanged("LastDownTime");
-                        }
-
-                        // Start scanning from a different log directory
-                        if (resetDirectory) {
-                            resetDirectory = false;
-                            watcher.Path = this.LogDirectory;
-                            channels.ForEach(x => x.Close());
-                            channels.ForEach(x => x.Rescan());
-                        }
-
-                        // Keep the channel list up to date
-                        this.UpdateChannels();
-
-                        // Change the login credentials
-                        if (authenticate) {
-                            // CreateSession() will ignore us if the authentication
-                            // failure flag is set.
-                            if (this.Status == IntelStatus.AuthenticationFailure) {
-                                this.Status = channels.Any(x => x.LogFile != null)
-                                    ? IntelStatus.Running
-                                    : IntelStatus.Idle;
-                            }
-                            // Only clear the authentication flag once we've actually
-                            // attempted to reauthenticate
-                            if (CreateSession()) {
-                                this.authenticate = false;
-                                sessionTimestamp = DateTime.UtcNow;
-                            } else if (this.Status == IntelStatus.AuthenticationFailure) {
-                                this.authenticate = false;
-                            }
-                        }
-
-                        // Check for directory changes
-                        FileSystemEventArgs args;
-                        while (watcherEvents.TryDequeue(out args)) {
-                            channels.ForEach(x => x.OnFileEvent(args));
-                        }
-
-                        // Have all children rescan their log files
-                        channels.ForEach(x => x.Tick());
-
-                        // Update Idle/Running status
-                        switch (this.Status) {
-                        case IntelStatus.NetworkFailure:
-                        case IntelStatus.ServerFailure:
-                            if (DateTime.UtcNow - lastFailure > this.RetryPeriod) {
-                                // Basically a fall through
-                                goto case IntelStatus.Idle;
-                            }
-                            break;
-                        case IntelStatus.Running:
-                        case IntelStatus.Idle:
-                            this.Status = channels.Any(x => x.LogFile != null)
-                                ? IntelStatus.Running
-                                : IntelStatus.Idle;
-                            break;
-                        }
-
-                        // Ping the session for keep alive
-                        if (this.session != null) {
-                            switch (this.Status) {
-                            case IntelStatus.Idle:
-                                this.session.Dispose();
-                                this.session = null;
-                                break;
-                            case IntelStatus.Running:
-                                if (DateTime.UtcNow - sessionTimestamp >= keepalivePeriod) {
-                                    try {
-                                        if (!this.session.KeepAlive()) {
-                                            this.session.Dispose();
-                                            this.session = null;
-                                        } else {
-                                            sessionTimestamp = DateTime.UtcNow;
-                                        }
-                                    } catch (WebException) {
-                                        this.Status = IntelStatus.NetworkFailure;
-                                        this.lastFailure = DateTime.UtcNow;
-                                    } catch (IntelException) {
-                                        this.Status = IntelStatus.ServerFailure;
-                                        this.lastFailure = DateTime.UtcNow;
-                                    }
-                                }
-                                break;
-                            }
-                        }
-
-                        // Wait for another event
-                        if (this.Status != IntelStatus.Idle) {
-                            signal.WaitOne(this.ChannelScanFrequency);
-                        } else {
-                            signal.WaitOne();
-                        }
-                    }
-
-                    // Terminate the session before disconnecting
-                    if (this.session != null) {
-                        session.Dispose();
-                        this.session = null;
-                    }
-                } //using (var container = new Container()) {
-
-                this.Status = IntelStatus.Stopped;
-                channels.ForEach(x => x.Close());
-            } catch {
-                this.Status = IntelStatus.FatalError;
-                this.session = null;
+                this.fileSystemWatcher = watcher;
+            } catch (ArgumentException) {
+                // Generally, this means LogDirectory does not exist
+                // TODO: Record the type of failure
+                watcher.Dispose();
+                this.CloseSession();
             }
         }
+
+        /// <summary>
+        ///     Destroys the instance of <see cref="FileSystemWatcher"/> (if
+        ///     any) being used to monitor the file system.
+        /// </summary>
+        private void DestroyFileWatcher() {
+            if (this.fileSystemWatcher != null) {
+                this.fileSystemWatcher.Dispose();
+                this.fileSystemWatcher = null;
+            }
+        }
+
+        /// <summary>
+        ///     Reconfigures the client for a new log directory.
+        /// </summary>
+        private void OnLogDirectory() {
+            // Recreate the file watcher
+            this.CreateFileWatcher();
+        }
+
+        /// <summary>
+        ///     Queues events from the <see cref="FileSystemWatcher"/> instance.
+        /// </summary>
+        private void OnFileEvent(object sender, FileSystemEventArgs e) {
+            Contract.Requires(e != null);
+            channels.OnFileEvent(e);
+        }
+        #endregion
+
+        #region Channel Management
+        // List of active IntelChannels
+        private readonly IntelChannelCollection channels;
+        // The default value for ChannelDownloadPeriod
+        private const string defaultChannelDownloadPeriod = "24:00:00";
+        // The default value for ChannelScanPeriod
+        private const string defaultChannelScanPeriod = "00:00:05";
+
+        /// <summary>
+        ///     Gets or sets the time between downloads of the intel
+        ///     channel list.
+        /// </summary>
+        [DefaultValue(typeof(TimeSpan), defaultChannelDownloadPeriod)]
+        [Category("Behavior")]
+        public TimeSpan ChannelDownloadPeriod { get; set; }
+
+        /// <summary>
+        ///     Gets or sets the time between scans of the chat logs for new intel.
+        /// </summary>
+        [DefaultValue(typeof(TimeSpan), defaultChannelScanPeriod)]
+        [Category("Behavior")]
+        public TimeSpan ChannelScanPeriod { get; set; }
+
+        /// <summary>
+        ///     Gets the list of channels currently being monitored by the
+        ///     component.
+        /// </summary>
+        [Browsable(false)]
+        public IntelChannelCollection Channels {
+            get {
+                Contract.Ensures(Contract.Result<IntelChannelCollection>() != null);
+                return this.channels;
+            }
+        }
+
+        /// <summary>
+        ///     Gets the number of events sent to the intel reporting server.
+        /// </summary>
+        [Browsable(false)]
+        public int IntelSent { get; private set; }
+
+        /// <summary>
+        ///     Gets the number of events that were dropped because of network
+        ///     or server errors.
+        /// </summary>
+        [Browsable(false)]
+        public int IntelDropped { get; private set; }
+
+        /// <summary>
+        ///     Raised when a new intel report has been parsed from a log file.
+        /// </summary>
+        /// <remarks>
+        ///     This call will be made from the <see cref="ThreadPool"/>.  The
+        ///     consumer will need synchronize to their local threads as
+        ///     appropriate.
+        /// </remarks>
+        public event EventHandler<IntelEventArgs> IntelReported;
 
         /// <summary>
         ///     Receives Intel reports from the child channel listeners.
@@ -569,201 +510,249 @@ namespace PleaseIgnore.IntelMap {
             Contract.Requires(e != null);
 
             // Send into the ThreadPool so not to interfere with our processing
-            var handler = this.IntelReported;
-            if (handler != null) {
-                ThreadPool.QueueUserWorkItem(x => handler(this, e));
-            }
+            ThreadPool.QueueUserWorkItem(this.IntelReportedWorkItem, e);
 
-            // See if it's worth trying again
-            switch (this.Status) {
-            case IntelStatus.AuthenticationFailure:
-            case IntelStatus.NetworkFailure:
-            case IntelStatus.ServerFailure:
-                ++this.IntelDropped;
-                this.OnPropertyChanged("IntelDropped");
-                return false;
-            }
-
-            // First, try an already existing session
-            if (this.session != null) {
-                if (this.SendReport(e, false)) {
-                    // Success
-                    return true;
-                } else if (this.session != null) {
-                    // If the session object remains, it wasn't a session problem
-                    return false;
+            if (this.CanSend(false)) {
+                // Report the intelligence
+                try {
+                    bool success = GetSession()
+                        .Report(e.Channel.Name, e.Timestamp, e.Message);
+                    if (success) {
+                        ++this.IntelSent;
+                        return true;
+                    } else {
+                        ++this.IntelDropped;
+                        return false;
+                    }
+                } catch (AuthenticationException) {
+                    // TODO: Record the type of failure
+                    this.lastFailure = DateTime.UtcNow;
+                } catch (IntelException) {
+                    // TODO: Record the type of failure
+                    this.lastFailure = DateTime.UtcNow;
+                } catch (WebException) {
+                    // TODO: Record the type of failure
+                    this.lastFailure = DateTime.UtcNow;
                 }
             }
 
-            // Try again after (re)openning the session
-            this.CreateSession();
-            return this.SendReport(e, true);
+            // Failed to report
+            ++this.IntelDropped;
+            return false;
         }
 
         /// <summary>
-        ///     Checks the expiration date on the channel list and downloads
-        ///     an updated list if stale.
+        ///     Raises <see cref="IntelReported"/> in the appropriate thread.
         /// </summary>
-        /// <remarks>
-        ///     <see cref="UpdateChannels"/> will fetch the channel observation
-        ///     list and create/dispose instances of <see cref="IntelChannel"/>
-        ///     to match that list.
-        /// </remarks>
-        private void UpdateChannels() {
-            // Check for network problems
-            switch (this.Status) {
-            case IntelStatus.NetworkFailure:
-            case IntelStatus.ServerFailure:
-                break;
+        /// <param name="state">
+        ///     Instance of <see cref="IntelEventArgs"/> to include.
+        /// </param>
+        private void IntelReportedWorkItem(object state) {
+            var handler = this.IntelReported;
+            if (handler != null) {
+                handler(this, (IntelEventArgs)state);
+            }
+        }
+        #endregion
+
+        #region Session Management
+        // The current session (if any) for Intel Reporting
+        private IntelSession session;
+        // The last time we 'pinged' the server to keep our session alive
+        private DateTime  lastKeepAlive;
+        // The last time we 'failed' to contact the server
+        private DateTime? lastFailure;
+        // The default value for KeepAlivePeriod
+        private const string defaultKeepAlivePeriod = "00:01:00";
+        // The default value for RetryPeriod
+        private const string defaultRetryPeriod = "00:15:00";
+
+        /// <summary>
+        ///     Gets or sets the time between server pings to maintain our Intel
+        ///     Reporting session.
+        /// </summary>
+        [DefaultValue(typeof(TimeSpan), defaultKeepAlivePeriod)]
+        [Category("Behavior")]
+        public TimeSpan KeepAlivePeriod { get; set; }
+
+        /// <summary>
+        ///     Gets or sets the time to back off attempting to contact the server
+        ///     again if networking problems prevent communication.
+        /// </summary>
+        [DefaultValue(typeof(TimeSpan), defaultRetryPeriod)]
+        [Category("Behavior")]
+        public TimeSpan RetryPeriod { get; set; }
+
+
+        /// <summary>
+        ///     Gets the number of users currently reporting intelligence.
+        /// </summary>
+        /// <value>
+        ///     The number of users reporting intelligence.  The value is
+        ///     undefined if we are not currently connected to the server.
+        /// </value>
+        [Browsable(false)]
+        public int Users {
+            get {
+                Contract.Ensures(Contract.Result<int>() >= 0);
+                var session = this.session;
+                return (session != null) ? session.Users : 0;
+            }
+        }
+
+        /// <summary>
+        ///     Tests if we can ping the server or if we should wait until
+        ///     an error timeout expires.
+        /// </summary>
+        /// <param name="throwError">
+        ///     <see langword="true"/> if we should rethrow the previous
+        ///     error if it still applies.
+        /// </param>
+        /// <returns>
+        ///     <see langword="true"/> if we should try to contact the server
+        ///     again; otherwise, <see langword="false"/>.
+        /// </returns>
+        private bool CanSend(bool throwError) {
+            Contract.EnsuresOnThrow<IntelException>(throwError);
+
+            if (!lastFailure.HasValue) {
+                return true;
             }
 
-            // Check for expiration
             var now = DateTime.UtcNow;
-            if (now - this.channelTimestamp < this.ChannelUpdatePeriod) {
+            if (now > this.lastFailure + this.RetryPeriod) {
+                return true;
+            }
+
+            if (throwError) {
+                throw new IntelException();
+            } else {
+                return false;
+            }
+        }
+
+        /// <summary>
+        ///     Returns the current session, initiating one if it does not already
+        ///     exist.  Can throw any exception normally thrown by
+        ///     <see cref="IntelSession.IntelSession"/>.
+        /// </summary>
+        /// <returns>
+        ///     Instance of <see cref="IntelSession"/> to use when contacting the
+        ///     server.
+        /// </returns>
+        private IntelSession GetSession() {
+            Contract.Ensures(Contract.Result<IntelSession>() != null);
+
+            // Check network back off time
+            CanSend(true);
+
+            // Clear out any expired session
+            if ((this.session != null) && !session.IsConnected) {
+                this.session = null;
+            }
+            
+            // Create the new session
+            if (this.session == null) {
+                try {
+                    this.session = new IntelSession(this.Username, this.PasswordHash);
+                    this.lastKeepAlive = DateTime.UtcNow;
+                } catch {
+                    // TODO: Record the type of failure
+                    this.lastFailure = DateTime.UtcNow;
+                    throw;
+                }
+            }
+
+            return this.session;
+        }
+
+        /// <summary>
+        ///     Sends a keep alive to the server as necessary.
+        /// </summary>
+        private void KeepAlive() {
+            if ((this.session == null) || (!session.IsConnected)) {
+                this.session = null;
                 return;
             }
 
-            // Get the list of channels
-            try {
-                var list = IntelSession.GetIntelChannels();
-
-                // Look for channels to remove
-                foreach (var x in channels.Where(x => !list.Any(y => x.Name == y)).ToArray()) {
-                    x.Close();
-                    channels.Remove(x);
+            if (this.CanSend(false)) {
+                // Perform the actual keep-alive
+                var now = DateTime.UtcNow;
+                if (now > this.lastKeepAlive + this.KeepAlivePeriod) {
+                    try {
+                        if (this.session.KeepAlive()) {
+                            this.lastKeepAlive = now;
+                        }
+                    } catch (IntelException) {
+                        // TODO: Record the type of failure
+                        this.lastFailure = now;
+                    } catch (WebException) {
+                        // TODO: Record the type of failure
+                        this.lastFailure = now;
+                    }
                 }
-
-                // Look for channels to add
-                foreach (var x in list.Where(x => !channels.Any(y => y.Name == x)).ToArray()) {
-                    var channel = new IntelChannel(this, x);
-                    channel.Rescan();
-                    channels.Add(channel);
-                }
-
-                // Update timestamp
-                this.channelTimestamp = now;
-            } catch (WebException) {
-                // Failed to download the list
-                this.lastFailure = now;
-                this.Status = IntelStatus.NetworkFailure;
-                this.OnPropertyChanged("Status");
             }
         }
 
         /// <summary>
-        ///     Creates a new connection to the intel reporting server.
+        ///     Closes the currently openned session (if any).
         /// </summary>
-        /// <returns>
-        ///     <see langword="true"/> if a connection was successfully made to
-        ///     the server; otherwise, <see langword="false"/>.
-        /// </returns>
-        /// <remarks>
-        ///     If a session already exists, it will be closed before the new
-        ///     session is created.
-        /// </remarks>
-        private bool CreateSession() {
-            Contract.Ensures((this.session != null) || !Contract.Result<bool>());
-            Contract.Ensures((this.session == null) ||  Contract.Result<bool>());
-
-            // Close any currently open session
+        private void CloseSession() {
             if (this.session != null) {
                 this.session.Dispose();
                 this.session = null;
             }
-
-            // Once authentication fails, don't try again until the user fixes it
-            switch (this.Status) {
-            case IntelStatus.AuthenticationFailure:
-            case IntelStatus.NetworkFailure:
-            case IntelStatus.ServerFailure:
-                return false;
-            }
-
-            if (String.IsNullOrEmpty(this.username)) {
-                this.Status = IntelStatus.AuthenticationFailure;
-                this.OnPropertyChanged("Status");
-                return false;
-            } else if (String.IsNullOrEmpty(this.password)) {
-                this.Status = IntelStatus.AuthenticationFailure;
-                this.OnPropertyChanged("Status");
-                return false;
-            }
-
-            // Try openning a new server connection
-            try {
-                this.session = new IntelSession(this.username, this.password);
-                return true;
-            } catch (AuthenticationException) {
-                // Will not try again until the user corrects this
-                this.Status = IntelStatus.AuthenticationFailure;
-            } catch (WebException) {
-                // Network problems, try again later.
-                this.Status = IntelStatus.NetworkFailure;
-            } catch (IntelException) {
-                // The server did something...odd.
-                this.Status = IntelStatus.ServerFailure;
-            }
-
-            this.lastFailure = DateTime.UtcNow;
-            this.OnPropertyChanged("Status");
-            return false;
         }
+        #endregion
+
+        #region Notification Support
+        // The time each day when Tranquility downtime begins
+        private static readonly TimeSpan downtimeStarts = new TimeSpan(11, 0, 0);
 
         /// <summary>
-        ///     Forwards an event received from an <see cref="IntelChannel"/>
-        ///     to the intel reporting service, incrementing the sent or
-        ///     dropped counter as appropriate.
+        ///     Gets the date and time of the most recent server downtime.
         /// </summary>
-        /// <param name="e">
-        ///     Event data to forward.
+        public DateTime LastDowntime { get; private set; }
+
+        /// <summary>
+        ///     Gets the date and time of the next scheduled server downtime.
+        /// </summary>
+        public DateTime NextDowntime { get; private set; }
+
+        /// <summary>
+        ///     Occurs when a property value changes.
+        /// </summary>
+        /// <remarks>
+        ///     The <see cref="PropertyChanged"/> event can indicate all properties
+        ///     on the object have changed by using either <see langword="null"/> or
+        ///     <see cref="String.Empty"/> as the property name in the
+        ///     <see cref="PropertyChangedEventArgs"/>.
+        /// </remarks>
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        /// <summary>
+        ///     Updates the <see cref="LastDowntime"/> and <see cref="NextDowntime"/>
+        ///     properties.
+        /// </summary>
+        /// <param name="signal">
+        ///     Raises the appropriate signals.
         /// </param>
-        /// <param name="lastTry">
-        ///     <see langword="true"/> if this is our last attempt to submit
-        ///     the data, so increment the failure count for conditions that
-        ///     would normally lead to a retry.
-        /// </param>
-        /// <returns>
-        ///     <see langword="true"/> if the intel was successfully reported
-        ///     to the intel service; otherwise, <see langword="false"/>.
-        /// </returns>
-        private bool SendReport(IntelEventArgs e, bool lastTry) {
-            // Require a session to send the attempt
-            if (this.session == null) {
-                if (lastTry) {
-                    ++this.IntelDropped;
-                    this.OnPropertyChanged("IntelDropped");
-                }
-                return false;
+        private void UpdateDowntime(bool signal) {
+            var now = DateTime.Now;
+            var oldtime = this.LastDowntime;
+            if (now.TimeOfDay > downtimeStarts) {
+                this.LastDowntime = now.Date + downtimeStarts;
+                this.NextDowntime = this.LastDowntime + new TimeSpan(1, 0, 0);
+            } else {
+                this.NextDowntime = now.Date + downtimeStarts;
+                this.LastDowntime = this.NextDowntime - new TimeSpan(1, 0, 0);
             }
 
-            // Catch the expected errors and update the status appropriately
-            try {
-                if (this.session.Report(e.Channel.Name, e.Timestamp, e.Message)) {
-                    // Successfully sent
-                    ++this.IntelSent;
-                    this.OnPropertyChanged("IntelSent");
-                    return true;
-                } else {
-                    // Session expired
-                    this.session = null;
-                    if (lastTry) {
-                        ++this.IntelDropped;
-                        this.OnPropertyChanged("IntelDropped");
-                    }
-                    return false;
-                }
-            } catch (WebException) {
-                // Dropping due to network problems
-                this.Status = IntelStatus.NetworkFailure;
-            } catch (IntelException) {
-                // The server did something...odd.
-                this.Status = IntelStatus.ServerFailure;
+            if (signal && (oldtime != this.LastDowntime)) {
+                OnPropertyChanged("LastDowntime");
+                OnPropertyChanged("NextDowntime");
+                channels.CloseAll();
             }
-            
-            ++this.IntelDropped;
-            this.OnPropertyChanged("IntelDropped");
-            this.lastFailure = DateTime.UtcNow;
-            return false;
         }
 
         /// <summary>
@@ -776,35 +765,34 @@ namespace PleaseIgnore.IntelMap {
                 Debug.Assert(this.GetType().GetProperty(propertyName) != null);
             }
 #endif
+            ThreadPool.QueueUserWorkItem(
+                this.PropertyChangedWorkItem,
+                propertyName);
+        }
 
+        /// <summary>
+        ///     Calls the <see cref="PropertyChanged"/> handler in the appropriate
+        ///     thread.
+        /// </summary>
+        /// <param name="state">
+        ///     Name of the property whose value has changed.
+        /// </param>
+        private void PropertyChangedWorkItem(object state) {
             var handler = this.PropertyChanged;
             if (handler != null) {
-                ThreadPool.QueueUserWorkItem(x => handler(this,
-                    new PropertyChangedEventArgs(propertyName)));
+                handler(this, new PropertyChangedEventArgs((string)state));
             }
         }
-
-        /// <summary>
-        ///     Queues events from the <see cref="FileSystemWatcher"/> instance.
-        /// </summary>
-        private void watcher_Created(object sender, FileSystemEventArgs e) {
-            watcherEvents.Enqueue(e);
-            signal.Set();
-        }
-
-        /// <summary>
-        ///     Queues events from the <see cref="FileSystemWatcher"/> instance.
-        /// </summary>
-        private void watcher_Changed(object sender, FileSystemEventArgs e) {
-            watcherEvents.Enqueue(e);
-            signal.Set();
-        }
+        #endregion
 
         [ContractInvariantMethod]
         private void ObjectInvariant() {
-            Contract.Invariant(this.ChannelUpdatePeriod > TimeSpan.Zero);
-            Contract.Invariant(this.ChannelScanFrequency > TimeSpan.Zero);
+            Contract.Invariant(this.ChannelDownloadPeriod > TimeSpan.Zero);
+            Contract.Invariant(this.ChannelScanPeriod > TimeSpan.Zero);
+            Contract.Invariant(this.KeepAlivePeriod > TimeSpan.Zero);
             Contract.Invariant(this.RetryPeriod > TimeSpan.Zero);
+
+            Contract.Invariant(this.NextDowntime > this.LastDowntime);
             Contract.Invariant(this.IntelSent >= 0);
             Contract.Invariant(this.IntelDropped >= 0);
         }

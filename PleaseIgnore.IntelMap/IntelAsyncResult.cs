@@ -218,7 +218,7 @@ namespace PleaseIgnore.IntelMap {
         ///     The value provided to <see cref="AsyncComplete(TResult)"/> or
         ///     <see cref="SyncComplete(TResult)"/>.
         /// </returns>
-        protected TResult Wait(TOwner owner, string methodName) {
+        internal TResult Wait(TOwner owner, string methodName) {
             if (this.owner != owner) {
                 throw new ArgumentException(Properties.Resources
                     .ArgumentException_WrongObject);

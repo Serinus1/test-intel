@@ -182,7 +182,7 @@ namespace PleaseIgnore.IntelMap {
                 var infoDir = new DirectoryInfo(logDir);
                 var infoLog = infoDir.GetFiles(this.Name + "_*.txt")
                     .Select(x => new { File = x, Timestamp = ParseTimeStamp(x) })
-                    .Where(x => x.Timestamp > this.IntelReporter.LastDownTime)
+                    .Where(x => x.Timestamp > this.IntelReporter.LastDowntime)
                     .OrderByDescending(x => x.Timestamp)
                     .Select(x => x.File)
                     .FirstOrDefault();
