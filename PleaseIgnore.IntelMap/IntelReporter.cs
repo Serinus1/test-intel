@@ -370,13 +370,17 @@ namespace PleaseIgnore.IntelMap {
                         Owner.session = session;
                         Owner.lastKeepAlive = now;
                         Owner.Username = this.username;
-                        Owner.Password = this.password;
+                        Owner.PasswordHash = this.password;
+                        Owner.OnPropertyChanged("Username");
+                        Owner.OnPropertyChanged("PasswordHash");
                         this.AsyncComplete(true);
-                    } catch (WebException e) {
+                    } catch (AuthenticationException e) {
                         this.AsyncComplete(e);
                     } catch (IntelException e) {
+                        Owner.ReportFailure(e);
                         this.AsyncComplete(e);
-                    } catch (AuthenticationException e) {
+                    } catch (WebException e) {
+                        Owner.ReportFailure(e);
                         this.AsyncComplete(e);
                     }
                 }
@@ -799,10 +803,10 @@ namespace PleaseIgnore.IntelMap {
             var oldtime = this.LastDowntime;
             if (now.TimeOfDay > downtimeStarts) {
                 this.LastDowntime = now.Date + downtimeStarts;
-                this.NextDowntime = this.LastDowntime + new TimeSpan(1, 0, 0);
+                this.NextDowntime = this.LastDowntime + new TimeSpan(24, 0, 0);
             } else {
                 this.NextDowntime = now.Date + downtimeStarts;
-                this.LastDowntime = this.NextDowntime - new TimeSpan(1, 0, 0);
+                this.LastDowntime = this.NextDowntime - new TimeSpan(24, 0, 0);
             }
 
             if (signal && (oldtime != this.LastDowntime)) {
