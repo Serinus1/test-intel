@@ -280,12 +280,17 @@ namespace PleaseIgnore.IntelMap {
             Contract.Requires<ArgumentException>(!string.IsNullOrEmpty(password));
             Contract.Ensures(Contract.Result<IAsyncResult>() != null);
 
-            // TODO: Handle case when worker isn't running
-            var asyncResult = new AuthenticateAsyncResult(this, callback,
-                state, username, password);
-            actionQueue.Enqueue(asyncResult.Execute);
-            signal.Set();
-            return asyncResult;
+            lock (this.syncRoot) {
+                var asyncResult = new AuthenticateAsyncResult(this, callback,
+                    state, username, password);
+                if (this.thread != null) {
+                    actionQueue.Enqueue(asyncResult.Execute);
+                    signal.Set();
+                } else {
+                    ThreadPool.QueueUserWorkItem(asyncResult.Execute);
+                }
+                return asyncResult;
+            }
         }
 
         /// <summary>
@@ -299,7 +304,8 @@ namespace PleaseIgnore.IntelMap {
         /// <remarks>
         ///     If <see cref="IAsyncResult.IsCompleted"/> is <see langword="false"/>,
         ///     <see cref="EndAuthenticate"/> will block until the operation is
-        ///     completed.  Authentication errors will be reported with an exception.
+        ///     completed.  In case of an error, the credentials are left unmodified
+        ///     and an exception is thrown.
         /// </remarks>
         /// <exception cref="AuthenticationException">
         ///     The credentials provided by the user are incorrect.
@@ -340,7 +346,7 @@ namespace PleaseIgnore.IntelMap {
             private readonly string username;
             private readonly string password;
 
-            public AuthenticateAsyncResult(IntelReporter owner, AsyncCallback callback,
+            internal AuthenticateAsyncResult(IntelReporter owner, AsyncCallback callback,
                     object state, string username, string password)
                 : base(owner, callback, state) {
                 Contract.Requires(username != null);
@@ -349,12 +355,35 @@ namespace PleaseIgnore.IntelMap {
                 this.password = IntelSession.HashPassword(password);
             }
 
-            public void Cancel() {
-                // TODO: Implement
+            internal void Cancel() {
+                if (!this.IsCompleted) {
+                    this.AsyncComplete(false);
+                }
             }
 
-            public void Execute() {
-                // TODO: Implement
+            internal void Execute() {
+                if (!this.IsCompleted) {
+                    try {
+                        var now = DateTime.UtcNow;
+                        var session = new IntelSession(this.username, this.password);
+                        Owner.CloseSession();
+                        Owner.session = session;
+                        Owner.lastKeepAlive = now;
+                        Owner.Username = this.username;
+                        Owner.Password = this.password;
+                        this.AsyncComplete(true);
+                    } catch (WebException e) {
+                        this.AsyncComplete(e);
+                    } catch (IntelException e) {
+                        this.AsyncComplete(e);
+                    } catch (AuthenticationException e) {
+                        this.AsyncComplete(e);
+                    }
+                }
+            }
+
+            internal void Execute(object obj) {
+                this.Execute();
             }
         }
         #endregion
