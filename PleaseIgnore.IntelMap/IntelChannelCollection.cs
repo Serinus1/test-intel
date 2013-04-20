@@ -124,14 +124,16 @@ namespace PleaseIgnore.IntelMap {
         internal void Tick() {
             var now = DateTime.UtcNow;
             var period = parent.ChannelDownloadPeriod;
-            if (!lastDownload.HasValue || now > lastDownload + period) {
+            if ((!lastDownload.HasValue || now > lastDownload + period)
+                    && parent.CanSend(false)) {
                 // Get the updated channel list
-                // TODO: Dial it back on network failures
                 string[] channels = null;
                 try {
                     channels = IntelSession.GetIntelChannels();
-                } catch (WebException) {
-                } catch (IntelException) {
+                } catch (WebException e) {
+                    parent.ReportFailure(e);
+                } catch (IntelException e) {
+                    parent.ReportFailure(e);
                 }
 
                 // Remove stale channels
@@ -154,9 +156,9 @@ namespace PleaseIgnore.IntelMap {
                             channel.Rescan();
                             list.Add(channel);
                         }
-                    }
-                }
-            }
+                    } //lock (this.syncRoot) {
+                } //if ((channels != null) && (channels.Length > 0)) {
+            } //if ((!lastDownload.HasValue || now > lastDownload + period)
 
             list.ForEach(x => x.Tick());
         }

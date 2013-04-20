@@ -205,11 +205,12 @@ namespace PleaseIgnore.IntelMap {
         ///     Gets or sets the TEST Alliance AUTH username.
         /// </summary>
         /// <remarks>
-        ///     Changing the username or password will force a reauthentication
-        ///     against the intel reporting server if the monitoring service is
-        ///     running.  This means that changing both may force two separate
-        ///     authentications.  Use <see cref="Authenticate"/> to change the
-        ///     username and password once the service has already started.
+        ///     Changes to the <see cref="Username"/>, <see cref="Password"/>,
+        ///     or <see cref="PasswordHash"/> will not be used until the next
+        ///     time the client tries to reauthenticate.  To verify that the
+        ///     authentication information is correct, use the
+        ///     <see cref="Authenticate"/> or <see cref="BeginAuthenticate"/>
+        ///     methods.
         /// </remarks>
         [DefaultValue((String)null), Category("Behavior")]
         public string Username { get; set; }
@@ -217,6 +218,14 @@ namespace PleaseIgnore.IntelMap {
         /// <summary>
         ///     Gets or sets the <em>hashed</em> services password for the user.
         /// </summary>
+        /// <remarks>
+        ///     Changes to the <see cref="Username"/>, <see cref="Password"/>,
+        ///     or <see cref="PasswordHash"/> will not be used until the next
+        ///     time the client tries to reauthenticate.  To verify that the
+        ///     authentication information is correct, use the
+        ///     <see cref="Authenticate"/> or <see cref="BeginAuthenticate"/>
+        ///     methods.
+        /// </remarks>
         [DefaultValue((String)null), Category("Behavior")]
         public string PasswordHash { get; set; }
 
@@ -224,33 +233,20 @@ namespace PleaseIgnore.IntelMap {
         ///     Sets the hashed password by automatically hashing and storing the
         ///     plaintext password.
         /// </summary>
+        /// <remarks>
+        ///     Changes to the <see cref="Username"/>, <see cref="Password"/>,
+        ///     or <see cref="PasswordHash"/> will not be used until the next
+        ///     time the client tries to reauthenticate.  To verify that the
+        ///     authentication information is correct, use the
+        ///     <see cref="Authenticate"/> or <see cref="BeginAuthenticate"/>
+        ///     methods.
+        /// </remarks>
         [Browsable(false)]
         public string Password {
             set {
                 this.PasswordHash = !String.IsNullOrEmpty(value)
                     ? IntelSession.HashPassword(value)
                     : null;
-            }
-        }
-
-        /// <summary>
-        ///     Provides the asynchronous implementation of Authenticate()
-        /// </summary>
-        private class AuthenticateAsyncResult : IntelAsyncResult<IntelReporter, bool> {
-            private readonly string username;
-            private readonly string password;
-
-            public AuthenticateAsyncResult(IntelReporter owner, AsyncCallback callback,
-                    object state, string username, string password)
-                    : base(owner, callback, state) {
-                Contract.Requires(username != null);
-                Contract.Requires(password != null);
-                this.username = username;
-                this.password = IntelSession.HashPassword(password);
-            }
-
-            public void Execute() {
-                // TODO: Implement
             }
         }
 
@@ -335,6 +331,31 @@ namespace PleaseIgnore.IntelMap {
         /// </exception>
         public bool Authenticate(string username, string password) {
             return EndAuthenticate(BeginAuthenticate(username, password, null, null));
+        }
+
+        /// <summary>
+        ///     Provides the asynchronous implementation of Authenticate()
+        /// </summary>
+        private class AuthenticateAsyncResult : IntelAsyncResult<IntelReporter, bool> {
+            private readonly string username;
+            private readonly string password;
+
+            public AuthenticateAsyncResult(IntelReporter owner, AsyncCallback callback,
+                    object state, string username, string password)
+                : base(owner, callback, state) {
+                Contract.Requires(username != null);
+                Contract.Requires(password != null);
+                this.username = username;
+                this.password = IntelSession.HashPassword(password);
+            }
+
+            public void Cancel() {
+                // TODO: Implement
+            }
+
+            public void Execute() {
+                // TODO: Implement
+            }
         }
         #endregion
 
@@ -506,17 +527,17 @@ namespace PleaseIgnore.IntelMap {
         ///     <see langword="true"/> if the intel was sucessfully sent to the
         ///     reporting server; otherwise, <see langword="false"/>.
         /// </returns>
-        internal bool OnIntelReported(IntelEventArgs e) {
-            Contract.Requires(e != null);
+        internal bool OnIntelReported(IntelEventArgs args) {
+            Contract.Requires(args != null);
 
             // Send into the ThreadPool so not to interfere with our processing
-            ThreadPool.QueueUserWorkItem(this.IntelReportedWorkItem, e);
+            ThreadPool.QueueUserWorkItem(this.IntelReportedWorkItem, args);
 
             if (this.CanSend(false)) {
                 // Report the intelligence
                 try {
                     bool success = GetSession()
-                        .Report(e.Channel.Name, e.Timestamp, e.Message);
+                        .Report(args.Channel.Name, args.Timestamp, args.Message);
                     if (success) {
                         ++this.IntelSent;
                         return true;
@@ -524,15 +545,12 @@ namespace PleaseIgnore.IntelMap {
                         ++this.IntelDropped;
                         return false;
                     }
-                } catch (AuthenticationException) {
-                    // TODO: Record the type of failure
-                    this.lastFailure = DateTime.UtcNow;
-                } catch (IntelException) {
-                    // TODO: Record the type of failure
-                    this.lastFailure = DateTime.UtcNow;
-                } catch (WebException) {
-                    // TODO: Record the type of failure
-                    this.lastFailure = DateTime.UtcNow;
+                } catch (AuthenticationException e) {
+                    this.ReportFailure(e);
+                } catch (IntelException e) {
+                    this.ReportFailure(e);
+                } catch (WebException e) {
+                    this.ReportFailure(e);
                 }
             }
 
@@ -612,7 +630,7 @@ namespace PleaseIgnore.IntelMap {
         ///     <see langword="true"/> if we should try to contact the server
         ///     again; otherwise, <see langword="false"/>.
         /// </returns>
-        private bool CanSend(bool throwError) {
+        internal bool CanSend(bool throwError) {
             Contract.EnsuresOnThrow<IntelException>(throwError);
 
             if (!lastFailure.HasValue) {
@@ -629,6 +647,19 @@ namespace PleaseIgnore.IntelMap {
             } else {
                 return false;
             }
+        }
+
+        /// <summary>
+        ///     Reports a communications error with the server, setting the
+        ///     retry timer and notify the client (if required).
+        /// </summary>
+        /// <param name="e">
+        ///     The exception describing the failure.
+        /// </param>
+        internal void ReportFailure(Exception e) {
+            Contract.Requires(e != null);
+            // TODO: Record manner of failure
+            this.lastFailure = DateTime.UtcNow;
         }
 
         /// <summary>
@@ -656,9 +687,8 @@ namespace PleaseIgnore.IntelMap {
                 try {
                     this.session = new IntelSession(this.Username, this.PasswordHash);
                     this.lastKeepAlive = DateTime.UtcNow;
-                } catch {
-                    // TODO: Record the type of failure
-                    this.lastFailure = DateTime.UtcNow;
+                } catch(Exception e) {
+                    this.ReportFailure(e);
                     throw;
                 }
             }
@@ -683,12 +713,10 @@ namespace PleaseIgnore.IntelMap {
                         if (this.session.KeepAlive()) {
                             this.lastKeepAlive = now;
                         }
-                    } catch (IntelException) {
-                        // TODO: Record the type of failure
-                        this.lastFailure = now;
-                    } catch (WebException) {
-                        // TODO: Record the type of failure
-                        this.lastFailure = now;
+                    } catch (IntelException e) {
+                        this.ReportFailure(e);
+                    } catch (WebException e) {
+                        this.ReportFailure(e);
                     }
                 }
             }
