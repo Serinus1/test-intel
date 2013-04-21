@@ -151,7 +151,8 @@ namespace PleaseIgnore.IntelMap {
             if (this.lastEvent != null) {
                 if (linesRead != 0) {
                     this.lastEvent = null;
-                } else if (this.lastEventTime + IntelReporter.ChannelScanPeriod < DateTime.UtcNow) {
+                } else if ((this.LogFile == null)
+                        || (this.lastEventTime + IntelReporter.ChannelScanPeriod < DateTime.UtcNow)) {
                     SwitchTo(new FileInfo(this.lastEvent.FullPath));
                     this.lastEvent = null;
                 }
@@ -173,6 +174,7 @@ namespace PleaseIgnore.IntelMap {
                     this.activeFile = null;
                     this.LogFile = null;
                 }
+                IntelReporter.OnChannelChanged(this);
             }
         }
 
@@ -267,6 +269,7 @@ namespace PleaseIgnore.IntelMap {
                     }
                 } catch (UnauthorizedAccessException) {
                 }
+                IntelReporter.OnChannelChanged(this);
             }
         }
 

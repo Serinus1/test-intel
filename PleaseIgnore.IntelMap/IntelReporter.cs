@@ -580,8 +580,6 @@ namespace PleaseIgnore.IntelMap {
         /// </summary>
         private void OnFileEvent(object sender, FileSystemEventArgs e) {
             Contract.Requires(e != null);
-            // Need to get the reset within the main loop to let off
-            this.lastIntelReport = DateTime.UtcNow;
             channels.OnFileEvent(e);
         }
         #endregion
@@ -745,6 +743,24 @@ namespace PleaseIgnore.IntelMap {
             ++this.IntelDropped;
             this.OnPropertyChanged("IntelDropped");
             return false;
+        }
+
+        /// <summary>
+        ///     Notification sent by <see cref="IntelChannel"/> when it's
+        ///     openned or closed a log file.
+        /// </summary>
+        internal void OnChannelChanged(IntelChannel channel) {
+            Contract.Requires(channel != null);
+            if (channel.LogFile != null) {
+                // So that the UI can display 'Connected' or 'Scanning' instead
+                // of simple 'Idle'
+                try {
+                    this.GetSession();
+                } catch (AuthenticationException) {
+                } catch (IntelException) {
+                } catch (WebException) {
+                }
+            }
         }
 
         /// <summary>
