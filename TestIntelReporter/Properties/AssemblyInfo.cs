@@ -12,8 +12,8 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTrademark("")]
 // If we change this field, the user's configuration will be lost
 [assembly: AssemblyVersion(ProductInfo.ProductVersionPrefix + "0.0")]
-[assembly: AssemblyInformationalVersion("0.2.0.2")]
-[assembly: AssemblyFileVersion("0.2.0.2")]
+[assembly: AssemblyInformationalVersion(ProductInfo.ProductVersion)]
+[assembly: AssemblyFileVersion(ProductInfo.ProductVersion)]
 [assembly: AssemblyConfiguration(ProductInfo.Configuration)]
 [assembly: AssemblyCulture("")]
 [assembly: NeutralResourcesLanguage("en-US")]
