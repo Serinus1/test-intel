@@ -176,11 +176,15 @@ namespace PleaseIgnore.IntelMap {
         /// </summary>
         private void ThreadMain() {
             try {
-                // Initialize I/O
+                // EVE may already be running
                 channels.RescanAll();
-                this.CreateFileWatcher();
 
                 while (this.running) {
+                    // Make sure the file watcher exists
+                    if (this.fileSystemWatcher == null) {
+                        this.CreateFileWatcher();
+                    }
+
                     // Check for downtime changes
                     this.UpdateDowntime(true);
 
@@ -194,10 +198,16 @@ namespace PleaseIgnore.IntelMap {
                     channels.Tick();
 
                     // Maintain Session health
-                    // TODO: Perform idle check
-                    this.KeepAlive();
+                    if (this.lastIntelReport + this.channelIdlePeriod < DateTime.UtcNow) {
+                        channels.CloseAll();
+                        this.CloseSession();
+                    } else {
+                        this.KeepAlive();
+                    }
 
                     // Sleep until we have something to do
+                    // TODO: What if ChannelScanPeriod is "long" compared to
+                    // other timers?
                     signal.WaitOne(this.ChannelScanPeriod);
                 }
             } finally {
@@ -510,8 +520,7 @@ namespace PleaseIgnore.IntelMap {
                 watcher.Filter = "*.txt";
                 watcher.Created += OnFileEvent;
                 watcher.Changed += OnFileEvent;
-                watcher.NotifyFilter = NotifyFilters.LastWrite
-                    | NotifyFilters.Size;
+                watcher.NotifyFilter = NotifyFilters.Size;
                 watcher.EnableRaisingEvents = true;
                 watcher.EndInit();
 
@@ -573,6 +582,8 @@ namespace PleaseIgnore.IntelMap {
         private TimeSpan channelScanPeriod = TimeSpan.Parse(
                 defaultChannelScanPeriod,
                 CultureInfo.InvariantCulture);
+        // The most recent message read from a log file
+        private DateTime lastIntelReport;
 
         /// <summary>
         ///     Gets or sets the time between log event messages before
@@ -677,6 +688,7 @@ namespace PleaseIgnore.IntelMap {
         /// </returns>
         internal bool OnIntelReported(IntelEventArgs args) {
             Contract.Requires(args != null);
+            lastIntelReport = DateTime.UtcNow;
 
             // Send into the ThreadPool so not to interfere with our processing
             ThreadPool.QueueUserWorkItem(this.IntelReportedWorkItem, args);
@@ -879,6 +891,7 @@ namespace PleaseIgnore.IntelMap {
                 try {
                     this.session = new IntelSession(this.Username, this.PasswordHash);
                     this.lastKeepAlive = now;
+                    this.lastIntelReport = now;
                     this.lastAuthenticationFailure = null;
                 } catch(AuthenticationException) {
                     this.lastAuthenticationFailure = now;

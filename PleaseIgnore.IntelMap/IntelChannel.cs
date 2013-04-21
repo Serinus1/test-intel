@@ -50,7 +50,8 @@ namespace PleaseIgnore.IntelMap {
         // When we receive a FileSystemWatcher.Changed event notification, we
         // hold onto it in case our current log file goes stale
         private FileSystemEventArgs lastEvent;
-
+        // Timestamp of lastEvent
+        private DateTime lastEventTime;
         // The file we are currently observing.
         private StreamReader activeFile;
 
@@ -103,6 +104,7 @@ namespace PleaseIgnore.IntelMap {
             Contract.Requires(e != null);
             if (Matches(e.Name)) {
                 this.lastEvent = e;
+                this.lastEventTime = DateTime.UtcNow;
             }
         }
 
@@ -146,9 +148,13 @@ namespace PleaseIgnore.IntelMap {
             }
 
             // Do we need to switch files?
-            // TODO: Need to implement a timer
-            if ((linesRead == 0) && (this.lastEvent != null)) {
-                SwitchTo(new FileInfo(this.lastEvent.FullPath));
+            if (this.lastEvent != null) {
+                if (linesRead != 0) {
+                    this.lastEvent = null;
+                } else if (this.lastEventTime + IntelReporter.ChannelScanPeriod < DateTime.UtcNow) {
+                    SwitchTo(new FileInfo(this.lastEvent.FullPath));
+                    this.lastEvent = null;
+                }
             }
 
             return intelRead;
