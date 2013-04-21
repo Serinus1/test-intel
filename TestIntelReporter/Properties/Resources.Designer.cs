@@ -80,20 +80,29 @@ namespace TestIntelReporter.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Application is not yet Configured..
-        /// </summary>
-        internal static string AppConfigure {
-            get {
-                return ResourceManager.GetString("AppConfigure", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Sending Intel to Server....
         /// </summary>
         internal static string AppConnected {
             get {
                 return ResourceManager.GetString("AppConnected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to locate the log directory..
+        /// </summary>
+        internal static string AppDirectory {
+            get {
+                return ResourceManager.GetString("AppDirectory", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A network error is preventing communication with the server..
+        /// </summary>
+        internal static string AppError {
+            get {
+                return ResourceManager.GetString("AppError", resourceCulture);
             }
         }
         

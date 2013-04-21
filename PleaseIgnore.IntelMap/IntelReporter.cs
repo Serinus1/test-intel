@@ -1034,6 +1034,8 @@ namespace PleaseIgnore.IntelMap {
                     return IntelStatus.Initializing;
                 } else if (this.thread == null) {
                     return IntelStatus.Stopped;
+                } else if (this.fileSystemWatcher == null) {
+                    return IntelStatus.MissingDirectory;
                 } else if (this.session != null) {
                     return IntelStatus.Connected;
                 } else if (lastAuthenticationFailure.HasValue) {

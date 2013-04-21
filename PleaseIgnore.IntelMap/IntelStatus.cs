@@ -36,6 +36,10 @@ namespace PleaseIgnore.IntelMap {
         /// </summary>
         NetworkError,
         /// <summary>
+        ///     The log directory does not exist.
+        /// </summary>
+        MissingDirectory,
+        /// <summary>
         ///     An unknown problem forced the service to terminate.
         /// </summary>
         FatalError

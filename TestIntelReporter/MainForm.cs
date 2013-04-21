@@ -91,8 +91,12 @@ namespace TestIntelReporter {
                 toolStripStatus.Text = Properties.Resources.AppIdle;
                 toolStripStatusUsers.Visible = false;
                 break;
+            case IntelStatus.MissingDirectory:
+                toolStripStatus.Text = Properties.Resources.AppDirectory;
+                toolStripStatusUsers.Visible = false;
+                break;
             default:
-                toolStripStatus.Text = Properties.Resources.AppConfigure;
+                toolStripStatus.Text = Properties.Resources.AppError;
                 toolStripStatusUsers.Visible = false;
                 break;
             }
