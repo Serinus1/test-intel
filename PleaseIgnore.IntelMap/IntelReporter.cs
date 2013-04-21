@@ -860,6 +860,7 @@ namespace PleaseIgnore.IntelMap {
                 try {
                     this.session = new IntelSession(this.Username, this.PasswordHash);
                     this.lastKeepAlive = now;
+                    this.lastAuthenticationFailure = null;
                 } catch(AuthenticationException) {
                     this.lastAuthenticationFailure = now;
                     throw;
