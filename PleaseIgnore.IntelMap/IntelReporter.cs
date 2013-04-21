@@ -167,6 +167,7 @@ namespace PleaseIgnore.IntelMap {
                     thread.Join();
                     thread = null;
                     this.OnPropertyChanged("Enabled");
+                    this.OnPropertyChanged("Status");
                 }
             }
         }
@@ -178,7 +179,20 @@ namespace PleaseIgnore.IntelMap {
             try {
                 // EVE may already be running
                 channels.RescanAll();
+                
+                // Try to log in immediately so we can display an error box
+                // quickly
+                try {
+                    this.GetSession();
+                } catch (AuthenticationException) {
+                } catch (IntelException) {
+                } catch (WebException) {
+                }
 
+                // Let the user know things are happening
+                this.OnPropertyChanged("Status");
+
+                // The main loop
                 while (this.running) {
                     // Make sure the file watcher exists
                     if (this.fileSystemWatcher == null) {
@@ -198,9 +212,12 @@ namespace PleaseIgnore.IntelMap {
                     channels.Tick();
 
                     // Maintain Session health
-                    if (this.lastIntelReport + this.channelIdlePeriod < DateTime.UtcNow) {
+                    if (this.session == null) {
+                        // Don't want to interfer with the following checks
+                    } else if (this.lastIntelReport + this.channelIdlePeriod < DateTime.UtcNow) {
                         channels.CloseAll();
                         this.CloseSession();
+                        this.OnPropertyChanged("Status");
                     } else {
                         this.KeepAlive();
                     }
@@ -856,6 +873,7 @@ namespace PleaseIgnore.IntelMap {
         internal void ReportFailure(Exception e) {
             Contract.Requires(e != null);
             this.lastFailure = DateTime.UtcNow;
+            this.OnPropertyChanged("Status");
         }
 
         /// <summary>
@@ -893,8 +911,10 @@ namespace PleaseIgnore.IntelMap {
                     this.lastKeepAlive = now;
                     this.lastIntelReport = now;
                     this.lastAuthenticationFailure = null;
-                } catch(AuthenticationException) {
+                    this.OnPropertyChanged("Status");
+                } catch (AuthenticationException) {
                     this.lastAuthenticationFailure = now;
+                    this.OnPropertyChanged("Status");
                     throw;
                 } catch(Exception e) {
                     this.ReportFailure(e);
