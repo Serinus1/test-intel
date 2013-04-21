@@ -194,6 +194,7 @@ namespace PleaseIgnore.IntelMap {
                 }
 
                 // Let the user know things are happening
+                this.CreateFileWatcher();
                 this.OnPropertyChanged("Status");
 
                 // The main loop
