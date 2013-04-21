@@ -179,23 +179,22 @@ namespace PleaseIgnore.IntelMap {
         private void ThreadMain() {
             try {
                 // EVE may already be running
+                this.CreateFileWatcher();
                 channels.RescanAll();
                 if (channels.Any(x => x.LogFile != null)) {
                     lastIntelReport = DateTime.UtcNow;
                 }
+                this.OnPropertyChanged("Status");
                 
                 // Try to log in immediately so we can display an error box
                 // quickly
                 try {
                     this.GetSession();
+                    this.OnPropertyChanged("Status");
                 } catch (AuthenticationException) {
                 } catch (IntelException) {
                 } catch (WebException) {
                 }
-
-                // Let the user know things are happening
-                this.CreateFileWatcher();
-                this.OnPropertyChanged("Status");
 
                 // The main loop
                 while (this.running) {

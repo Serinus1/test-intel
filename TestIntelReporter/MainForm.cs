@@ -38,7 +38,6 @@ namespace TestIntelReporter {
             this.UpdateAutoRun();
 
             // Update the status
-            this.UpdateStatus();
             logWatcher.Start();
         }
 
