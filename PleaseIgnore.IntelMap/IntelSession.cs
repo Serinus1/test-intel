@@ -350,7 +350,7 @@ namespace PleaseIgnore.IntelMap {
 
                 using (var response = request.GetResponse()) {
                     using (var reader = new StreamReader(response.GetResponseStream())) {
-                        var responseBody = reader.ReadLine();
+                        var responseBody = reader.ReadLine() ?? String.Empty;
                         Trace.WriteLine(">> " + responseBody, typeof(IntelSession).FullName);
                         return responseBody;
                     }

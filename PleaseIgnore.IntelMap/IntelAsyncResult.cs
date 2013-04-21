@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
+using System.Globalization;
 using System.Threading;
 
 namespace PleaseIgnore.IntelMap {
@@ -88,6 +89,7 @@ namespace PleaseIgnore.IntelMap {
                     ref this.waitHandle,
                     handle,
                     null);
+                Contract.Assume(this.waitHandle != null);
                 if (this.completed) {
                     this.waitHandle.Set();
                 }
@@ -227,6 +229,7 @@ namespace PleaseIgnore.IntelMap {
             var old = Interlocked.CompareExchange(ref waitCount, 1, 0);
             if (old != 0) {
                 throw new InvalidOperationException(string.Format(
+                    CultureInfo.CurrentCulture,
                     Properties.Resources.InvalidOperation_MultipleCalls,
                     methodName));
             }
@@ -246,6 +249,7 @@ namespace PleaseIgnore.IntelMap {
         ///     ThreadPool callback.
         /// </summary>
         private void UserCallback(object state) {
+            Contract.Requires(this.callback != null);
             this.callback(this);
         }
     }

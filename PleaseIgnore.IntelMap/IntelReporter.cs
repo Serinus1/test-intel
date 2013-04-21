@@ -56,6 +56,10 @@ namespace PleaseIgnore.IntelMap {
         /// </remarks>
         /// <seealso cref="EndInit"/>
         public void BeginInit() {
+            if (this.thread != null) {
+                throw new InvalidOperationException(
+                    Properties.Resources.InvalidOperation_InitRunning);
+            }
             this.initializing = true;
         }
 
@@ -130,11 +134,20 @@ namespace PleaseIgnore.IntelMap {
             Contract.Ensures(this.Enabled == true);
 
             lock (syncRoot) {
-                this.running = true;
-                if ((thread == null) && !this.initializing && !this.DesignMode) {
-                    this.thread = new Thread(this.ThreadMain);
-                    this.thread.Start();
-                    this.OnPropertyChanged("Enabled");
+                try {
+                    // Attempt to start the thread
+                    this.running = true;
+                    if ((thread == null) && !this.initializing && !this.DesignMode) {
+                        this.thread = new Thread(this.ThreadMain);
+                        this.thread.Start();
+                        this.OnPropertyChanged("Enabled");
+                    }
+                } catch {
+                    // Make sure we aren't in a half-open state if an exception
+                    // occurs
+                    this.thread = null;
+                    this.running = false;
+                    throw;
                 }
             }
         }
@@ -180,6 +193,10 @@ namespace PleaseIgnore.IntelMap {
                     // Rummage through the log files
                     channels.Tick();
 
+                    // Maintain Session health
+                    // TODO: Perform idle check
+                    this.KeepAlive();
+
                     // Sleep until we have something to do
                     signal.WaitOne(this.ChannelScanPeriod);
                 }
@@ -209,7 +226,7 @@ namespace PleaseIgnore.IntelMap {
         ///     Gets or sets the TEST Alliance AUTH username.
         /// </summary>
         /// <remarks>
-        ///     Changes to the <see cref="Username"/>, <see cref="Password"/>,
+        ///     Changes to the <see cref="Username"/>
         ///     or <see cref="PasswordHash"/> will not be used until the next
         ///     time the client tries to reauthenticate.  To verify that the
         ///     authentication information is correct, use the
@@ -234,7 +251,7 @@ namespace PleaseIgnore.IntelMap {
         ///     Gets or sets the <em>hashed</em> services password for the user.
         /// </summary>
         /// <remarks>
-        ///     Changes to the <see cref="Username"/>, <see cref="Password"/>,
+        ///     Changes to the <see cref="Username"/>
         ///     or <see cref="PasswordHash"/> will not be used until the next
         ///     time the client tries to reauthenticate.  To verify that the
         ///     authentication information is correct, use the
@@ -252,28 +269,6 @@ namespace PleaseIgnore.IntelMap {
                     this.lastAuthenticationFailure = null;
                     this.OnPropertyChanged("PasswordHash");
                 }
-            }
-        }
-
-        /// <summary>
-        ///     Sets the hashed password by automatically hashing and storing the
-        ///     plaintext password.  The plaintext password cannot be recovered
-        ///     after being stored.
-        /// </summary>
-        /// <remarks>
-        ///     Changes to the <see cref="Username"/>, <see cref="Password"/>,
-        ///     or <see cref="PasswordHash"/> will not be used until the next
-        ///     time the client tries to reauthenticate.  To verify that the
-        ///     authentication information is correct, use the
-        ///     <see cref="Authenticate"/> or <see cref="BeginAuthenticate"/>
-        ///     methods.
-        /// </remarks>
-        [Browsable(false)]
-        public string Password {
-            set {
-                this.PasswordHash = !String.IsNullOrEmpty(value)
-                    ? IntelSession.HashPassword(value)
-                    : null;
             }
         }
 
@@ -392,6 +387,8 @@ namespace PleaseIgnore.IntelMap {
         ///     The credentials provided by the user are incorrect.
         /// </exception>
         public bool Authenticate(string username, string password) {
+            Contract.Requires<ArgumentException>(!string.IsNullOrEmpty(username));
+            Contract.Requires<ArgumentException>(!string.IsNullOrEmpty(password));
             return EndAuthenticate(BeginAuthenticate(username, password, null, null));
         }
 
@@ -406,17 +403,12 @@ namespace PleaseIgnore.IntelMap {
             internal AuthenticateAsyncResult(IntelReporter owner, AsyncCallback callback,
                     object state, string username, string password, bool offline)
                 : base(owner, callback, state) {
-                Contract.Requires(username != null);
-                Contract.Requires(password != null);
+                Contract.Requires(owner != null);
+                Contract.Requires<ArgumentException>(!string.IsNullOrEmpty(username));
+                Contract.Requires<ArgumentException>(!string.IsNullOrEmpty(password));
                 this.username = username;
                 this.password = IntelSession.HashPassword(password);
                 this.offline = offline;
-            }
-
-            internal void Cancel() {
-                if (!this.IsCompleted) {
-                    this.AsyncComplete(false);
-                }
             }
 
             internal void Execute() {
@@ -487,6 +479,7 @@ namespace PleaseIgnore.IntelMap {
                 if (this.logDirectory != value) {
                     if (!String.IsNullOrEmpty(value) && !Directory.Exists(value)) {
                         throw new ArgumentException(string.Format(
+                            CultureInfo.CurrentCulture,
                             Properties.Resources.ArgumentException_DirNotExist,
                             value));
                     }
@@ -560,12 +553,18 @@ namespace PleaseIgnore.IntelMap {
         #endregion
 
         #region Channel Management
+        // The default value for ChannelIdlePeriod
+        private const string defaultChannelIdlePeriod = "00:10:00";
         // The default value for ChannelDownloadPeriod
         private const string defaultChannelDownloadPeriod = "24:00:00";
         // The default value for ChannelScanPeriod
         private const string defaultChannelScanPeriod = "00:00:05";
         // List of active IntelChannels
         private readonly IntelChannelCollection channels;
+        // Field backing the ChannelIdlePeriod property
+        private TimeSpan channelIdlePeriod = TimeSpan.Parse(
+                defaultChannelIdlePeriod,
+                CultureInfo.InvariantCulture);
         // Field backing the ChannelDownloadPeriod property
         private TimeSpan channelDownloadPeriod = TimeSpan.Parse(
                 defaultChannelDownloadPeriod,
@@ -574,6 +573,26 @@ namespace PleaseIgnore.IntelMap {
         private TimeSpan channelScanPeriod = TimeSpan.Parse(
                 defaultChannelScanPeriod,
                 CultureInfo.InvariantCulture);
+
+        /// <summary>
+        ///     Gets or sets the time between log event messages before
+        ///     declaring the channel 'idle'.
+        /// </summary>
+        [DefaultValue(typeof(TimeSpan), defaultChannelIdlePeriod)]
+        [Category("Behavior")]
+        public TimeSpan ChannelIdlePeriod {
+            get {
+                Contract.Ensures(Contract.Result<TimeSpan>() > TimeSpan.Zero);
+                return this.channelIdlePeriod;
+            }
+            set {
+                Contract.Requires<ArgumentOutOfRangeException>(value > TimeSpan.Zero);
+                if (this.channelIdlePeriod != value) {
+                    this.channelIdlePeriod = value;
+                    this.OnPropertyChanged("ChannelIdlePeriod");
+                }
+            }
+        }
 
         /// <summary>
         ///     Gets or sets the time between downloads of the intel
@@ -844,7 +863,7 @@ namespace PleaseIgnore.IntelMap {
 
             // Clear out any expired session
             var users = this.Users;
-            if ((this.session != null) || !session.IsConnected) {
+            if ((this.session != null) && !session.IsConnected) {
                 this.session = null;
             }
 
@@ -996,6 +1015,7 @@ namespace PleaseIgnore.IntelMap {
                 OnPropertyChanged("LastDowntime");
                 OnPropertyChanged("NextDowntime");
                 channels.CloseAll();
+                this.CloseSession();
             }
         }
 
@@ -1035,13 +1055,23 @@ namespace PleaseIgnore.IntelMap {
         [ContractInvariantMethod]
         private void ObjectInvariant() {
             Contract.Invariant(this.channelDownloadPeriod > TimeSpan.Zero);
+            Contract.Invariant(this.channelIdlePeriod > TimeSpan.Zero);
             Contract.Invariant(this.channelScanPeriod > TimeSpan.Zero);
             Contract.Invariant(this.keepAlivePeriod > TimeSpan.Zero);
             Contract.Invariant(this.retryPeriod > TimeSpan.Zero);
+            Contract.Invariant(this.channels != null);
 
             Contract.Invariant(this.NextDowntime > this.LastDowntime);
             Contract.Invariant(this.IntelSent >= 0);
             Contract.Invariant(this.IntelDropped >= 0);
+
+            // Unless we are initializating or in DesignMode, thread must be
+            // set iff we are running
+            Contract.Invariant(((this.thread != null) == this.running)
+                ||  (this.initializing || this.DesignMode));
+            // Thread cannot be set if we are initializating or in design mode
+            //Contract.Invariant((this.thread == null)
+            //    || !(this.initializing || this.DesignMode));
         }
     }
 }

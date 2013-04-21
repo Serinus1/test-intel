@@ -1,7 +1,7 @@
 ﻿using System.Reflection;
 
 // Stores common constants used in individual AssemblyInfo.cs
-internal class ProductInfo {
+internal static class ProductInfo {
     // Content for AssemblyCompanyAttribute
     internal const string CompanyName = "Test Alliance Please Ignore";
 

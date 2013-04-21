@@ -132,6 +132,9 @@
   <data name="IntelSession_Disposed" xml:space="preserve">
     <value>{0}: Disposed ({2} Reports Sent)</value>
   </data>
+  <data name="InvalidOperation_InitRunning" xml:space="preserve">
+    <value>Attempt to begin initiation after component has been started.</value>
+  </data>
   <data name="InvalidOperation_MultipleCalls" xml:space="preserve">
     <value>{0} can only be called once for each asynchronous operation.</value>
   </data>

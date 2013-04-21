@@ -136,6 +136,7 @@ namespace PleaseIgnore.IntelMap {
                                 DateTimeKind.Utc);
                             var args = new IntelEventArgs(this, timestamp, match.Groups[7].Value);
                             ++intelRead;
+                            ++this.IntelCount;
                             this.IntelReporter.OnIntelReported(args);
                         }
                     }
@@ -221,9 +222,9 @@ namespace PleaseIgnore.IntelMap {
         /// </summary>
         [Pure]
         private bool Matches(string filename) {
-            Contract.Requires(filename != null);
-            return filename.StartsWith(this.Name + '_',
-                StringComparison.InvariantCultureIgnoreCase);
+            return !String.IsNullOrEmpty(filename)
+                && filename.StartsWith(this.Name + '_',
+                    StringComparison.InvariantCultureIgnoreCase);
         }
 
         /// <summary>

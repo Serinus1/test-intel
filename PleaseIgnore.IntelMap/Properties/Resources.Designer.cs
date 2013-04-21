@@ -106,6 +106,15 @@ namespace PleaseIgnore.IntelMap.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Attempt to begin initiation after component has been started..
+        /// </summary>
+        internal static string InvalidOperation_InitRunning {
+            get {
+                return ResourceManager.GetString("InvalidOperation_InitRunning", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} can only be called once for each asynchronous operation..
         /// </summary>
         internal static string InvalidOperation_MultipleCalls {
