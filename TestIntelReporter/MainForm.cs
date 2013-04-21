@@ -42,7 +42,12 @@ namespace TestIntelReporter {
             logWatcher.Start();
         }
 
-        public bool HasConfig { get { return true; } }
+        public bool HasConfig {
+            get {
+                return !String.IsNullOrEmpty(logWatcher.Username)
+                    && !String.IsNullOrEmpty(logWatcher.PasswordHash);
+            }
+        }
 
         private void UpdateAutoRun() {
             try {

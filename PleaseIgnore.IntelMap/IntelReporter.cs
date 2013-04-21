@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Security.Authentication;
 using System.Threading;
@@ -179,6 +180,9 @@ namespace PleaseIgnore.IntelMap {
             try {
                 // EVE may already be running
                 channels.RescanAll();
+                if (channels.Any(x => x.LogFile != null)) {
+                    lastIntelReport = DateTime.UtcNow;
+                }
                 
                 // Try to log in immediately so we can display an error box
                 // quickly
@@ -212,12 +216,12 @@ namespace PleaseIgnore.IntelMap {
                     channels.Tick();
 
                     // Maintain Session health
-                    if (this.session == null) {
-                        // Don't want to interfer with the following checks
-                    } else if (this.lastIntelReport + this.channelIdlePeriod < DateTime.UtcNow) {
+                    if (this.lastIntelReport + this.channelIdlePeriod < DateTime.UtcNow) {
                         channels.CloseAll();
-                        this.CloseSession();
-                        this.OnPropertyChanged("Status");
+                        if (this.session != null) {
+                            this.CloseSession();
+                            this.OnPropertyChanged("Status");
+                        }
                     } else {
                         this.KeepAlive();
                     }
@@ -451,6 +455,7 @@ namespace PleaseIgnore.IntelMap {
                             Owner.CloseSession();
                             Owner.session = session;
                             Owner.lastKeepAlive = now;
+                            Owner.lastIntelReport = now;
                         }
                         Owner.Username = this.username;
                         Owner.PasswordHash = this.password;
@@ -903,11 +908,18 @@ namespace PleaseIgnore.IntelMap {
                     && (lastAuthenticationFailure + retryAuthenticationPeriod > now)) {
                 throw new AuthenticationException();
             }
+
+            // If the username or password or blank, another no go
+            if (String.IsNullOrEmpty(this.username) || String.IsNullOrEmpty(this.passwordHash)) {
+                this.lastAuthenticationFailure = now;
+                this.OnPropertyChanged("Status");
+                throw new AuthenticationException();
+            }
             
             // Create the new session
             if (this.session == null) {
                 try {
-                    this.session = new IntelSession(this.Username, this.PasswordHash);
+                    this.session = new IntelSession(this.username, this.passwordHash);
                     this.lastKeepAlive = now;
                     this.lastIntelReport = now;
                     this.lastAuthenticationFailure = null;
