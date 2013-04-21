@@ -824,7 +824,6 @@ namespace PleaseIgnore.IntelMap {
         /// </param>
         internal void ReportFailure(Exception e) {
             Contract.Requires(e != null);
-            // TODO: Record manner of failure
             this.lastFailure = DateTime.UtcNow;
         }
 
@@ -845,15 +844,25 @@ namespace PleaseIgnore.IntelMap {
 
             // Clear out any expired session
             var users = this.Users;
-            if ((this.session != null) && !session.IsConnected) {
+            if ((this.session != null) || !session.IsConnected) {
                 this.session = null;
+            }
+
+            // Don't retry on authentication failures
+            var now = DateTime.UtcNow;
+            if (lastAuthenticationFailure.HasValue
+                    && (lastAuthenticationFailure + retryAuthenticationPeriod > now)) {
+                throw new AuthenticationException();
             }
             
             // Create the new session
             if (this.session == null) {
                 try {
                     this.session = new IntelSession(this.Username, this.PasswordHash);
-                    this.lastKeepAlive = DateTime.UtcNow;
+                    this.lastKeepAlive = now;
+                } catch(AuthenticationException) {
+                    this.lastAuthenticationFailure = now;
+                    throw;
                 } catch(Exception e) {
                     this.ReportFailure(e);
                     throw;
