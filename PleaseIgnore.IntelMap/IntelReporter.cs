@@ -781,7 +781,7 @@ namespace PleaseIgnore.IntelMap {
         // The default value for KeepAlivePeriod
         private const string defaultKeepAlivePeriod = "00:01:00";
         // The default value for RetryPeriod
-        private const string defaultRetryPeriod = "00:15:00";
+        private const string defaultRetryPeriod = "00:00:30";
         // Field backing the KeepAlivePeriod property
         [ContractPublicPropertyName("KeepAlivePeriod")]
         private TimeSpan keepAlivePeriod = TimeSpan.Parse(

@@ -31,7 +31,7 @@ namespace PleaseIgnore.IntelMap {
         private static readonly char[] ChannelSeparators = new char[] { ',' };
 
         // API response parsers
-        private static readonly Regex ErrorResponse  = new Regex(@"^(50?) ERROR (.*)");
+        private static readonly Regex ErrorResponse  = new Regex(@"^(50\d) ERROR (.*)");
         private static readonly Regex AuthResponse   = new Regex(@"^200 AUTH ([^\s]+) (\d+)");
         private static readonly Regex IntelResponse  = new Regex(@"^202 INTEL .*");
         private static readonly Regex AliveResponse  = new Regex(@"^203 ALIVE OK (\d+)");
