@@ -145,6 +145,7 @@ namespace PleaseIgnore.IntelMap {
             }
 
             // Do we need to switch files?
+            // TODO: Need to implement a timer
             if ((linesRead == 0) && (this.lastEvent != null)) {
                 SwitchTo(new FileInfo(this.lastEvent.FullPath));
             }

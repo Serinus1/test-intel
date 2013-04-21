@@ -78,7 +78,7 @@ namespace TestIntelReporter {
                 toolStripStatus.Text = Properties.Resources.AppAuthenticateFailed;
                 toolStripStatusUsers.Visible = false;
                 break;
-            case IntelStatus.Running:
+            case IntelStatus.Connected:
                 toolStripStatus.Text = Properties.Resources.AppConnected;
                 toolStripStatusUsers.Visible = true;
                 break;

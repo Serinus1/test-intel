@@ -27,21 +27,7 @@ namespace PleaseIgnore.IntelMap {
         /// </summary>
         public IntelReporter() {
             Contract.Ensures(this.Container == null);
-
-            this.ChannelDownloadPeriod = TimeSpan.Parse(
-                defaultChannelDownloadPeriod,
-                CultureInfo.InvariantCulture);
-            this.KeepAlivePeriod = TimeSpan.Parse(
-                defaultKeepAlivePeriod,
-                CultureInfo.InvariantCulture);
-            this.ChannelScanPeriod = TimeSpan.Parse(
-                defaultChannelScanPeriod,
-                CultureInfo.InvariantCulture);
-            this.RetryPeriod = TimeSpan.Parse(
-                defaultRetryPeriod,
-                CultureInfo.InvariantCulture);
             this.UpdateDowntime(false);
-
             this.channels = new IntelChannelCollection(this);
         }
 
@@ -49,11 +35,14 @@ namespace PleaseIgnore.IntelMap {
         ///     Initializes a new instance of the <see cref="IntelReporter"/>
         ///     class and adds it to the specified <see cref="Container"/>.
         /// </summary>
-        public IntelReporter(IContainer container) : this() {
+        public IntelReporter(IContainer container) {
             Contract.Ensures(this.Container == container);
             if (container != null) {
                 container.Add(this);
             }
+
+            this.UpdateDowntime(false);
+            this.channels = new IntelChannelCollection(this);
         }
 
         /// <summary>
@@ -145,6 +134,7 @@ namespace PleaseIgnore.IntelMap {
                 if ((thread == null) && !this.initializing && !this.DesignMode) {
                     this.thread = new Thread(this.ThreadMain);
                     this.thread.Start();
+                    this.OnPropertyChanged("Enabled");
                 }
             }
         }
@@ -163,6 +153,7 @@ namespace PleaseIgnore.IntelMap {
                     signal.Set();
                     thread.Join();
                     thread = null;
+                    this.OnPropertyChanged("Enabled");
                 }
             }
         }
@@ -201,6 +192,19 @@ namespace PleaseIgnore.IntelMap {
         #endregion
 
         #region Authentication
+        // The default value for RetryAuthenticationPeriod
+        private const string defaultRetryAuthenticationPeriod = "01:00:00";
+        // Field backing the Username property
+        private string username;
+        // Field backing the PasswordHash property
+        private string passwordHash;
+        // Field backing the RetryAuthenticationPeriod property
+        private TimeSpan retryAuthenticationPeriod = TimeSpan.Parse(
+            defaultRetryAuthenticationPeriod,
+            CultureInfo.InvariantCulture);
+        // The last time an authentication failed
+        private DateTime? lastAuthenticationFailure;
+
         /// <summary>
         ///     Gets or sets the TEST Alliance AUTH username.
         /// </summary>
@@ -213,7 +217,18 @@ namespace PleaseIgnore.IntelMap {
         ///     methods.
         /// </remarks>
         [DefaultValue((String)null), Category("Behavior")]
-        public string Username { get; set; }
+        public string Username {
+            get {
+                return this.username;
+            }
+            set {
+                if (this.username != value) {
+                    this.username = value;
+                    this.lastAuthenticationFailure = null;
+                    this.OnPropertyChanged("Username");
+                }
+            }
+        }
 
         /// <summary>
         ///     Gets or sets the <em>hashed</em> services password for the user.
@@ -227,11 +242,23 @@ namespace PleaseIgnore.IntelMap {
         ///     methods.
         /// </remarks>
         [DefaultValue((String)null), Category("Behavior")]
-        public string PasswordHash { get; set; }
+        public string PasswordHash {
+            get {
+                return this.passwordHash;
+            }
+            set {
+                if (this.passwordHash != value) {
+                    this.passwordHash = value;
+                    this.lastAuthenticationFailure = null;
+                    this.OnPropertyChanged("PasswordHash");
+                }
+            }
+        }
 
         /// <summary>
         ///     Sets the hashed password by automatically hashing and storing the
-        ///     plaintext password.
+        ///     plaintext password.  The plaintext password cannot be recovered
+        ///     after being stored.
         /// </summary>
         /// <remarks>
         ///     Changes to the <see cref="Username"/>, <see cref="Password"/>,
@@ -247,6 +274,32 @@ namespace PleaseIgnore.IntelMap {
                 this.PasswordHash = !String.IsNullOrEmpty(value)
                     ? IntelSession.HashPassword(value)
                     : null;
+            }
+        }
+
+        /// <summary>
+        ///     Gets or sets the time between attempts to authenticate against the
+        ///     server.
+        /// </summary>
+        /// <remarks>
+        ///     In some situations, a server may reject a login due to reasons other
+        ///     than invalid password (e.g. an EVE API screw-up, database issue,
+        ///     etc.).  Instead of permanently rejecting the credentials, it will
+        ///     periodically try to log in.
+        /// </remarks>
+        [DefaultValue(typeof(TimeSpan), defaultRetryAuthenticationPeriod)]
+        [Category("Behavior")]
+        public TimeSpan RetryAuthenticationPeriod {
+            get {
+                Contract.Ensures(Contract.Result<TimeSpan>() > TimeSpan.Zero);
+                return this.retryAuthenticationPeriod;
+            }
+            set {
+                Contract.Requires<ArgumentOutOfRangeException>(value > TimeSpan.Zero);
+                if (this.retryAuthenticationPeriod != value) {
+                    this.retryAuthenticationPeriod = value;
+                    this.OnPropertyChanged("RetryAuthenticationPeriod");
+                }
             }
         }
 
@@ -281,13 +334,14 @@ namespace PleaseIgnore.IntelMap {
             Contract.Ensures(Contract.Result<IAsyncResult>() != null);
 
             lock (this.syncRoot) {
+                var offline = (this.thread == null);
                 var asyncResult = new AuthenticateAsyncResult(this, callback,
-                    state, username, password);
-                if (this.thread != null) {
+                    state, username, password, offline);
+                if (offline) {
+                    ThreadPool.QueueUserWorkItem(asyncResult.Execute);
+                } else {
                     actionQueue.Enqueue(asyncResult.Execute);
                     signal.Set();
-                } else {
-                    ThreadPool.QueueUserWorkItem(asyncResult.Execute);
                 }
                 return asyncResult;
             }
@@ -315,7 +369,9 @@ namespace PleaseIgnore.IntelMap {
 
             var localResult = asyncResult as AuthenticateAsyncResult;
             if (localResult == null) {
-                throw new ArgumentException(Properties.Resources.ArgumentException_WrongObject);
+                throw new ArgumentException(
+                    Properties.Resources.ArgumentException_WrongObject,
+                    "asyncResult");
             }
 
             return localResult.Wait(this, "EndAuthenticate");
@@ -345,14 +401,16 @@ namespace PleaseIgnore.IntelMap {
         private class AuthenticateAsyncResult : IntelAsyncResult<IntelReporter, bool> {
             private readonly string username;
             private readonly string password;
+            private readonly bool offline;
 
             internal AuthenticateAsyncResult(IntelReporter owner, AsyncCallback callback,
-                    object state, string username, string password)
+                    object state, string username, string password, bool offline)
                 : base(owner, callback, state) {
                 Contract.Requires(username != null);
                 Contract.Requires(password != null);
                 this.username = username;
                 this.password = IntelSession.HashPassword(password);
+                this.offline = offline;
             }
 
             internal void Cancel() {
@@ -366,13 +424,17 @@ namespace PleaseIgnore.IntelMap {
                     try {
                         var now = DateTime.UtcNow;
                         var session = new IntelSession(this.username, this.password);
-                        Owner.CloseSession();
-                        Owner.session = session;
-                        Owner.lastKeepAlive = now;
+                        if (offline) {
+                            // Not running in the main thread
+                            session.Dispose();
+                        } else {
+                            // Only save the session if running in the main thread
+                            Owner.CloseSession();
+                            Owner.session = session;
+                            Owner.lastKeepAlive = now;
+                        }
                         Owner.Username = this.username;
                         Owner.PasswordHash = this.password;
-                        Owner.OnPropertyChanged("Username");
-                        Owner.OnPropertyChanged("PasswordHash");
                         this.AsyncComplete(true);
                     } catch (AuthenticationException e) {
                         this.AsyncComplete(e);
@@ -434,6 +496,8 @@ namespace PleaseIgnore.IntelMap {
                         actionQueue.Enqueue(OnLogDirectory);
                         signal.Set();
                     }
+
+                    this.OnPropertyChanged("LogDirectory");
                 }
             }
         }
@@ -496,12 +560,20 @@ namespace PleaseIgnore.IntelMap {
         #endregion
 
         #region Channel Management
-        // List of active IntelChannels
-        private readonly IntelChannelCollection channels;
         // The default value for ChannelDownloadPeriod
         private const string defaultChannelDownloadPeriod = "24:00:00";
         // The default value for ChannelScanPeriod
         private const string defaultChannelScanPeriod = "00:00:05";
+        // List of active IntelChannels
+        private readonly IntelChannelCollection channels;
+        // Field backing the ChannelDownloadPeriod property
+        private TimeSpan channelDownloadPeriod = TimeSpan.Parse(
+                defaultChannelDownloadPeriod,
+                CultureInfo.InvariantCulture);
+        // Field backing the ChannelScanPeriod property
+        private TimeSpan channelScanPeriod = TimeSpan.Parse(
+                defaultChannelScanPeriod,
+                CultureInfo.InvariantCulture);
 
         /// <summary>
         ///     Gets or sets the time between downloads of the intel
@@ -509,14 +581,38 @@ namespace PleaseIgnore.IntelMap {
         /// </summary>
         [DefaultValue(typeof(TimeSpan), defaultChannelDownloadPeriod)]
         [Category("Behavior")]
-        public TimeSpan ChannelDownloadPeriod { get; set; }
+        public TimeSpan ChannelDownloadPeriod {
+            get {
+                Contract.Ensures(Contract.Result<TimeSpan>() > TimeSpan.Zero);
+                return this.channelDownloadPeriod;
+            }
+            set {
+                Contract.Requires<ArgumentOutOfRangeException>(value > TimeSpan.Zero);
+                if (this.channelDownloadPeriod != value) {
+                    this.channelDownloadPeriod = value;
+                    this.OnPropertyChanged("ChannelDownloadPeriod");
+                }
+            }
+        }
 
         /// <summary>
         ///     Gets or sets the time between scans of the chat logs for new intel.
         /// </summary>
         [DefaultValue(typeof(TimeSpan), defaultChannelScanPeriod)]
         [Category("Behavior")]
-        public TimeSpan ChannelScanPeriod { get; set; }
+        public TimeSpan ChannelScanPeriod {
+            get {
+                Contract.Ensures(Contract.Result<TimeSpan>() > TimeSpan.Zero);
+                return this.channelScanPeriod;
+            }
+            set {
+                Contract.Requires<ArgumentOutOfRangeException>(value > TimeSpan.Zero);
+                if (this.channelScanPeriod != value) {
+                    this.channelScanPeriod = value;
+                    this.OnPropertyChanged("ChannelScanPeriod");
+                }
+            }
+        }
 
         /// <summary>
         ///     Gets the list of channels currently being monitored by the
@@ -573,9 +669,11 @@ namespace PleaseIgnore.IntelMap {
                         .Report(args.Channel.Name, args.Timestamp, args.Message);
                     if (success) {
                         ++this.IntelSent;
+                        this.OnPropertyChanged("IntelSent");
                         return true;
                     } else {
                         ++this.IntelDropped;
+                        this.OnPropertyChanged("IntelDropped");
                         return false;
                     }
                 } catch (AuthenticationException e) {
@@ -589,6 +687,7 @@ namespace PleaseIgnore.IntelMap {
 
             // Failed to report
             ++this.IntelDropped;
+            this.OnPropertyChanged("IntelDropped");
             return false;
         }
 
@@ -607,16 +706,26 @@ namespace PleaseIgnore.IntelMap {
         #endregion
 
         #region Session Management
+        // The default value for KeepAlivePeriod
+        private const string defaultKeepAlivePeriod = "00:01:00";
+        // The default value for RetryPeriod
+        private const string defaultRetryPeriod = "00:15:00";
+        // Field backing the KeepAlivePeriod property
+        [ContractPublicPropertyName("KeepAlivePeriod")]
+        private TimeSpan keepAlivePeriod = TimeSpan.Parse(
+                defaultKeepAlivePeriod,
+                CultureInfo.InvariantCulture);
+        // Field backing the RetryPeriod property
+        [ContractPublicPropertyName("RetryPeriod")]
+        private TimeSpan retryPeriod = TimeSpan.Parse(
+                defaultRetryPeriod,
+                CultureInfo.InvariantCulture);
         // The current session (if any) for Intel Reporting
         private IntelSession session;
         // The last time we 'pinged' the server to keep our session alive
         private DateTime  lastKeepAlive;
         // The last time we 'failed' to contact the server
         private DateTime? lastFailure;
-        // The default value for KeepAlivePeriod
-        private const string defaultKeepAlivePeriod = "00:01:00";
-        // The default value for RetryPeriod
-        private const string defaultRetryPeriod = "00:15:00";
 
         /// <summary>
         ///     Gets or sets the time between server pings to maintain our Intel
@@ -624,7 +733,19 @@ namespace PleaseIgnore.IntelMap {
         /// </summary>
         [DefaultValue(typeof(TimeSpan), defaultKeepAlivePeriod)]
         [Category("Behavior")]
-        public TimeSpan KeepAlivePeriod { get; set; }
+        public TimeSpan KeepAlivePeriod {
+            get {
+                Contract.Ensures(Contract.Result<TimeSpan>() > TimeSpan.Zero);
+                return this.keepAlivePeriod;
+            }
+            set {
+                Contract.Requires<ArgumentOutOfRangeException>(value > TimeSpan.Zero, "value");
+                if (this.keepAlivePeriod != value) {
+                    this.keepAlivePeriod = value;
+                    this.OnPropertyChanged("KeepAlivePeriod");
+                }
+            }
+        }
 
         /// <summary>
         ///     Gets or sets the time to back off attempting to contact the server
@@ -632,7 +753,19 @@ namespace PleaseIgnore.IntelMap {
         /// </summary>
         [DefaultValue(typeof(TimeSpan), defaultRetryPeriod)]
         [Category("Behavior")]
-        public TimeSpan RetryPeriod { get; set; }
+        public TimeSpan RetryPeriod {
+            get {
+                Contract.Ensures(Contract.Result<TimeSpan>() > TimeSpan.Zero);
+                return this.retryPeriod;
+            }
+            set {
+                Contract.Requires<ArgumentOutOfRangeException>(value > TimeSpan.Zero, "value");
+                if (this.retryPeriod != value) {
+                    this.retryPeriod = value;
+                    this.OnPropertyChanged("RetryPeriod");
+                }
+            }
+        }
 
 
         /// <summary>
@@ -711,6 +844,7 @@ namespace PleaseIgnore.IntelMap {
             CanSend(true);
 
             // Clear out any expired session
+            var users = this.Users;
             if ((this.session != null) && !session.IsConnected) {
                 this.session = null;
             }
@@ -740,6 +874,7 @@ namespace PleaseIgnore.IntelMap {
 
             if (this.CanSend(false)) {
                 // Perform the actual keep-alive
+                var users = this.Users;
                 var now = DateTime.UtcNow;
                 if (now > this.lastKeepAlive + this.KeepAlivePeriod) {
                     try {
@@ -751,6 +886,10 @@ namespace PleaseIgnore.IntelMap {
                     } catch (WebException e) {
                         this.ReportFailure(e);
                     }
+                }
+                // Check for changes to 'Users'
+                if (this.Users != users) {
+                    this.OnPropertyChanged("Users");
                 }
             }
         }
@@ -773,12 +912,46 @@ namespace PleaseIgnore.IntelMap {
         /// <summary>
         ///     Gets the date and time of the most recent server downtime.
         /// </summary>
+        /// <value>
+        ///     A <see cref="DateTime"/> instance encoding the start time of
+        ///     the most recent downtime.  The value is only valid if the
+        ///     service is running.
+        /// </value>
+        [Browsable(false)]
         public DateTime LastDowntime { get; private set; }
 
         /// <summary>
         ///     Gets the date and time of the next scheduled server downtime.
         /// </summary>
+        /// <value>
+        ///     A <see cref="DateTime"/> instance encoding the start time of
+        ///     the next scheduled downtime.  The value is only valid if the
+        ///     service is running.
+        /// </value>
+        [Browsable(false)]
         public DateTime NextDowntime { get; private set; }
+
+        /// <summary>
+        ///     Gets the current status of the intel reporting component.
+        /// </summary>
+        [Browsable(false)]
+        public IntelStatus Status {
+            get {
+                if (this.initializing) {
+                    return IntelStatus.Initializing;
+                } else if (this.thread == null) {
+                    return IntelStatus.Stopped;
+                } else if (this.session != null) {
+                    return IntelStatus.Connected;
+                } else if (lastAuthenticationFailure.HasValue) {
+                    return IntelStatus.AuthenticationFailure;
+                } else if (lastFailure.HasValue) {
+                    return IntelStatus.NetworkError;
+                } else {
+                    return IntelStatus.Idle;
+                }
+            }
+        }
 
         /// <summary>
         ///     Occurs when a property value changes.
@@ -826,9 +999,12 @@ namespace PleaseIgnore.IntelMap {
                 Debug.Assert(this.GetType().GetProperty(propertyName) != null);
             }
 #endif
-            ThreadPool.QueueUserWorkItem(
-                this.PropertyChangedWorkItem,
-                propertyName);
+            // Raise the event (as appropriate)
+            if (!this.initializing) {
+                ThreadPool.QueueUserWorkItem(
+                    this.PropertyChangedWorkItem,
+                    propertyName);
+            }
         }
 
         /// <summary>
@@ -848,10 +1024,10 @@ namespace PleaseIgnore.IntelMap {
 
         [ContractInvariantMethod]
         private void ObjectInvariant() {
-            Contract.Invariant(this.ChannelDownloadPeriod > TimeSpan.Zero);
-            Contract.Invariant(this.ChannelScanPeriod > TimeSpan.Zero);
-            Contract.Invariant(this.KeepAlivePeriod > TimeSpan.Zero);
-            Contract.Invariant(this.RetryPeriod > TimeSpan.Zero);
+            Contract.Invariant(this.channelDownloadPeriod > TimeSpan.Zero);
+            Contract.Invariant(this.channelScanPeriod > TimeSpan.Zero);
+            Contract.Invariant(this.keepAlivePeriod > TimeSpan.Zero);
+            Contract.Invariant(this.retryPeriod > TimeSpan.Zero);
 
             Contract.Invariant(this.NextDowntime > this.LastDowntime);
             Contract.Invariant(this.IntelSent >= 0);

@@ -121,7 +121,10 @@ namespace PleaseIgnore.IntelMap {
         ///     Updates the channel list (if appropriate) and then pings each channel
         ///     to perform a log scan.
         /// </summary>
-        internal void Tick() {
+        /// <returns>
+        ///     The number of new intel messages parsed from the log files.
+        /// </returns>
+        internal int Tick() {
             var now = DateTime.UtcNow;
             var period = parent.ChannelDownloadPeriod;
             if ((!lastDownload.HasValue || now > lastDownload + period)
@@ -160,7 +163,7 @@ namespace PleaseIgnore.IntelMap {
                 } //if ((channels != null) && (channels.Length > 0)) {
             } //if ((!lastDownload.HasValue || now > lastDownload + period)
 
-            list.ForEach(x => x.Tick());
+            return list.Sum(x => x.Tick());
         }
 
         /// <summary>

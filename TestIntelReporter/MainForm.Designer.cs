@@ -433,10 +433,6 @@
             // 
             // logWatcher
             // 
-            this.logWatcher.ChannelUpdatePeriod = System.TimeSpan.Parse("1.00:00:00");
-            this.logWatcher.LogDirectory = "C:\\Users\\mcgee\\Documents\\EVE\\logs\\Chatlogs";
-            this.logWatcher.PasswordHash = "";
-            this.logWatcher.Username = "";
             this.logWatcher.PropertyChanged += new System.ComponentModel.PropertyChangedEventHandler(this.logWatcher_PropertyChanged);
             // 
             // MainForm
