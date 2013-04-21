@@ -17,7 +17,7 @@ namespace TestIntelReporter {
 
             // Initialize additional properties
             this.Icon = Properties.Resources.AppIcon;
-            labelAppName.Text = String.Format(labelAppVersion.Text, Application.ProductName);
+            labelAppName.Text = String.Format(labelAppName.Text, Application.ProductName);
             labelAppVersion.Text = String.Format(labelAppVersion.Text, Application.ProductVersion);
             notifyIcon.Icon = Properties.Resources.AppIcon;
             notifyIcon.Visible = true;
