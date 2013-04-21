@@ -579,6 +579,8 @@ namespace PleaseIgnore.IntelMap {
         /// </summary>
         private void OnFileEvent(object sender, FileSystemEventArgs e) {
             Contract.Requires(e != null);
+            // Need to get the reset within the main loop to let off
+            this.lastIntelReport = DateTime.UtcNow;
             channels.OnFileEvent(e);
         }
         #endregion
