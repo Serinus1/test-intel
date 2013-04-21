@@ -1036,12 +1036,12 @@ namespace PleaseIgnore.IntelMap {
                     return IntelStatus.Stopped;
                 } else if (this.fileSystemWatcher == null) {
                     return IntelStatus.MissingDirectory;
+                } else if (lastFailure.HasValue) {
+                    return IntelStatus.NetworkError;
                 } else if (this.session != null) {
                     return IntelStatus.Connected;
                 } else if (lastAuthenticationFailure.HasValue) {
                     return IntelStatus.AuthenticationFailure;
-                } else if (lastFailure.HasValue) {
-                    return IntelStatus.NetworkError;
                 } else {
                     return IntelStatus.Idle;
                 }
