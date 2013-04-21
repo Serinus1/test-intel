@@ -108,15 +108,17 @@ namespace TestIntelReporter {
         }
 
         private void buttonApply_Click(object sender, EventArgs e) {
-            settings.Username = logWatcher.Username = textUsername.Text.Trim();
-            logWatcher.PasswordHash = settings.PasswordHash
-                = IntelSession.HashPassword(textPassword.Text.Trim());
-            logWatcher.LogDirectory = textLogDirectory.Text;
-            settings.Save();
-
-            logWatcher.Start();
-            buttonApply.Enabled = false;
-            textPassword.Text = "";
+            var username = textUsername.Text.Trim();
+            var password = textPassword.Text.Trim();
+            
+            try {
+                logWatcher.Authenticate(username, password);
+                settings.Username = logWatcher.Username;
+                settings.PasswordHash = logWatcher.PasswordHash;
+                settings.Save();
+                buttonApply.Enabled = false;
+            } catch (Exception) {
+            }
         }
 
         private void buttonBrowse_Click(object sender, EventArgs e) {
@@ -124,7 +126,9 @@ namespace TestIntelReporter {
             switch (folderBrowserDialog.ShowDialog(this)) {
             case DialogResult.OK:
                 textLogDirectory.Text = folderBrowserDialog.SelectedPath;
-                buttonApply.Enabled = true;
+                logWatcher.LogDirectory = folderBrowserDialog.SelectedPath;
+                settings.LogDirectory = folderBrowserDialog.SelectedPath;
+                settings.Save();
                 break;
             }
         }

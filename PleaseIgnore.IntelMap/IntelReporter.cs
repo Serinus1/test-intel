@@ -216,7 +216,8 @@ namespace PleaseIgnore.IntelMap {
                     channels.Tick();
 
                     // Maintain Session health
-                    if (this.lastIntelReport + this.channelIdlePeriod < DateTime.UtcNow) {
+                    if ((this.lastIntelReport + this.channelIdlePeriod < DateTime.UtcNow)
+                            || channels.All(x => x.LogFile == null)) {
                         channels.CloseAll();
                         if (this.session != null) {
                             this.CloseSession();
@@ -1048,7 +1049,7 @@ namespace PleaseIgnore.IntelMap {
         ///     Raises the appropriate signals.
         /// </param>
         private void UpdateDowntime(bool signal) {
-            var now = DateTime.Now;
+            var now = DateTime.UtcNow;
             var oldtime = this.LastDowntime;
             if (now.TimeOfDay > downtimeStarts) {
                 this.LastDowntime = now.Date + downtimeStarts;
