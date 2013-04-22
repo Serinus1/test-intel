@@ -713,8 +713,10 @@ namespace PleaseIgnore.IntelMap {
             Contract.Requires(args != null);
             lastIntelReport = DateTime.UtcNow;
 
-            // Send into the ThreadPool so not to interfere with our processing
-            ThreadPool.QueueUserWorkItem(this.IntelReportedWorkItem, args);
+            // Raise the detection event
+            this.RaiseEvent(
+                new Action<object, IntelEventArgs>(this.IntelReported),
+                args);
 
             if (this.CanSend(false)) {
                 // Report the intelligence
@@ -760,19 +762,6 @@ namespace PleaseIgnore.IntelMap {
                 } catch (IntelException) {
                 } catch (WebException) {
                 }
-            }
-        }
-
-        /// <summary>
-        ///     Raises <see cref="IntelReported"/> in the appropriate thread.
-        /// </summary>
-        /// <param name="state">
-        ///     Instance of <see cref="IntelEventArgs"/> to include.
-        /// </param>
-        private void IntelReportedWorkItem(object state) {
-            var handler = this.IntelReported;
-            if (handler != null) {
-                handler(this, (IntelEventArgs)state);
             }
         }
         #endregion
@@ -1001,6 +990,18 @@ namespace PleaseIgnore.IntelMap {
         #region Notification Support
         // The time each day when Tranquility downtime begins
         private static readonly TimeSpan downtimeStarts = new TimeSpan(11, 0, 0);
+        // The instance of ISynchronizeInvoke to use for messaging
+        private ISynchronizeInvoke synchronizingObject;
+
+        /// <summary>
+        ///     Gets or sets the object used to marshal the event handler
+        ///     calls issued as a result of a <see cref="PropertyChanged"/>
+        ///     or <see cref="IntelReported"/> event.
+        /// </summary>
+        public ISynchronizeInvoke SynchronizingObject {
+            get { return this.synchronizingObject; }
+            set { this.synchronizingObject = value; }
+        }
 
         /// <summary>
         ///     Gets the date and time of the most recent server downtime.
@@ -1096,24 +1097,24 @@ namespace PleaseIgnore.IntelMap {
             }
 #endif
             // Raise the event (as appropriate)
-            if (!this.initializing) {
-                ThreadPool.QueueUserWorkItem(
-                    this.PropertyChangedWorkItem,
-                    propertyName);
-            }
+            this.RaiseEvent(
+                new Action<object, PropertyChangedEventArgs>(this.PropertyChanged),
+                new PropertyChangedEventArgs(propertyName));
         }
 
         /// <summary>
-        ///     Calls the <see cref="PropertyChanged"/> handler in the appropriate
-        ///     thread.
+        ///     Raises an event using the <see cref="SynchronizingObject"/>
+        ///     as appropriate.
         /// </summary>
-        /// <param name="state">
-        ///     Name of the property whose value has changed.
-        /// </param>
-        private void PropertyChangedWorkItem(object state) {
-            var handler = this.PropertyChanged;
+        private void RaiseEvent<T>(Action<object, T> handler, T args)
+                where T : EventArgs {
             if (handler != null) {
-                handler(this, new PropertyChangedEventArgs((string)state));
+                var invoker = this.synchronizingObject;
+                if ((invoker == null) || !invoker.InvokeRequired) {
+                    handler(this, args);
+                } else {
+                    invoker.BeginInvoke(handler, new object[] { this, args });
+                }
             }
         }
         #endregion
