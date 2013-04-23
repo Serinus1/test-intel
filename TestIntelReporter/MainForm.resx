@@ -124,11 +124,14 @@
   <data name="labelUsername.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="labelUsername.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="labelUsername.Location" type="System.Drawing.Point, System.Drawing">
     <value>20, 64</value>
   </data>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="labelUsername.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>0, 0, 0, 0</value>
   </data>
@@ -158,6 +161,9 @@
   </metadata>
   <data name="labelPassword.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
+  </data>
+  <data name="labelPassword.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
   </data>
   <data name="labelPassword.Location" type="System.Drawing.Point, System.Drawing">
     <value>20, 114</value>
@@ -194,6 +200,9 @@
   </data>
   <data name="labelAuthenticationTitle.Font" type="System.Drawing.Font, System.Drawing">
     <value>Segoe UI, 18pt</value>
+  </data>
+  <data name="labelAuthenticationTitle.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
   </data>
   <data name="labelAuthenticationTitle.Location" type="System.Drawing.Point, System.Drawing">
     <value>20, 20</value>
@@ -270,6 +279,75 @@
   <data name="panelAuthentication.ColumnCount" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
+  <data name="&gt;&gt;textBoxUsername.Name" xml:space="preserve">
+    <value>textBoxUsername</value>
+  </data>
+  <data name="&gt;&gt;textBoxUsername.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textBoxUsername.Parent" xml:space="preserve">
+    <value>panelAuthentication</value>
+  </data>
+  <data name="&gt;&gt;textBoxUsername.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;textBoxPassword.Name" xml:space="preserve">
+    <value>textBoxPassword</value>
+  </data>
+  <data name="&gt;&gt;textBoxPassword.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textBoxPassword.Parent" xml:space="preserve">
+    <value>panelAuthentication</value>
+  </data>
+  <data name="&gt;&gt;textBoxPassword.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="&gt;&gt;buttonLogin.Name" xml:space="preserve">
+    <value>buttonLogin</value>
+  </data>
+  <data name="&gt;&gt;buttonLogin.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;buttonLogin.Parent" xml:space="preserve">
+    <value>panelAuthentication</value>
+  </data>
+  <data name="&gt;&gt;buttonLogin.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="panelAuthentication.Location" type="System.Drawing.Point, System.Drawing">
+    <value>92, 145</value>
+  </data>
+  <data name="panelAuthentication.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>20, 20, 20, 20</value>
+  </data>
+  <data name="panelAuthentication.RowCount" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="panelAuthentication.Size" type="System.Drawing.Size, System.Drawing">
+    <value>440, 229</value>
+  </data>
+  <data name="panelAuthentication.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="panelAuthentication.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="&gt;&gt;panelAuthentication.Name" xml:space="preserve">
+    <value>panelAuthentication</value>
+  </data>
+  <data name="&gt;&gt;panelAuthentication.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TableLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;panelAuthentication.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;panelAuthentication.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="panelAuthentication.LayoutSettings" type="System.Windows.Forms.TableLayoutSettings, System.Windows.Forms">
+    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="labelUsername" Row="1" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="textBoxUsername" Row="2" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="labelPassword" Row="3" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="textBoxPassword" Row="4" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="buttonLogin" Row="5" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="labelAuthenticationTitle" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="Absolute,400,Absolute,20" /&gt;&lt;Rows Styles="AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0" /&gt;&lt;/TableLayoutSettings&gt;</value>
+  </data>
   <data name="textBoxUsername.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
@@ -336,6 +414,9 @@
   <data name="buttonLogin.FlatStyle" type="System.Windows.Forms.FlatStyle, System.Windows.Forms">
     <value>Flat</value>
   </data>
+  <data name="buttonLogin.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
   <data name="buttonLogin.Location" type="System.Drawing.Point, System.Drawing">
     <value>345, 176</value>
   </data>
@@ -363,39 +444,6 @@
   <data name="&gt;&gt;buttonLogin.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
-  <data name="panelAuthentication.Location" type="System.Drawing.Point, System.Drawing">
-    <value>92, 145</value>
-  </data>
-  <data name="panelAuthentication.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>20, 20, 20, 20</value>
-  </data>
-  <data name="panelAuthentication.RowCount" type="System.Int32, mscorlib">
-    <value>6</value>
-  </data>
-  <data name="panelAuthentication.Size" type="System.Drawing.Size, System.Drawing">
-    <value>440, 229</value>
-  </data>
-  <data name="panelAuthentication.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="panelAuthentication.Visible" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
-  <data name="&gt;&gt;panelAuthentication.Name" xml:space="preserve">
-    <value>panelAuthentication</value>
-  </data>
-  <data name="&gt;&gt;panelAuthentication.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TableLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;panelAuthentication.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;panelAuthentication.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="panelAuthentication.LayoutSettings" type="System.Windows.Forms.TableLayoutSettings, System.Windows.Forms">
-    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="labelUsername" Row="1" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="textBoxUsername" Row="2" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="labelPassword" Row="3" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="textBoxPassword" Row="4" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="buttonLogin" Row="5" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="labelAuthenticationTitle" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="Absolute,400,Absolute,20" /&gt;&lt;Rows Styles="AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0" /&gt;&lt;/TableLayoutSettings&gt;</value>
-  </data>
   <data name="panelAuthError.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -404,33 +452,6 @@
   </data>
   <data name="panelAuthError.ColumnCount" type="System.Int32, mscorlib">
     <value>1</value>
-  </data>
-  <data name="buttonChangeAuth.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Right</value>
-  </data>
-  <data name="buttonChangeAuth.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="buttonChangeAuth.FlatStyle" type="System.Windows.Forms.FlatStyle, System.Windows.Forms">
-    <value>Flat</value>
-  </data>
-  <data name="buttonChangeAuth.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="buttonChangeAuth.Location" type="System.Drawing.Point, System.Drawing">
-    <value>352, 85</value>
-  </data>
-  <data name="buttonChangeAuth.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>12, 12, 0, 0</value>
-  </data>
-  <data name="buttonChangeAuth.Size" type="System.Drawing.Size, System.Drawing">
-    <value>118, 33</value>
-  </data>
-  <data name="buttonChangeAuth.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="buttonChangeAuth.Text" xml:space="preserve">
-    <value>&amp;Change Login</value>
   </data>
   <data name="&gt;&gt;buttonChangeAuth.Name" xml:space="preserve">
     <value>buttonChangeAuth</value>
@@ -444,27 +465,6 @@
   <data name="&gt;&gt;buttonChangeAuth.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="labelAuthError.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Left, Right</value>
-  </data>
-  <data name="labelAuthError.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="labelAuthError.Location" type="System.Drawing.Point, System.Drawing">
-    <value>20, 52</value>
-  </data>
-  <data name="labelAuthError.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>0, 0, 0, 0</value>
-  </data>
-  <data name="labelAuthError.Size" type="System.Drawing.Size, System.Drawing">
-    <value>450, 21</value>
-  </data>
-  <data name="labelAuthError.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="labelAuthError.Text" xml:space="preserve">
-    <value>Auth Message</value>
-  </data>
   <data name="&gt;&gt;labelAuthError.Name" xml:space="preserve">
     <value>labelAuthError</value>
   </data>
@@ -476,27 +476,6 @@
   </data>
   <data name="&gt;&gt;labelAuthError.ZOrder" xml:space="preserve">
     <value>1</value>
-  </data>
-  <data name="labelAuthErrorTitle.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="labelAuthErrorTitle.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Segoe UI, 18pt</value>
-  </data>
-  <data name="labelAuthErrorTitle.Location" type="System.Drawing.Point, System.Drawing">
-    <value>20, 20</value>
-  </data>
-  <data name="labelAuthErrorTitle.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>0, 0, 0, 0</value>
-  </data>
-  <data name="labelAuthErrorTitle.Size" type="System.Drawing.Size, System.Drawing">
-    <value>119, 32</value>
-  </data>
-  <data name="labelAuthErrorTitle.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <data name="labelAuthErrorTitle.Text" xml:space="preserve">
-    <value>Auth Title</value>
   </data>
   <data name="&gt;&gt;labelAuthErrorTitle.Name" xml:space="preserve">
     <value>labelAuthErrorTitle</value>
@@ -543,6 +522,117 @@
   <data name="panelAuthError.LayoutSettings" type="System.Windows.Forms.TableLayoutSettings, System.Windows.Forms">
     <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="buttonChangeAuth" Row="2" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="labelAuthError" Row="1" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="labelAuthErrorTitle" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="Absolute,450" /&gt;&lt;Rows Styles="AutoSize,0,AutoSize,0,AutoSize,0" /&gt;&lt;/TableLayoutSettings&gt;</value>
   </data>
+  <data name="buttonChangeAuth.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="buttonChangeAuth.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="buttonChangeAuth.FlatStyle" type="System.Windows.Forms.FlatStyle, System.Windows.Forms">
+    <value>Flat</value>
+  </data>
+  <data name="buttonChangeAuth.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="buttonChangeAuth.Location" type="System.Drawing.Point, System.Drawing">
+    <value>352, 85</value>
+  </data>
+  <data name="buttonChangeAuth.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>12, 12, 0, 0</value>
+  </data>
+  <data name="buttonChangeAuth.Size" type="System.Drawing.Size, System.Drawing">
+    <value>118, 33</value>
+  </data>
+  <data name="buttonChangeAuth.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="buttonChangeAuth.Text" xml:space="preserve">
+    <value>&amp;Change Login</value>
+  </data>
+  <data name="&gt;&gt;buttonChangeAuth.Name" xml:space="preserve">
+    <value>buttonChangeAuth</value>
+  </data>
+  <data name="&gt;&gt;buttonChangeAuth.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;buttonChangeAuth.Parent" xml:space="preserve">
+    <value>panelAuthError</value>
+  </data>
+  <data name="&gt;&gt;buttonChangeAuth.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="labelAuthError.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
+  <data name="labelAuthError.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelAuthError.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelAuthError.Location" type="System.Drawing.Point, System.Drawing">
+    <value>20, 52</value>
+  </data>
+  <data name="labelAuthError.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>0, 0, 0, 0</value>
+  </data>
+  <data name="labelAuthError.Size" type="System.Drawing.Size, System.Drawing">
+    <value>450, 21</value>
+  </data>
+  <data name="labelAuthError.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="labelAuthError.Text" xml:space="preserve">
+    <value>Auth Message</value>
+  </data>
+  <data name="&gt;&gt;labelAuthError.Name" xml:space="preserve">
+    <value>labelAuthError</value>
+  </data>
+  <data name="&gt;&gt;labelAuthError.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelAuthError.Parent" xml:space="preserve">
+    <value>panelAuthError</value>
+  </data>
+  <data name="&gt;&gt;labelAuthError.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="labelAuthErrorTitle.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelAuthErrorTitle.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Segoe UI, 18pt</value>
+  </data>
+  <data name="labelAuthErrorTitle.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelAuthErrorTitle.Location" type="System.Drawing.Point, System.Drawing">
+    <value>20, 20</value>
+  </data>
+  <data name="labelAuthErrorTitle.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>0, 0, 0, 0</value>
+  </data>
+  <data name="labelAuthErrorTitle.Size" type="System.Drawing.Size, System.Drawing">
+    <value>119, 32</value>
+  </data>
+  <data name="labelAuthErrorTitle.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="labelAuthErrorTitle.Text" xml:space="preserve">
+    <value>Auth Title</value>
+  </data>
+  <data name="&gt;&gt;labelAuthErrorTitle.Name" xml:space="preserve">
+    <value>labelAuthErrorTitle</value>
+  </data>
+  <data name="&gt;&gt;labelAuthErrorTitle.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelAuthErrorTitle.Parent" xml:space="preserve">
+    <value>panelAuthError</value>
+  </data>
+  <data name="&gt;&gt;labelAuthErrorTitle.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
   <data name="tableLayoutPanel.ColumnCount" type="System.Int32, mscorlib">
     <value>2</value>
   </data>
@@ -579,6 +669,9 @@
   <data name="labelAppName.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
+  <data name="labelAppName.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
   <data name="labelAppName.Location" type="System.Drawing.Point, System.Drawing">
     <value>78, 367</value>
   </data>
@@ -609,6 +702,9 @@
   <data name="labelCounts.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
+  <data name="labelCounts.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
   <data name="labelCounts.Location" type="System.Drawing.Point, System.Drawing">
     <value>78, 388</value>
   </data>
@@ -632,6 +728,30 @@
   </data>
   <data name="&gt;&gt;labelCounts.ZOrder" xml:space="preserve">
     <value>2</value>
+  </data>
+  <data name="messageView.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="messageView.Location" type="System.Drawing.Point, System.Drawing">
+    <value>8, 8</value>
+  </data>
+  <data name="messageView.Size" type="System.Drawing.Size, System.Drawing">
+    <value>608, 356</value>
+  </data>
+  <data name="messageView.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="&gt;&gt;messageView.Name" xml:space="preserve">
+    <value>messageView</value>
+  </data>
+  <data name="&gt;&gt;messageView.Type" xml:space="preserve">
+    <value>TestIntelReporter.MessageView, TestIntelReporter, Version=0.3.0.0, Culture=neutral, PublicKeyToken=e646930e7fe9a812</value>
+  </data>
+  <data name="&gt;&gt;messageView.Parent" xml:space="preserve">
+    <value>tableLayoutPanel</value>
+  </data>
+  <data name="&gt;&gt;messageView.ZOrder" xml:space="preserve">
+    <value>3</value>
   </data>
   <data name="tableLayoutPanel.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
@@ -664,7 +784,7 @@
     <value>3</value>
   </data>
   <data name="tableLayoutPanel.LayoutSettings" type="System.Windows.Forms.TableLayoutSettings, System.Windows.Forms">
-    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="pictureBoxDino" Row="1" RowSpan="3" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="labelAppName" Row="1" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="labelCounts" Row="2" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="AutoSize,0,Percent,100" /&gt;&lt;Rows Styles="Percent,100,AutoSize,0,AutoSize,0,AutoSize,0" /&gt;&lt;/TableLayoutSettings&gt;</value>
+    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="pictureBoxDino" Row="1" RowSpan="3" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="labelAppName" Row="1" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="labelCounts" Row="2" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="messageView" Row="0" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;/Controls&gt;&lt;Columns Styles="AutoSize,0,Percent,100" /&gt;&lt;Rows Styles="Percent,100,AutoSize,0,AutoSize,0,AutoSize,0" /&gt;&lt;/TableLayoutSettings&gt;</value>
   </data>
   <data name="panelStatus.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -674,30 +794,6 @@
   </data>
   <data name="panelStatus.ColumnCount" type="System.Int32, mscorlib">
     <value>1</value>
-  </data>
-  <data name="labelStatusTitle.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Bottom, Left, Right</value>
-  </data>
-  <data name="labelStatusTitle.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="labelStatusTitle.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Segoe UI, 18pt</value>
-  </data>
-  <data name="labelStatusTitle.Location" type="System.Drawing.Point, System.Drawing">
-    <value>20, 20</value>
-  </data>
-  <data name="labelStatusTitle.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>0, 0, 0, 0</value>
-  </data>
-  <data name="labelStatusTitle.Size" type="System.Drawing.Size, System.Drawing">
-    <value>450, 32</value>
-  </data>
-  <data name="labelStatusTitle.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="labelStatusTitle.Text" xml:space="preserve">
-    <value>Status Title</value>
   </data>
   <data name="&gt;&gt;labelStatusTitle.Name" xml:space="preserve">
     <value>labelStatusTitle</value>
@@ -743,6 +839,45 @@
   </data>
   <data name="panelStatus.LayoutSettings" type="System.Windows.Forms.TableLayoutSettings, System.Windows.Forms">
     <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="labelStatus" Row="1" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="labelStatusTitle" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="Absolute,450" /&gt;&lt;Rows Styles="AutoSize,0,AutoSize,0" /&gt;&lt;/TableLayoutSettings&gt;</value>
+  </data>
+  <data name="labelStatusTitle.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="labelStatusTitle.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelStatusTitle.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Segoe UI, 18pt</value>
+  </data>
+  <data name="labelStatusTitle.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelStatusTitle.Location" type="System.Drawing.Point, System.Drawing">
+    <value>20, 20</value>
+  </data>
+  <data name="labelStatusTitle.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>0, 0, 0, 0</value>
+  </data>
+  <data name="labelStatusTitle.Size" type="System.Drawing.Size, System.Drawing">
+    <value>450, 32</value>
+  </data>
+  <data name="labelStatusTitle.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="labelStatusTitle.Text" xml:space="preserve">
+    <value>Status Title</value>
+  </data>
+  <data name="&gt;&gt;labelStatusTitle.Name" xml:space="preserve">
+    <value>labelStatusTitle</value>
+  </data>
+  <data name="&gt;&gt;labelStatusTitle.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelStatusTitle.Parent" xml:space="preserve">
+    <value>panelStatus</value>
+  </data>
+  <data name="&gt;&gt;labelStatusTitle.ZOrder" xml:space="preserve">
+    <value>1</value>
   </data>
   <metadata name="intelReporter.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>

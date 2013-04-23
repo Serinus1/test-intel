@@ -187,7 +187,7 @@ namespace TestIntelReporter {
         ///     new log entry.
         /// </summary>
         private void intelReporter_IntelReported(object sender, IntelEventArgs e) {
-            // Novelty counter
+            messageView.PushMessage(e);
             if (e.Message.IndexOf("Dabigredboat", StringComparison.OrdinalIgnoreCase) != -1) {
                 ++this.noveltyCount;
                 this.UpdateStatus();

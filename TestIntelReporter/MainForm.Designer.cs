@@ -46,6 +46,7 @@
             this.pictureBoxDino = new System.Windows.Forms.PictureBox();
             this.labelAppName = new System.Windows.Forms.Label();
             this.labelCounts = new System.Windows.Forms.Label();
+            this.messageView = new TestIntelReporter.MessageView();
             this.panelStatus = new System.Windows.Forms.TableLayoutPanel();
             this.labelStatusTitle = new System.Windows.Forms.Label();
             this.intelReporter = new PleaseIgnore.IntelMap.IntelReporter(this.components);
@@ -151,6 +152,7 @@
             this.tableLayoutPanel.Controls.Add(this.pictureBoxDino, 0, 1);
             this.tableLayoutPanel.Controls.Add(this.labelAppName, 1, 1);
             this.tableLayoutPanel.Controls.Add(this.labelCounts, 1, 2);
+            this.tableLayoutPanel.Controls.Add(this.messageView, 0, 0);
             this.tableLayoutPanel.Name = "tableLayoutPanel";
             // 
             // pictureBoxDino
@@ -170,6 +172,12 @@
             // 
             resources.ApplyResources(this.labelCounts, "labelCounts");
             this.labelCounts.Name = "labelCounts";
+            // 
+            // messageView
+            // 
+            resources.ApplyResources(this.messageView, "messageView");
+            this.tableLayoutPanel.SetColumnSpan(this.messageView, 2);
+            this.messageView.Name = "messageView";
             // 
             // panelStatus
             // 
@@ -237,6 +245,7 @@
         private System.Windows.Forms.Label labelStatusTitle;
         private System.Windows.Forms.Label labelStatus;
         private System.Windows.Forms.Label labelAuthErrorTitle;
+        private MessageView messageView;
 
     }
 }

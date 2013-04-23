@@ -149,7 +149,7 @@
     <value>AWOX in Progress!</value>
   </data>
   <data name="IntelStatus_Idle" xml:space="preserve">
-    <value>Since EVE isn't running, I don't have any source of intel to report to the server and am taking a break.  That must be some seriously good forum drama to keep you away from EVE for this long.</value>
+    <value>Since EVE isn't running, I don't have any source of intel to report to the server so I am taking a break.  That must be some seriously good forum drama to keep you away from EVE for this long.</value>
   </data>
   <data name="IntelStatus_IdleTitle" xml:space="preserve">
     <value>Toxic Forum Drama</value>

@@ -153,7 +153,7 @@ namespace TestIntelReporter.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Since EVE isn&apos;t running, I don&apos;t have any source of intel to report to the server and am taking a break.  That must be some seriously good forum drama to keep you away from EVE for this long..
+        ///   Looks up a localized string similar to Since EVE isn&apos;t running, I don&apos;t have any source of intel to report to the server so I am taking a break.  That must be some seriously good forum drama to keep you away from EVE for this long..
         /// </summary>
         internal static string IntelStatus_Idle {
             get {
