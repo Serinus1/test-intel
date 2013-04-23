@@ -99,6 +99,33 @@ namespace TestIntelReporter.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0:N0} Lost.
+        /// </summary>
+        internal static string DropCount_Many {
+            get {
+                return ResourceManager.GetString("DropCount_Many", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0:N0} Lost.
+        /// </summary>
+        internal static string DropCount_One {
+            get {
+                return ResourceManager.GetString("DropCount_One", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to None Lost.
+        /// </summary>
+        internal static string DropCount_Zero {
+            get {
+                return ResourceManager.GetString("DropCount_Zero", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0:N0} Sent.
         /// </summary>
         internal static string IntelCount_Many {
@@ -117,7 +144,7 @@ namespace TestIntelReporter.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to .
+        ///   Looks up a localized string similar to 0 Sent.
         /// </summary>
         internal static string IntelCount_Zero {
             get {
@@ -212,6 +239,132 @@ namespace TestIntelReporter.Properties {
         internal static string IntelStatus_MissingTitle {
             get {
                 return ResourceManager.GetString("IntelStatus_MissingTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0:N0} Sightings of DBRB.
+        /// </summary>
+        internal static string NoveltyCount_Many {
+            get {
+                return ResourceManager.GetString("NoveltyCount_Many", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to One Sighting of DBRB.
+        /// </summary>
+        internal static string NoveltyCount_One {
+            get {
+                return ResourceManager.GetString("NoveltyCount_One", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No Sightings of DBRB.
+        /// </summary>
+        internal static string NoveltyCount_Zero {
+            get {
+                return ResourceManager.GetString("NoveltyCount_Zero", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to  // .
+        /// </summary>
+        internal static string Stats_Join {
+            get {
+                return ResourceManager.GetString("Stats_Join", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Server rejected the username and password..
+        /// </summary>
+        internal static string StatusString_AuthenticationFailure {
+            get {
+                return ResourceManager.GetString("StatusString_AuthenticationFailure", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Connected to the Test Alliance Intel Map..
+        /// </summary>
+        internal static string StatusString_Connected {
+            get {
+                return ResourceManager.GetString("StatusString_Connected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Waiting for EVE online to start..
+        /// </summary>
+        internal static string StatusString_Idle {
+            get {
+                return ResourceManager.GetString("StatusString_Idle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Reporting client is still initializing..
+        /// </summary>
+        internal static string StatusString_Initializing {
+            get {
+                return ResourceManager.GetString("StatusString_Initializing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Can not locate the chat log (tried {1}).
+        /// </summary>
+        internal static string StatusString_MissingDirectory {
+            get {
+                return ResourceManager.GetString("StatusString_MissingDirectory", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error communicating with server..
+        /// </summary>
+        internal static string StatusString_NetworkError {
+            get {
+                return ResourceManager.GetString("StatusString_NetworkError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Client is in an unsupported state ({0}).
+        /// </summary>
+        internal static string StatusString_Unknown {
+            get {
+                return ResourceManager.GetString("StatusString_Unknown", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0:N0} People Reporting.
+        /// </summary>
+        internal static string UserCount_Many {
+            get {
+                return ResourceManager.GetString("UserCount_Many", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Test&apos;s Only Hope.
+        /// </summary>
+        internal static string UserCount_One {
+            get {
+                return ResourceManager.GetString("UserCount_One", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to User Count Invalid.
+        /// </summary>
+        internal static string UserCount_Zero {
+            get {
+                return ResourceManager.GetString("UserCount_Zero", resourceCulture);
             }
         }
     }

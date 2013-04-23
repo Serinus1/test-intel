@@ -53,6 +53,7 @@
             this.intelReporter = new PleaseIgnore.IntelMap.IntelReporter(this.components);
             this.panelChannels = new System.Windows.Forms.TableLayoutPanel();
             this.imageList = new System.Windows.Forms.ImageList(this.components);
+            this.labelStatusString = new System.Windows.Forms.Label();
             labelUsername = new System.Windows.Forms.Label();
             labelPassword = new System.Windows.Forms.Label();
             labelAuthenticationTitle = new System.Windows.Forms.Label();
@@ -164,6 +165,7 @@
             this.tableLayoutPanel.Controls.Add(this.labelAppName, 1, 1);
             this.tableLayoutPanel.Controls.Add(this.labelCounts, 1, 2);
             this.tableLayoutPanel.Controls.Add(this.messageView, 0, 0);
+            this.tableLayoutPanel.Controls.Add(this.labelStatusString, 1, 3);
             this.tableLayoutPanel.Name = "tableLayoutPanel";
             // 
             // pictureBoxDino
@@ -225,6 +227,11 @@
             this.imageList.Images.SetKeyName(0, "tick.png");
             this.imageList.Images.SetKeyName(1, "cross.png");
             // 
+            // labelStatusString
+            // 
+            resources.ApplyResources(this.labelStatusString, "labelStatusString");
+            this.labelStatusString.Name = "labelStatusString";
+            // 
             // MainForm
             // 
             resources.ApplyResources(this, "$this");
@@ -277,6 +284,7 @@
         private MessageView messageView;
         private System.Windows.Forms.TableLayoutPanel panelChannels;
         private System.Windows.Forms.ImageList imageList;
+        private System.Windows.Forms.Label labelStatusString;
 
     }
 }

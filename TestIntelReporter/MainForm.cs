@@ -11,13 +11,12 @@ using TestIntelReporter.Properties;
 using System.Net;
 using System.Security.Authentication;
 using System.Collections.Generic;
+using System.Globalization;
 
 namespace TestIntelReporter {
     public partial class MainForm : Form {
         // Pen used for drawing the panel borders
         private readonly Pen borderPen = new Pen(Color.Gray, 4.0f);
-        // The format string for labelCounts
-        private readonly string formatCounts;
         // The settings object
         private readonly Settings settings;
         // List of channel status flags
@@ -38,8 +37,6 @@ namespace TestIntelReporter {
         public MainForm() {
             InitializeComponent();
 
-            // Claim some fields
-            formatCounts = labelCounts.Text;
             // Update some fields
             this.Icon = Properties.Resources.AppIcon;
             labelAppName.Text = string.Format(
@@ -133,20 +130,48 @@ namespace TestIntelReporter {
         /// </summary>
         private void UpdateStatus() {
             // Simple updates
-            labelCounts.Text = string.Format(
-                Application.CurrentCulture,
-                formatCounts,
-                intelReporter.IntelSent,
-                intelReporter.IntelDropped,
-                this.noveltyCount);
+            labelCounts.Text = String.Join(
+                Resources.Stats_Join,
+                FormatCount(
+                    intelReporter.IntelSent,
+                    Resources.IntelCount_Zero,
+                    Resources.IntelCount_One,
+                    Resources.IntelCount_Many),
+                FormatCount(
+                    intelReporter.IntelDropped,
+                    Resources.DropCount_Zero,
+                    Resources.DropCount_One,
+                    Resources.DropCount_Many),
+                FormatCount(
+                    intelReporter.Users,
+                    Resources.UserCount_Zero,
+                    Resources.UserCount_One,
+                    Resources.UserCount_Many),
+                FormatCount(
+                    this.noveltyCount,
+                    Resources.NoveltyCount_Zero,
+                    Resources.NoveltyCount_One,
+                    Resources.NoveltyCount_Many)
+            );
 
             // Authentication errors are handled specially
             if (this.configError && !panelAuthentication.Visible) {
                 this.ShowAuthWindow();
             }
 
-            // Status changes
+            // Update the status string
             var status = intelReporter.Status;
+            var statusString = Resources.ResourceManager.GetString(
+                    String.Format(
+                        CultureInfo.InvariantCulture,
+                        "StatusString_{0}", status))
+                ?? Resources.StatusString_Unknown;
+            labelStatusString.Text = String.Format(
+                statusString,
+                status,
+                intelReporter.LogDirectory);
+
+            // Status changes
             if (this.oldStatus != status) {
                 this.oldStatus = status;
                 switch (status) {
@@ -275,31 +300,45 @@ namespace TestIntelReporter {
             // Update the channel statistics
             foreach (var flag in channelFlags) {
                 var channel = (IntelChannel)flag.Tag;
-                flag.ImageIndex = (channel.LogFile != null) ? 0 : 1;
+                var logFile = channel.LogFile;
+                if (logFile != null) {
+                    flag.ImageIndex = 0;
+                } else {
+                    flag.ImageIndex = 1;
+                }
             }
             foreach (var label in channelCounts) {
                 var channel = (IntelChannel)label.Tag;
                 var count = channel.IntelCount;
-                switch(count) {
-                case 0:
-                    label.Text = string.Format(
-                        Application.CurrentCulture,
-                        Resources.IntelCount_Zero,
-                        count);
-                    break;
-                case 1:
-                    label.Text = string.Format(
-                        Application.CurrentCulture,
-                        Resources.IntelCount_One,
-                        count);
-                    break;
-                default:
-                    label.Text = string.Format(
-                        Application.CurrentCulture,
-                        Resources.IntelCount_Many,
-                        count);
-                    break;
-                }
+                label.Text = FormatCount(
+                    channel.IntelCount,
+                    Resources.IntelCount_Zero,
+                    Resources.IntelCount_One,
+                    Resources.IntelCount_Many);
+            }
+        }
+
+        /// <summary>
+        ///     Formats an integer count using seperate strings for
+        ///     zero, one, or many countable items.
+        /// </summary>
+        private static string FormatCount(int count, string formatZero,
+                string formatOne, string formatMany) {
+            if (count <= 0) {
+                return String.Format(
+                    Application.CurrentCulture,
+                    formatZero,
+                    count);
+            } else if (count == 1) {
+                return String.Format(
+                    Application.CurrentCulture,
+                    formatOne,
+                    count);
+            } else {
+                return String.Format(
+                    Application.CurrentCulture,
+                    formatMany,
+                    count);
             }
         }
         #endregion
