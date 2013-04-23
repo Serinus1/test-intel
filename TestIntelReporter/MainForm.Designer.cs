@@ -38,11 +38,10 @@
             this.textBoxUsername = new System.Windows.Forms.TextBox();
             this.textBoxPassword = new System.Windows.Forms.TextBox();
             this.buttonLogin = new System.Windows.Forms.Button();
-            this.buttonCancel = new System.Windows.Forms.Button();
-            this.labelAuthentication = new System.Windows.Forms.Label();
             this.panelAuthError = new System.Windows.Forms.TableLayoutPanel();
             this.buttonChangeAuth = new System.Windows.Forms.Button();
             this.labelAuthError = new System.Windows.Forms.Label();
+            this.labelAuthErrorTitle = new System.Windows.Forms.Label();
             this.tableLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
             this.pictureBoxDino = new System.Windows.Forms.PictureBox();
             this.labelAppName = new System.Windows.Forms.Label();
@@ -64,19 +63,16 @@
             // labelUsername
             // 
             resources.ApplyResources(labelUsername, "labelUsername");
-            this.panelAuthentication.SetColumnSpan(labelUsername, 2);
             labelUsername.Name = "labelUsername";
             // 
             // labelPassword
             // 
             resources.ApplyResources(labelPassword, "labelPassword");
-            this.panelAuthentication.SetColumnSpan(labelPassword, 2);
             labelPassword.Name = "labelPassword";
             // 
             // labelAuthenticationTitle
             // 
             resources.ApplyResources(labelAuthenticationTitle, "labelAuthenticationTitle");
-            this.panelAuthentication.SetColumnSpan(labelAuthenticationTitle, 2);
             labelAuthenticationTitle.Name = "labelAuthenticationTitle";
             // 
             // labelStatus
@@ -93,8 +89,6 @@
             this.panelAuthentication.Controls.Add(labelPassword, 0, 3);
             this.panelAuthentication.Controls.Add(this.textBoxPassword, 0, 4);
             this.panelAuthentication.Controls.Add(this.buttonLogin, 0, 5);
-            this.panelAuthentication.Controls.Add(this.buttonCancel, 1, 5);
-            this.panelAuthentication.Controls.Add(this.labelAuthentication, 0, 6);
             this.panelAuthentication.Controls.Add(labelAuthenticationTitle, 0, 0);
             this.panelAuthentication.Name = "panelAuthentication";
             this.panelAuthentication.Paint += new System.Windows.Forms.PaintEventHandler(this.DrawBorder);
@@ -103,42 +97,34 @@
             // 
             resources.ApplyResources(this.textBoxUsername, "textBoxUsername");
             this.textBoxUsername.BackColor = System.Drawing.Color.White;
-            this.panelAuthentication.SetColumnSpan(this.textBoxUsername, 2);
+            this.textBoxUsername.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.textBoxUsername.ForeColor = System.Drawing.Color.Black;
             this.textBoxUsername.Name = "textBoxUsername";
+            this.textBoxUsername.TextChanged += new System.EventHandler(this.textBoxAuth_TextChanged);
             // 
             // textBoxPassword
             // 
             resources.ApplyResources(this.textBoxPassword, "textBoxPassword");
             this.textBoxPassword.BackColor = System.Drawing.Color.White;
-            this.panelAuthentication.SetColumnSpan(this.textBoxPassword, 2);
+            this.textBoxPassword.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.textBoxPassword.ForeColor = System.Drawing.Color.Black;
             this.textBoxPassword.Name = "textBoxPassword";
+            this.textBoxPassword.TextChanged += new System.EventHandler(this.textBoxAuth_TextChanged);
             // 
             // buttonLogin
             // 
             resources.ApplyResources(this.buttonLogin, "buttonLogin");
             this.buttonLogin.Name = "buttonLogin";
             this.buttonLogin.UseVisualStyleBackColor = true;
-            // 
-            // buttonCancel
-            // 
-            resources.ApplyResources(this.buttonCancel, "buttonCancel");
-            this.buttonCancel.Name = "buttonCancel";
-            this.buttonCancel.UseVisualStyleBackColor = true;
-            // 
-            // labelAuthentication
-            // 
-            resources.ApplyResources(this.labelAuthentication, "labelAuthentication");
-            this.panelAuthentication.SetColumnSpan(this.labelAuthentication, 2);
-            this.labelAuthentication.Name = "labelAuthentication";
+            this.buttonLogin.Click += new System.EventHandler(this.buttonLogin_Click);
             // 
             // panelAuthError
             // 
             resources.ApplyResources(this.panelAuthError, "panelAuthError");
             this.panelAuthError.BackColor = System.Drawing.Color.DimGray;
-            this.panelAuthError.Controls.Add(this.buttonChangeAuth, 0, 1);
-            this.panelAuthError.Controls.Add(this.labelAuthError, 0, 0);
+            this.panelAuthError.Controls.Add(this.buttonChangeAuth, 0, 2);
+            this.panelAuthError.Controls.Add(this.labelAuthError, 0, 1);
+            this.panelAuthError.Controls.Add(this.labelAuthErrorTitle, 0, 0);
             this.panelAuthError.Name = "panelAuthError";
             this.panelAuthError.Paint += new System.Windows.Forms.PaintEventHandler(this.DrawBorder);
             // 
@@ -147,11 +133,17 @@
             resources.ApplyResources(this.buttonChangeAuth, "buttonChangeAuth");
             this.buttonChangeAuth.Name = "buttonChangeAuth";
             this.buttonChangeAuth.UseVisualStyleBackColor = true;
+            this.buttonChangeAuth.Click += new System.EventHandler(this.buttonChangeAuth_Click);
             // 
             // labelAuthError
             // 
             resources.ApplyResources(this.labelAuthError, "labelAuthError");
             this.labelAuthError.Name = "labelAuthError";
+            // 
+            // labelAuthErrorTitle
+            // 
+            resources.ApplyResources(this.labelAuthErrorTitle, "labelAuthErrorTitle");
+            this.labelAuthErrorTitle.Name = "labelAuthErrorTitle";
             // 
             // tableLayoutPanel
             // 
@@ -204,9 +196,9 @@
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(40)))), ((int)(((byte)(40)))), ((int)(((byte)(45)))));
-            this.Controls.Add(this.panelStatus);
             this.Controls.Add(this.panelAuthError);
             this.Controls.Add(this.panelAuthentication);
+            this.Controls.Add(this.panelStatus);
             this.Controls.Add(this.tableLayoutPanel);
             this.ForeColor = System.Drawing.Color.White;
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
@@ -233,8 +225,6 @@
         private System.Windows.Forms.TextBox textBoxUsername;
         private System.Windows.Forms.TextBox textBoxPassword;
         private System.Windows.Forms.Button buttonLogin;
-        private System.Windows.Forms.Button buttonCancel;
-        private System.Windows.Forms.Label labelAuthentication;
         private System.Windows.Forms.TableLayoutPanel panelAuthError;
         private System.Windows.Forms.Button buttonChangeAuth;
         private System.Windows.Forms.Label labelAuthError;
@@ -246,6 +236,7 @@
         private PleaseIgnore.IntelMap.IntelReporter intelReporter;
         private System.Windows.Forms.Label labelStatusTitle;
         private System.Windows.Forms.Label labelStatus;
+        private System.Windows.Forms.Label labelAuthErrorTitle;
 
     }
 }

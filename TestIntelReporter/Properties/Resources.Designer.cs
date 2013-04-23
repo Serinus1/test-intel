@@ -81,6 +81,42 @@ namespace TestIntelReporter.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The server seems to be convinced that you are a Goon spy.  Of course, there are more mundane explainations like you changed your password or AUTH is simply having a bad day.  Check your username and password then try again..
+        /// </summary>
+        internal static string Authenticate_Auth {
+            get {
+                return ResourceManager.GetString("Authenticate_Auth", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to My trusty crane couldn&apos;t complete the contract in time due to traffic control.  Try again and if you keep having this problem, spam Awol Aurix until this message disappears..
+        /// </summary>
+        internal static string Authenticate_Network {
+            get {
+                return ResourceManager.GetString("Authenticate_Network", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The server seems to be convinced that you are a Goon spy.  Of course, there are more mundane explainations like you changed your password or AUTH is simply having a bad day.  Because I like you, I&apos;ll keep trying to log in every couple of minutes to see if AUTH is feeling better..
+        /// </summary>
+        internal static string IntelStatus_Auth {
+            get {
+                return ResourceManager.GetString("IntelStatus_Auth", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Spai!.
+        /// </summary>
+        internal static string IntelStatus_AuthTitle {
+            get {
+                return ResourceManager.GetString("IntelStatus_AuthTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to I&apos;m trying to get Intel to the server, but Traffic Control keeps getting in my way.  Since EVE is clearly running, it must be a problem with the Intel server.  Go spam Awol Aurix until this message disappears..
         /// </summary>
         internal static string IntelStatus_Error {
@@ -117,7 +153,7 @@ namespace TestIntelReporter.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Since EVE isn&apos;t running, I don&apos;t have any source of intel to report to the server and am taking a break.  That must be some seriously good forum drama to keep you away from EVE that long..
+        ///   Looks up a localized string similar to Since EVE isn&apos;t running, I don&apos;t have any source of intel to report to the server and am taking a break.  That must be some seriously good forum drama to keep you away from EVE for this long..
         /// </summary>
         internal static string IntelStatus_Idle {
             get {

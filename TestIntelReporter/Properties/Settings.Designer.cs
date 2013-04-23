@@ -46,53 +46,5 @@ namespace TestIntelReporter.Properties {
                 this["PasswordHash"] = value;
             }
         }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string LogDirectory {
-            get {
-                return ((string)(this["LogDirectory"]));
-            }
-            set {
-                this["LogDirectory"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool AutoStart {
-            get {
-                return ((bool)(this["AutoStart"]));
-            }
-            set {
-                this["AutoStart"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool HideOnClose {
-            get {
-                return ((bool)(this["HideOnClose"]));
-            }
-            set {
-                this["HideOnClose"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool HideOnMinimize {
-            get {
-                return ((bool)(this["HideOnMinimize"]));
-            }
-            set {
-                this["HideOnMinimize"] = value;
-            }
-        }
     }
 }
