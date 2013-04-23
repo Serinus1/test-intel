@@ -35,6 +35,8 @@ namespace PleaseIgnore.IntelMap {
         private static readonly Regex AuthResponse   = new Regex(@"^200 AUTH ([^\s]+) (\d+)");
         private static readonly Regex IntelResponse  = new Regex(@"^202 INTEL .*");
         private static readonly Regex AliveResponse  = new Regex(@"^203 ALIVE OK (\d+)");
+        // Number of server errors before dropping the connection
+        private const int maxServerErrors = 3;
 
         // The username for this login (required when logging out)
         private readonly string username;
@@ -42,6 +44,8 @@ namespace PleaseIgnore.IntelMap {
         private readonly string session;
         // Set to true once we are disposed
         private bool disposed;
+        // Number of consecutive server errors
+        private int serverErrors;
 
         /// <summary>
         ///     Creates a new instance of the <see cref="IntelSession"/> class
@@ -93,7 +97,7 @@ namespace PleaseIgnore.IntelMap {
         ///     Gets a flag indicating whether our session with the intel
         ///     reporting server is still valid.
         /// </summary>
-        public bool IsConnected { get { return !this.disposed; } }
+        public bool IsConnected { get { return !this.disposed && (this.serverErrors < maxServerErrors); } }
 
         /// <summary>
         ///     Gets the number of users currently connected to the server.
@@ -127,7 +131,7 @@ namespace PleaseIgnore.IntelMap {
         /// </exception>
         public bool KeepAlive() {
             Contract.Ensures(Contract.Result<bool>() == this.IsConnected);
-            if (disposed)
+            if (!this.IsConnected)
                 return false;
 
             var response = SendRequest(new Dictionary<string, string>() {
@@ -141,6 +145,7 @@ namespace PleaseIgnore.IntelMap {
                 this.Users = int.Parse(
                     match.Groups[1].Value,
                     CultureInfo.InvariantCulture);
+                this.serverErrors = 0;
                 return true;
             } else if ((match = ErrorResponse.Match(response)).Success) {
                 if (match.Groups[1].Value == "502") {
@@ -149,10 +154,12 @@ namespace PleaseIgnore.IntelMap {
                     return false;
                 } else {
                     // The server responded with something unexpected
+                    ++this.serverErrors;
                     throw new IntelException();
                 }
             } else {
                 // The server responded with something unexpected
+                ++this.serverErrors;
                 throw new IntelException();
             }
         }
@@ -174,7 +181,7 @@ namespace PleaseIgnore.IntelMap {
             Contract.Requires<ArgumentException>(!String.IsNullOrEmpty(channel));
             Contract.Requires<ArgumentException>(!String.IsNullOrEmpty(message));
             Contract.Ensures(Contract.Result<bool>() == this.IsConnected);
-            if (disposed)
+            if (!this.IsConnected)
                 return false;
 
             var response = SendRequest(new Dictionary<string, string>() {
@@ -189,8 +196,9 @@ namespace PleaseIgnore.IntelMap {
 
             Match match;
             if ((match = IntelResponse.Match(response)).Success) {
-                // Successful ping of the server
+                // Successfully reported intel
                 ++this.ReportsSent;
+                this.serverErrors = 0;
                 return true;
             } else if ((match = ErrorResponse.Match(response)).Success) {
                 if (match.Groups[1].Value == "502") {
@@ -199,10 +207,12 @@ namespace PleaseIgnore.IntelMap {
                     return false;
                 } else {
                     // The server responded with something unexpected
+                    ++this.serverErrors;
                     throw new IntelException();
                 }
             } else {
                 // The server responded with something unexpected
+                ++this.serverErrors;
                 throw new IntelException();
             }
         }

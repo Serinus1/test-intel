@@ -998,6 +998,7 @@ namespace PleaseIgnore.IntelMap {
         ///     calls issued as a result of a <see cref="PropertyChanged"/>
         ///     or <see cref="IntelReported"/> event.
         /// </summary>
+        [DefaultValue((object)null)]
         public ISynchronizeInvoke SynchronizingObject {
             get { return this.synchronizingObject; }
             set { this.synchronizingObject = value; }
