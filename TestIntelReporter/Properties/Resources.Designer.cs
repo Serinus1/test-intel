@@ -71,42 +71,6 @@ namespace TestIntelReporter.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Authentication with Map Server Failed..
-        /// </summary>
-        internal static string AppAuthenticateFailed {
-            get {
-                return ResourceManager.GetString("AppAuthenticateFailed", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Sending Intel to Server....
-        /// </summary>
-        internal static string AppConnected {
-            get {
-                return ResourceManager.GetString("AppConnected", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Unable to locate the log directory..
-        /// </summary>
-        internal static string AppDirectory {
-            get {
-                return ResourceManager.GetString("AppDirectory", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to A network error is preventing communication with the server..
-        /// </summary>
-        internal static string AppError {
-            get {
-                return ResourceManager.GetString("AppError", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
         /// </summary>
         internal static System.Drawing.Icon AppIcon {
@@ -117,56 +81,74 @@ namespace TestIntelReporter.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Waiting for EVE to Start....
+        ///   Looks up a localized string similar to I&apos;m trying to get Intel to the server, but Traffic Control keeps getting in my way.  Since EVE is clearly running, it must be a problem with the Intel server.  Go spam Awol Aurix until this message disappears..
         /// </summary>
-        internal static string AppIdle {
+        internal static string IntelStatus_Error {
             get {
-                return ResourceManager.GetString("AppIdle", resourceCulture);
+                return ResourceManager.GetString("IntelStatus_Error", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to An unknown error occured contacting the intel map server..
+        ///   Looks up a localized string similar to FC, Traffic Control!.
         /// </summary>
-        internal static string IntelException {
+        internal static string IntelStatus_ErrorTitle {
             get {
-                return ResourceManager.GetString("IntelException", resourceCulture);
+                return ResourceManager.GetString("IntelStatus_ErrorTitle", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} Sent.
+        ///   Looks up a localized string similar to Pizza&apos;s at fault.  It has to be.  The program broke and I don&apos;t know why.  Restart it and let the code diplo (namely, Ranisa Kazuko) know if it happens again..
         /// </summary>
-        internal static string MultiIntelReported {
+        internal static string IntelStatus_Fatal {
             get {
-                return ResourceManager.GetString("MultiIntelReported", resourceCulture);
+                return ResourceManager.GetString("IntelStatus_Fatal", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} Users.
+        ///   Looks up a localized string similar to AWOX in Progress!.
         /// </summary>
-        internal static string MultiUserReporting {
+        internal static string IntelStatus_FatalTitle {
             get {
-                return ResourceManager.GetString("MultiUserReporting", resourceCulture);
+                return ResourceManager.GetString("IntelStatus_FatalTitle", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} Sent.
+        ///   Looks up a localized string similar to Since EVE isn&apos;t running, I don&apos;t have any source of intel to report to the server and am taking a break.  That must be some seriously good forum drama to keep you away from EVE that long..
         /// </summary>
-        internal static string OneIntelReported {
+        internal static string IntelStatus_Idle {
             get {
-                return ResourceManager.GetString("OneIntelReported", resourceCulture);
+                return ResourceManager.GetString("IntelStatus_Idle", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} Sent.
+        ///   Looks up a localized string similar to Toxic Forum Drama.
         /// </summary>
-        internal static string OneUserReporting {
+        internal static string IntelStatus_IdleTitle {
             get {
-                return ResourceManager.GetString("OneUserReporting", resourceCulture);
+                return ResourceManager.GetString("IntelStatus_IdleTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to I can&apos;t seem to find the EVE chat logs, I know I left them around here somewhere.  Without those logs, how will I possibly know when Pizza&apos;s about to hotdrop me?  This should be idiot-proof, so let Ranisa Kazuko know the current extent of his idiocy..
+        /// </summary>
+        internal static string IntelStatus_Missing {
+            get {
+                return ResourceManager.GetString("IntelStatus_Missing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Suspected Corp Theft.
+        /// </summary>
+        internal static string IntelStatus_MissingTitle {
+            get {
+                return ResourceManager.GetString("IntelStatus_MissingTitle", resourceCulture);
             }
         }
     }

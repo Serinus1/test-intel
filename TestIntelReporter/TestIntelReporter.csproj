@@ -106,7 +106,7 @@
     <None Include="Resources\MiddleManagementDino.ico" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Resources\MiddleManagementDino.png" />
+    <None Include="Resources\MiddleManagementDino.png" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\PleaseIgnore.IntelMap\PleaseIgnore.IntelMap.csproj">

@@ -121,37 +121,31 @@
   <data name="AboutImage" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\middlemanagementdino.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="AppAuthenticateFailed" xml:space="preserve">
-    <value>Authentication with Map Server Failed.</value>
-  </data>
-  <data name="AppConnected" xml:space="preserve">
-    <value>Sending Intel to Server...</value>
-  </data>
-  <data name="AppDirectory" xml:space="preserve">
-    <value>Unable to locate the log directory.</value>
-  </data>
-  <data name="AppError" xml:space="preserve">
-    <value>A network error is preventing communication with the server.</value>
-  </data>
   <data name="AppIcon" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\middlemanagementdino.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="AppIdle" xml:space="preserve">
-    <value>Waiting for EVE to Start...</value>
+  <data name="IntelStatus_Error" xml:space="preserve">
+    <value>I'm trying to get Intel to the server, but Traffic Control keeps getting in my way.  Since EVE is clearly running, it must be a problem with the Intel server.  Go spam Awol Aurix until this message disappears.</value>
   </data>
-  <data name="IntelException" xml:space="preserve">
-    <value>An unknown error occured contacting the intel map server.</value>
+  <data name="IntelStatus_ErrorTitle" xml:space="preserve">
+    <value>FC, Traffic Control!</value>
   </data>
-  <data name="MultiIntelReported" xml:space="preserve">
-    <value>{0} Sent</value>
+  <data name="IntelStatus_Fatal" xml:space="preserve">
+    <value>Pizza's at fault.  It has to be.  The program broke and I don't know why.  Restart it and let the code diplo (namely, Ranisa Kazuko) know if it happens again.</value>
   </data>
-  <data name="MultiUserReporting" xml:space="preserve">
-    <value>{0} Users</value>
+  <data name="IntelStatus_FatalTitle" xml:space="preserve">
+    <value>AWOX in Progress!</value>
   </data>
-  <data name="OneIntelReported" xml:space="preserve">
-    <value>{0} Sent</value>
+  <data name="IntelStatus_Idle" xml:space="preserve">
+    <value>Since EVE isn't running, I don't have any source of intel to report to the server and am taking a break.  That must be some seriously good forum drama to keep you away from EVE that long.</value>
   </data>
-  <data name="OneUserReporting" xml:space="preserve">
-    <value>{0} Sent</value>
+  <data name="IntelStatus_IdleTitle" xml:space="preserve">
+    <value>Toxic Forum Drama</value>
+  </data>
+  <data name="IntelStatus_Missing" xml:space="preserve">
+    <value>I can't seem to find the EVE chat logs, I know I left them around here somewhere.  Without those logs, how will I possibly know when Pizza's about to hotdrop me?  This should be idiot-proof, so let Ranisa Kazuko know the current extent of his idiocy.</value>
+  </data>
+  <data name="IntelStatus_MissingTitle" xml:space="preserve">
+    <value>Suspected Corp Theft</value>
   </data>
 </root>
