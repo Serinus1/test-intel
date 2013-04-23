@@ -130,6 +130,15 @@
   <data name="Authenticate_Network" xml:space="preserve">
     <value>My trusty crane couldn't complete the contract in time due to traffic control.  Try again and if you keep having this problem, spam Awol Aurix until this message disappears.</value>
   </data>
+  <data name="IntelCount_Many" xml:space="preserve">
+    <value>{0:N0} Sent</value>
+  </data>
+  <data name="IntelCount_One" xml:space="preserve">
+    <value>{0:N0} Sent</value>
+  </data>
+  <data name="IntelCount_Zero" xml:space="preserve">
+    <value />
+  </data>
   <data name="IntelStatus_Auth" xml:space="preserve">
     <value>The server seems to be convinced that you are a Goon spy.  Of course, there are more mundane explainations like you changed your password or AUTH is simply having a bad day.  Because I like you, I'll keep trying to log in every couple of minutes to see if AUTH is feeling better.</value>
   </data>

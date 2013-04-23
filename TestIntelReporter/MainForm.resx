@@ -234,6 +234,84 @@
   <data name="&gt;&gt;labelAuthenticationTitle.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
+  <metadata name="labelChannelsTitle.GenerateMember" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>False</value>
+  </metadata>
+  <data name="labelChannelsTitle.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
+  <data name="labelChannelsTitle.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="panelChannels.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="panelChannels.AutoSizeMode" type="System.Windows.Forms.AutoSizeMode, System.Windows.Forms">
+    <value>GrowAndShrink</value>
+  </data>
+  <data name="panelChannels.ColumnCount" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="panelChannels.Location" type="System.Drawing.Point, System.Drawing">
+    <value>102, 195</value>
+  </data>
+  <data name="panelChannels.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>10, 10, 10, 10</value>
+  </data>
+  <data name="panelChannels.RowCount" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="panelChannels.Size" type="System.Drawing.Size, System.Drawing">
+    <value>420, 52</value>
+  </data>
+  <data name="panelChannels.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="panelChannels.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="&gt;&gt;panelChannels.Name" xml:space="preserve">
+    <value>panelChannels</value>
+  </data>
+  <data name="&gt;&gt;panelChannels.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TableLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;panelChannels.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;panelChannels.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="panelChannels.LayoutSettings" type="System.Windows.Forms.TableLayoutSettings, System.Windows.Forms">
+    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="labelChannelsTitle" Row="0" RowSpan="1" Column="0" ColumnSpan="3" /&gt;&lt;/Controls&gt;&lt;Columns Styles="Absolute,24,Absolute,276,Absolute,100" /&gt;&lt;Rows Styles="AutoSize,0" /&gt;&lt;/TableLayoutSettings&gt;</value>
+  </data>
+  <data name="labelChannelsTitle.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Segoe UI, 18pt</value>
+  </data>
+  <data name="labelChannelsTitle.Location" type="System.Drawing.Point, System.Drawing">
+    <value>13, 10</value>
+  </data>
+  <data name="labelChannelsTitle.Size" type="System.Drawing.Size, System.Drawing">
+    <value>394, 32</value>
+  </data>
+  <data name="labelChannelsTitle.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="labelChannelsTitle.Text" xml:space="preserve">
+    <value>Hardeners Online</value>
+  </data>
+  <data name="&gt;&gt;labelChannelsTitle.Name" xml:space="preserve">
+    <value>labelChannelsTitle</value>
+  </data>
+  <data name="&gt;&gt;labelChannelsTitle.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelChannelsTitle.Parent" xml:space="preserve">
+    <value>panelChannels</value>
+  </data>
+  <data name="&gt;&gt;labelChannelsTitle.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <data name="labelStatus.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
@@ -343,7 +421,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;panelAuthentication.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>2</value>
   </data>
   <data name="panelAuthentication.LayoutSettings" type="System.Windows.Forms.TableLayoutSettings, System.Windows.Forms">
     <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="labelUsername" Row="1" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="textBoxUsername" Row="2" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="labelPassword" Row="3" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="textBoxPassword" Row="4" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="buttonLogin" Row="5" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="labelAuthenticationTitle" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="Absolute,400,Absolute,20" /&gt;&lt;Rows Styles="AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0" /&gt;&lt;/TableLayoutSettings&gt;</value>
@@ -517,7 +595,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;panelAuthError.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>1</value>
   </data>
   <data name="panelAuthError.LayoutSettings" type="System.Windows.Forms.TableLayoutSettings, System.Windows.Forms">
     <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="buttonChangeAuth" Row="2" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="labelAuthError" Row="1" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="labelAuthErrorTitle" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="Absolute,450" /&gt;&lt;Rows Styles="AutoSize,0,AutoSize,0,AutoSize,0" /&gt;&lt;/TableLayoutSettings&gt;</value>
@@ -636,6 +714,87 @@
   <data name="tableLayoutPanel.ColumnCount" type="System.Int32, mscorlib">
     <value>2</value>
   </data>
+  <data name="&gt;&gt;pictureBoxDino.Name" xml:space="preserve">
+    <value>pictureBoxDino</value>
+  </data>
+  <data name="&gt;&gt;pictureBoxDino.Type" xml:space="preserve">
+    <value>System.Windows.Forms.PictureBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;pictureBoxDino.Parent" xml:space="preserve">
+    <value>tableLayoutPanel</value>
+  </data>
+  <data name="&gt;&gt;pictureBoxDino.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;labelAppName.Name" xml:space="preserve">
+    <value>labelAppName</value>
+  </data>
+  <data name="&gt;&gt;labelAppName.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelAppName.Parent" xml:space="preserve">
+    <value>tableLayoutPanel</value>
+  </data>
+  <data name="&gt;&gt;labelAppName.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;labelCounts.Name" xml:space="preserve">
+    <value>labelCounts</value>
+  </data>
+  <data name="&gt;&gt;labelCounts.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelCounts.Parent" xml:space="preserve">
+    <value>tableLayoutPanel</value>
+  </data>
+  <data name="&gt;&gt;labelCounts.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="&gt;&gt;messageView.Name" xml:space="preserve">
+    <value>messageView</value>
+  </data>
+  <data name="&gt;&gt;messageView.Type" xml:space="preserve">
+    <value>TestIntelReporter.MessageView, TestIntelReporter, Version=0.3.0.0, Culture=neutral, PublicKeyToken=e646930e7fe9a812</value>
+  </data>
+  <data name="&gt;&gt;messageView.Parent" xml:space="preserve">
+    <value>tableLayoutPanel</value>
+  </data>
+  <data name="&gt;&gt;messageView.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="tableLayoutPanel.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="tableLayoutPanel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 0</value>
+  </data>
+  <data name="tableLayoutPanel.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>5, 5, 5, 5</value>
+  </data>
+  <data name="tableLayoutPanel.RowCount" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="tableLayoutPanel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>624, 442</value>
+  </data>
+  <data name="tableLayoutPanel.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="&gt;&gt;tableLayoutPanel.Name" xml:space="preserve">
+    <value>tableLayoutPanel</value>
+  </data>
+  <data name="&gt;&gt;tableLayoutPanel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TableLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tableLayoutPanel.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;tableLayoutPanel.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="tableLayoutPanel.LayoutSettings" type="System.Windows.Forms.TableLayoutSettings, System.Windows.Forms">
+    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="pictureBoxDino" Row="1" RowSpan="3" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="labelAppName" Row="1" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="labelCounts" Row="2" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="messageView" Row="0" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;/Controls&gt;&lt;Columns Styles="AutoSize,0,Percent,100" /&gt;&lt;Rows Styles="Percent,100,AutoSize,0,AutoSize,0,AutoSize,0" /&gt;&lt;/TableLayoutSettings&gt;</value>
+  </data>
   <data name="pictureBoxDino.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
@@ -753,39 +912,6 @@
   <data name="&gt;&gt;messageView.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
-  <data name="tableLayoutPanel.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Fill</value>
-  </data>
-  <data name="tableLayoutPanel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 0</value>
-  </data>
-  <data name="tableLayoutPanel.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>5, 5, 5, 5</value>
-  </data>
-  <data name="tableLayoutPanel.RowCount" type="System.Int32, mscorlib">
-    <value>4</value>
-  </data>
-  <data name="tableLayoutPanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>624, 442</value>
-  </data>
-  <data name="tableLayoutPanel.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="&gt;&gt;tableLayoutPanel.Name" xml:space="preserve">
-    <value>tableLayoutPanel</value>
-  </data>
-  <data name="&gt;&gt;tableLayoutPanel.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TableLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;tableLayoutPanel.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;tableLayoutPanel.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="tableLayoutPanel.LayoutSettings" type="System.Windows.Forms.TableLayoutSettings, System.Windows.Forms">
-    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="pictureBoxDino" Row="1" RowSpan="3" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="labelAppName" Row="1" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="labelCounts" Row="2" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="messageView" Row="0" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;/Controls&gt;&lt;Columns Styles="AutoSize,0,Percent,100" /&gt;&lt;Rows Styles="Percent,100,AutoSize,0,AutoSize,0,AutoSize,0" /&gt;&lt;/TableLayoutSettings&gt;</value>
-  </data>
   <data name="panelStatus.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -835,7 +961,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;panelStatus.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="panelStatus.LayoutSettings" type="System.Windows.Forms.TableLayoutSettings, System.Windows.Forms">
     <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="labelStatus" Row="1" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="labelStatusTitle" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="Absolute,450" /&gt;&lt;Rows Styles="AutoSize,0,AutoSize,0" /&gt;&lt;/TableLayoutSettings&gt;</value>
@@ -906,10 +1032,53 @@
   <data name="&gt;&gt;intelReporter.Type" xml:space="preserve">
     <value>PleaseIgnore.IntelMap.IntelReporter, PleaseIgnore.IntelMap, Version=0.3.0.0, Culture=neutral, PublicKeyToken=e646930e7fe9a812</value>
   </data>
+  <data name="&gt;&gt;imageList.Name" xml:space="preserve">
+    <value>imageList</value>
+  </data>
+  <data name="&gt;&gt;imageList.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ImageList, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>MainForm</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
     <value>System.Windows.Forms.Form, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <metadata name="imageList.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>140, 17</value>
+  </metadata>
+  <data name="imageList.ImageStream" mimetype="application/x-microsoft.net.object.binary.base64">
+    <value>
+        AAEAAAD/////AQAAAAAAAAAMAgAAAFdTeXN0ZW0uV2luZG93cy5Gb3JtcywgVmVyc2lvbj00LjAuMC4w
+        LCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODkFAQAAACZTeXN0
+        ZW0uV2luZG93cy5Gb3Jtcy5JbWFnZUxpc3RTdHJlYW1lcgEAAAAERGF0YQcCAgAAAAkDAAAADwMAAABA
+        BgAAAk1TRnQBSQFMAgEBAgEAASgBAAEoAQABEAEAARABAAT/ARkBAAj/AUIBTQE2BwABNgMAASgDAAFA
+        AwABEAMAAQEBAAEYBgABDOEAA/0D/iQAAuoB9QL9Af4SAAL9Af4C6AH1dQAD/QE3AYMBPQE2AX4BPAP+
+        HgAC6wH2AU8BTAHyAkIB7QL9Af4MAAL9Af4BKQEnAeMBMQEvAeoC6AH1bwAD/QFAAY4BRwFUAaMBXAFP
+        AZ8BVwE0AX4BOgH9Af4B/RgAAusB9gFYAVYB9QFjAWEB+gFYAVUB9gFEAUIB7AL9Af4GAAL9Af4BLwEu
+        AeUBQQE/AfEBTAFKAfYBMQEvAeoC6AH1aQAD/QFJAZoBUQFbAawBZAF3AcoBggF0AcgBfgFRAaABWQE1
+        AX8BOwH9Af4B/RUAAvQB+AFbAVgB9gFlAWIB+gFxAXAB/wFZAVYB9gFFAUMB7QL9Af4C/QH+ATgBNQHo
+        AUcBRQHyAWMBYgH/AUoBSAH0AS8BLQHpAfMB8gH4ZgAD/QFRAaYBWgFjAbUBbQF+Ac4BiQF7AcwBhwF2
+        AcoBgQF2AckBgQFSAaIBWgE2AYABPAH9Af4B/RUAAvQB+AFbAVkB9gFmAWMB+gF0AXEB/wFaAVgB9gFG
+        AUQB7QFCAUAB7AFQAU0B9AFoAWcB/wFQAU4B9QE2ATQB6wLzAfhmAAP9AVkBsAFjAWsBvQF2AYQB0gGQ
+        AXoByQGFAWABsgFqAWMBtAFtAXgByQGDAXgBywGCAVMBowFcATgBgQE+Af0B/gH9FQAC9AH4AVwBWgH2
+        AWcBZAH6AXQBcgH/AXMBcAH/AXABbgH/AW4BbAH/AVcBVQH3AT8BPQHuAvMB+GkAAeoB8QHrAXcBwAGA
+        AXkByQGGAYABzgGNAVQBpwFdAdMB4gHUAb4B1wHAAVwBrQFnAXwBzAGGAXkBywGFAVQBpAFdATgBgQE+
+        Af0B/gH9FQAC9AH4AV0BWwH3AXkBdgH/AVkBVgH/AVcBVAH/AXIBcAH/AUgBRgHwAvMB+G8AAe4B8wHv
+        AXcBwAF/AW0BwAF5AdQB5AHWBgABugHUAbwBXgGuAWgBfQHNAYkBfAHNAYcBVgGlAV8BOQGCAT8B/QH+
+        Af0SAAL9Af4BXwFcAfYBfQF5Af8BXgFbAf8BWwFYAf8BdgF0Af8BSAFFAe8C/QH+cgAB7AHyAewB2wHp
+        Ad0MAAG6AdUBvAFfAa8BaQF/Ac4BigF+Ac4BiQFXAaYBYAE6AYMBQAH9Af4B/QwAAv0B/gFpAWYB+AFw
+        AW0B+wGAAX4B/wF+AXsB/wF8AXkB/wF5AXcB/wFeAVwB9wFKAUcB7gL9Af6EAAG6AdUBvQFgAbABagGB
+        Ac8BjQF/Ac8BiwFYAacBYQE5AYUBQAH9Af4B/QYAAf4B/QH+AXEBbgH7AXcBdAH9AYYBggH/AXYBcwH8
+        AWQBYgH4AWABXQH3AW0BagH6AXsBeQH/AWABXQH3AUsBSAHuAv0B/oQAAboB1QG9AWIBsgFsAYIB0QGP
+        AXoByAGFAVcBpgFgAcYB1wHHAwAD/gF2AXMB/gF9AXoB/gGKAYcB/wF8AXkB/QFsAWkB+wL0AfkC9AH5
+        AWEBXgH4AW4BbAH6AX0BegH/AWEBXwH3AUwBSQHvA/6EAAG7AdYBvgFjAbMBbQFfAa8BaQHJAdsBywYA
+        AvgB+gF6AXcB/wGBAX4B/wGBAX4B/gF0AXEB/QL1AfkGAAL0AfkBYgFfAfgBbwFtAfsBfgF8Af8BYgFf
+        AfgB0gHRAfED/4QAAbsB1gG+AccB3AHJDAAC+AH6AXoBdwH/AXkBdgH+AvUB+QwAAvQB+QFkAWEB+AFq
+        AWgB+QGrAakB8AH1AfQB+ZwAAvgB+gL1AfkSAAL0AfkC1QHzAu0B9roAA/1pAAFCAU0BPgcAAT4DAAEo
+        AwABQAMAARADAAEBAQABAQUAAYAXAAP/AQAE/wQAAfkB/wLnBAAB8AH/AsMEAAHgAX8CgQQAAcABPwGA
+        AQEEAAGAAR8BwAEDBQABDwHgAQcFAAEHAfABDwQAAYYBAwHwAQ8EAAHPAQEB4AEHBAAB/wGAAcABAwQA
+        Af8BwAGAAQEEAAH/AeEBgQGABAAB/wHzAcMBwQQAAv8B5wHjBAAD/wH3BAAL
+</value>
   </data>
 </root>

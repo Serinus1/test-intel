@@ -10,6 +10,7 @@ using System.Diagnostics;
 using TestIntelReporter.Properties;
 using System.Net;
 using System.Security.Authentication;
+using System.Collections.Generic;
 
 namespace TestIntelReporter {
     public partial class MainForm : Form {
@@ -19,6 +20,10 @@ namespace TestIntelReporter {
         private readonly string formatCounts;
         // The settings object
         private readonly Settings settings;
+        // List of channel status flags
+        private readonly List<Label> channelFlags = new List<Label>();
+        // List of channel upload counts
+        private readonly List<Label> channelCounts = new List<Label>();
 
         // Number of times DaBigRedBoat has shown up in a message
         private int noveltyCount;
@@ -71,18 +76,16 @@ namespace TestIntelReporter {
         /// </summary>
         private void ShowPanel(Control panel, Control focus) {
             // Recenter and show a child panel
-            if (!panel.Visible) {
-                var parent = panel.Parent;
-                if (parent != null) {
-                    var margin = parent.ClientSize - panel.Size;
-                    margin.Height /= 2;
-                    margin.Width /= 2;
-                    panel.Location = parent.ClientRectangle.Location + margin;
-                }
-                panel.BringToFront();
-                panel.Visible = true;
-                (focus ?? panel).Focus();
+            var parent = panel.Parent;
+            if (parent != null) {
+                var margin = parent.ClientSize - panel.Size;
+                margin.Height /= 2;
+                margin.Width /= 2;
+                panel.Location = parent.ClientRectangle.Location + margin;
             }
+            panel.BringToFront();
+            panel.Visible = true;
+            (focus ?? panel).Focus();
         }
 
         /// <summary>
@@ -106,9 +109,22 @@ namespace TestIntelReporter {
             if (!panelAuthentication.Visible) {
                 panelStatus.Visible = false;
                 panelAuthError.Visible = false;
+                panelChannels.Visible = false;
                 labelStatusTitle.Text = title;
                 labelStatus.Text = message;
                 this.ShowPanel(this.panelStatus, null);
+            }
+        }
+
+        /// <summary>
+        ///     Displays the channel list pseudo-dialog.
+        /// </summary>
+        private void ShowChannelList() {
+            if (!panelChannels.Visible) {
+                panelStatus.Visible = false;
+                panelAuthError.Visible = false;
+                panelChannels.Visible = false;
+                this.ShowPanel(this.panelChannels, null);
             }
         }
 
@@ -136,10 +152,7 @@ namespace TestIntelReporter {
                 switch (status) {
                 case IntelStatus.Connected:
                     // Normal operation
-                    if (!this.configError) {
-                        this.panelAuthError.Visible = false;
-                        this.panelStatus.Visible = false;
-                    }
+                    this.ShowChannelList();
                     break;
                 case IntelStatus.Idle:
                     // Normal operation
@@ -200,6 +213,94 @@ namespace TestIntelReporter {
         /// </summary>
         private void intelReporter_PropertyChanged(object sender, PropertyChangedEventArgs e) {
             this.UpdateStatus();
+
+            // Update the channel list
+            if (String.IsNullOrEmpty(e.PropertyName) || (e.PropertyName == "Channels")) {
+                var visible = panelChannels.Visible;
+                // Clear out the old channel list
+                foreach (var label in panelChannels.Controls
+                        .OfType<Label>()
+                        .Where(x => x.Tag != null)
+                        .ToArray()) {
+                    panelChannels.Controls.Remove(label);
+                    label.Dispose();
+                }
+                channelFlags.Clear();
+                channelCounts.Clear();
+
+                // Clear out the old rows
+                while(panelChannels.RowStyles.Count > 1) {
+                    panelChannels.RowStyles.RemoveAt(1);
+                }
+
+                // Create a new channel list
+                foreach (var channel in intelReporter.Channels
+                        .OrderBy(x => x.Name)) {
+                    var row = panelChannels.RowStyles.Count;
+                    panelChannels.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+
+                    var status = new Label {
+                        Tag = channel,
+                        ImageList = this.imageList,
+                        Padding = new Padding(0)
+                    };
+                    panelChannels.Controls.Add(status, 0, row);
+                    channelFlags.Add(status);
+
+                    var name = new Label {
+                        Text = channel.Name,
+                        Tag = channel,
+                        Padding = new Padding(0),
+                        Anchor = AnchorStyles.Left | AnchorStyles.Right
+                    };
+                    panelChannels.Controls.Add(name, 1, row);
+
+                    var count = new Label {
+                        Text = String.Empty,
+                        Tag = channel,
+                        Padding = new Padding(0),
+                        TextAlign = ContentAlignment.MiddleRight,
+                        Anchor = AnchorStyles.Left | AnchorStyles.Right
+                    };
+                    panelChannels.Controls.Add(count, 2, row);
+                    channelCounts.Add(count);
+                }
+
+                if (visible) {
+                    // Will recenter the channel list
+                    this.ShowPanel(this.panelChannels, null);
+                }
+            }
+
+            // Update the channel statistics
+            foreach (var flag in channelFlags) {
+                var channel = (IntelChannel)flag.Tag;
+                flag.ImageIndex = (channel.LogFile != null) ? 0 : 1;
+            }
+            foreach (var label in channelCounts) {
+                var channel = (IntelChannel)label.Tag;
+                var count = channel.IntelCount;
+                switch(count) {
+                case 0:
+                    label.Text = string.Format(
+                        Application.CurrentCulture,
+                        Resources.IntelCount_Zero,
+                        count);
+                    break;
+                case 1:
+                    label.Text = string.Format(
+                        Application.CurrentCulture,
+                        Resources.IntelCount_One,
+                        count);
+                    break;
+                default:
+                    label.Text = string.Format(
+                        Application.CurrentCulture,
+                        Resources.IntelCount_Many,
+                        count);
+                    break;
+                }
+            }
         }
         #endregion
 
@@ -210,6 +311,7 @@ namespace TestIntelReporter {
         private void ShowAuthError(string title, string message) {
             panelStatus.Visible = false;
             panelAuthError.Visible = false;
+            panelChannels.Visible = false;
             labelAuthErrorTitle.Text = title;
             labelAuthError.Text = message;
             this.ShowPanel(this.panelAuthError, this.buttonChangeAuth);

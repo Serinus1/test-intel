@@ -144,7 +144,6 @@ namespace PleaseIgnore.IntelMap {
                     lastDownload = now;
                     lock (this.syncRoot) {
                         // TODO: Should we keep lock while dealing with files?
-                        // TODO: Notify clients on changes?
                         foreach (var channel in list
                                 .Where(x => !channels.Contains(x.Name))
                                 .ToList()) {
@@ -159,6 +158,9 @@ namespace PleaseIgnore.IntelMap {
                             channel.Rescan();
                             list.Add(channel);
                         }
+                        
+                        // TODO: Notify clients correctly (however that is)
+                        parent.OnPropertyChanged("Channels");
                     } //lock (this.syncRoot) {
                 } //if ((channels != null) && (channels.Length > 0)) {
             } //if ((!lastDownload.HasValue || now > lastDownload + period)

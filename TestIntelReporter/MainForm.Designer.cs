@@ -33,6 +33,7 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             System.Windows.Forms.Label labelPassword;
             System.Windows.Forms.Label labelAuthenticationTitle;
+            System.Windows.Forms.Label labelChannelsTitle;
             this.labelStatus = new System.Windows.Forms.Label();
             this.panelAuthentication = new System.Windows.Forms.TableLayoutPanel();
             this.textBoxUsername = new System.Windows.Forms.TextBox();
@@ -50,15 +51,19 @@
             this.panelStatus = new System.Windows.Forms.TableLayoutPanel();
             this.labelStatusTitle = new System.Windows.Forms.Label();
             this.intelReporter = new PleaseIgnore.IntelMap.IntelReporter(this.components);
+            this.panelChannels = new System.Windows.Forms.TableLayoutPanel();
+            this.imageList = new System.Windows.Forms.ImageList(this.components);
             labelUsername = new System.Windows.Forms.Label();
             labelPassword = new System.Windows.Forms.Label();
             labelAuthenticationTitle = new System.Windows.Forms.Label();
+            labelChannelsTitle = new System.Windows.Forms.Label();
             this.panelAuthentication.SuspendLayout();
             this.panelAuthError.SuspendLayout();
             this.tableLayoutPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxDino)).BeginInit();
             this.panelStatus.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.intelReporter)).BeginInit();
+            this.panelChannels.SuspendLayout();
             this.SuspendLayout();
             // 
             // labelUsername
@@ -75,6 +80,12 @@
             // 
             resources.ApplyResources(labelAuthenticationTitle, "labelAuthenticationTitle");
             labelAuthenticationTitle.Name = "labelAuthenticationTitle";
+            // 
+            // labelChannelsTitle
+            // 
+            resources.ApplyResources(labelChannelsTitle, "labelChannelsTitle");
+            this.panelChannels.SetColumnSpan(labelChannelsTitle, 3);
+            labelChannelsTitle.Name = "labelChannelsTitle";
             // 
             // labelStatus
             // 
@@ -199,11 +210,27 @@
             this.intelReporter.IntelReported += new System.EventHandler<PleaseIgnore.IntelMap.IntelEventArgs>(this.intelReporter_IntelReported);
             this.intelReporter.PropertyChanged += new System.ComponentModel.PropertyChangedEventHandler(this.intelReporter_PropertyChanged);
             // 
+            // panelChannels
+            // 
+            resources.ApplyResources(this.panelChannels, "panelChannels");
+            this.panelChannels.BackColor = System.Drawing.Color.DimGray;
+            this.panelChannels.Controls.Add(labelChannelsTitle, 0, 0);
+            this.panelChannels.Name = "panelChannels";
+            this.panelChannels.Paint += new System.Windows.Forms.PaintEventHandler(this.DrawBorder);
+            // 
+            // imageList
+            // 
+            this.imageList.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("imageList.ImageStream")));
+            this.imageList.TransparentColor = System.Drawing.Color.Transparent;
+            this.imageList.Images.SetKeyName(0, "tick.png");
+            this.imageList.Images.SetKeyName(1, "cross.png");
+            // 
             // MainForm
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(40)))), ((int)(((byte)(40)))), ((int)(((byte)(45)))));
+            this.Controls.Add(this.panelChannels);
             this.Controls.Add(this.panelAuthError);
             this.Controls.Add(this.panelAuthentication);
             this.Controls.Add(this.panelStatus);
@@ -222,6 +249,8 @@
             this.panelStatus.ResumeLayout(false);
             this.panelStatus.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.intelReporter)).EndInit();
+            this.panelChannels.ResumeLayout(false);
+            this.panelChannels.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -246,6 +275,8 @@
         private System.Windows.Forms.Label labelStatus;
         private System.Windows.Forms.Label labelAuthErrorTitle;
         private MessageView messageView;
+        private System.Windows.Forms.TableLayoutPanel panelChannels;
+        private System.Windows.Forms.ImageList imageList;
 
     }
 }

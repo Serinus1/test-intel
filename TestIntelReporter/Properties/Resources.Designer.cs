@@ -99,6 +99,33 @@ namespace TestIntelReporter.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0:N0} Sent.
+        /// </summary>
+        internal static string IntelCount_Many {
+            get {
+                return ResourceManager.GetString("IntelCount_Many", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0:N0} Sent.
+        /// </summary>
+        internal static string IntelCount_One {
+            get {
+                return ResourceManager.GetString("IntelCount_One", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to .
+        /// </summary>
+        internal static string IntelCount_Zero {
+            get {
+                return ResourceManager.GetString("IntelCount_Zero", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The server seems to be convinced that you are a Goon spy.  Of course, there are more mundane explainations like you changed your password or AUTH is simply having a bad day.  Because I like you, I&apos;ll keep trying to log in every couple of minutes to see if AUTH is feeling better..
         /// </summary>
         internal static string IntelStatus_Auth {

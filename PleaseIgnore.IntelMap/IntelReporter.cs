@@ -1090,7 +1090,7 @@ namespace PleaseIgnore.IntelMap {
         /// <summary>
         ///     Raises the <see cref="PropertyChanged"/> event.
         /// </summary>
-        private void OnPropertyChanged(string propertyName) {
+        internal void OnPropertyChanged(string propertyName) {
 #if DEBUG
             // Verify that propertyName actually exists
             if (!String.IsNullOrEmpty(propertyName)) {
