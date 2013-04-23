@@ -52,10 +52,10 @@
 	<summary>
 		<codepage>1252</codepage>
 		<title>Installation Database</title>
-		<subject>Test Intel Map Reporting Tool</subject>
+		<subject>##ID_STRING8##</subject>
 		<author>##ID_STRING3##</author>
 		<keywords>Installer,MSI,Database</keywords>
-		<comments>Contact:  Your local administrator</comments>
+		<comments>##ID_STRING4##</comments>
 		<template>Intel;1033</template>
 		<lastauthor>Administrator</lastauthor>
 		<revnumber>{905A4BEB-FC4B-42F6-AC76-09150039AC2D}</revnumber>
@@ -341,6 +341,8 @@
 		<col def="S0">ISDotNetInstallerArgsCommit</col>
 		<col def="S0">ISDotNetInstallerArgsUninstall</col>
 		<col def="S0">ISDotNetInstallerArgsRollback</col>
+		<row><td>ISO19770_LocalTag</td><td>{887B6D44-B479-47B6-8A04-9E07E5B1A60B}</td><td>INSTALLDIR</td><td>2</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
+		<row><td>ISO19770_SystemTag</td><td>{17713E2B-749D-4439-A618-1D3BCDD9ADD3}</td><td>CommonAppDataFolder</td><td>2</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
 		<row><td>PleaseIgnore.IntelMap.Primary_output</td><td>{9981AB1B-4C7A-4AA9-A3C7-7196B778CCB4}</td><td>INSTALLDIR</td><td>2</td><td/><td>pleaseignore.intelmap.primar</td><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
 		<row><td>TestIntelReporter.Primary_output</td><td>{A9C97580-920D-4055-9EDB-DD7AACAD7DAE}</td><td>INSTALLDIR</td><td>2</td><td/><td>testintelreporter.primary_ou</td><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
 	</table>
@@ -1052,6 +1054,8 @@
 	<table name="CreateFolder">
 		<col key="yes" def="s72">Directory_</col>
 		<col key="yes" def="s72">Component_</col>
+		<row><td>CommonAppDataFolder</td><td>ISO19770_SystemTag</td></row>
+		<row><td>INSTALLDIR</td><td>ISO19770_LocalTag</td></row>
 	</table>
 
 	<table name="CustomAction">
@@ -1067,6 +1071,7 @@
 		<row><td>ISSelfRegisterCosting</td><td>1</td><td>ISSELFREG.DLL</td><td>ISSelfRegisterCosting</td><td/><td/></row>
 		<row><td>ISSelfRegisterFiles</td><td>3073</td><td>ISSELFREG.DLL</td><td>ISSelfRegisterFiles</td><td/><td/></row>
 		<row><td>ISSelfRegisterFinalize</td><td>1</td><td>ISSELFREG.DLL</td><td>ISSelfRegisterFinalize</td><td/><td/></row>
+		<row><td>ISSetAllUsers</td><td>257</td><td>SetAllUsers.dll</td><td>SetAllUsers</td><td/><td/></row>
 		<row><td>ISUnSelfRegisterFiles</td><td>3073</td><td>ISSELFREG.DLL</td><td>ISUnSelfRegisterFiles</td><td/><td/></row>
 		<row><td>LaunchProgramFileFromSetupCompleteSuccess</td><td>1</td><td>NewBinary19</td><td>LaunchProgram</td><td/><td/></row>
 		<row><td>SetARPINSTALLLOCATION</td><td>51</td><td>ARPINSTALLLOCATION</td><td>[INSTALLDIR]</td><td/><td/></row>
@@ -1141,7 +1146,7 @@
 		<row><td>FavoritesFolder</td><td>TARGETDIR</td><td>.:FAVORI~1|Favorites</td><td/><td>0</td><td/></row>
 		<row><td>FontsFolder</td><td>TARGETDIR</td><td>.:Fonts</td><td/><td>0</td><td/></row>
 		<row><td>GlobalAssemblyCache</td><td>TARGETDIR</td><td>.:Global~1|GlobalAssemblyCache</td><td/><td>0</td><td/></row>
-		<row><td>INSTALLDIR</td><td>TEST_INTEL_MAP_REPORTING_TOOL</td><td>.</td><td/><td>0</td><td/></row>
+		<row><td>INSTALLDIR</td><td>TEST_INTEL_REPORTING_TOOL</td><td>.</td><td/><td>0</td><td/></row>
 		<row><td>ISCommonFilesFolder</td><td>CommonFilesFolder</td><td>Instal~1|InstallShield</td><td/><td>0</td><td/></row>
 		<row><td>ISMyCompanyDir</td><td>ProgramFilesFolder</td><td>MYCOMP~1|My Company Name</td><td/><td>0</td><td/></row>
 		<row><td>ISMyProductDir</td><td>ISMyCompanyDir</td><td>MYPROD~1|My Product Name</td><td/><td>0</td><td/></row>
@@ -1164,13 +1169,14 @@
 		<row><td>TARGETDIR</td><td/><td>SourceDir</td><td/><td>0</td><td/></row>
 		<row><td>TEST_ALLIANCE_PLEASE_IGNORE</td><td>ProgramFilesFolder</td><td>TESTAL~1|Test Alliance Please Ignore</td><td/><td>0</td><td/></row>
 		<row><td>TEST_INTEL_MAP_REPORTING_TOOL</td><td>ProgramFilesFolder</td><td>TESTIN~1|Test Intel Map Reporting Tool</td><td/><td>0</td><td/></row>
+		<row><td>TEST_INTEL_REPORTING_TOOL</td><td>ProgramFilesFolder</td><td>TESTIN~1|Test Intel Reporting Tool</td><td/><td>0</td><td/></row>
 		<row><td>TempFolder</td><td>TARGETDIR</td><td>.:Temp</td><td/><td>0</td><td/></row>
 		<row><td>TemplateFolder</td><td>TARGETDIR</td><td>.:ShellNew</td><td/><td>0</td><td/></row>
 		<row><td>USERPROFILE</td><td>TARGETDIR</td><td>.:USERPR~1|UserProfile</td><td/><td>0</td><td/></row>
 		<row><td>WindowsFolder</td><td>TARGETDIR</td><td>.:Windows</td><td/><td>0</td><td/></row>
 		<row><td>WindowsVolume</td><td>TARGETDIR</td><td>.:WinRoot</td><td/><td>0</td><td/></row>
 		<row><td>testal_1_test_alliance_please_ignore</td><td>ProgramMenuFolder</td><td>TESTAL~1|Test Alliance Please Ignore</td><td/><td>1</td><td/></row>
-		<row><td>testin_1_test_intel_map_reporting_tool</td><td>testal_1_test_alliance_please_ignore</td><td>TESTIN~1|Test Intel Map Reporting Tool</td><td/><td>1</td><td/></row>
+		<row><td>testin_1_test_intel_map_reporting_tool</td><td>testal_1_test_alliance_please_ignore</td><td>INTELR~1|Intel Reporting Tool</td><td/><td>1</td><td/></row>
 	</table>
 
 	<table name="DrLocator">
@@ -1862,6 +1868,8 @@
 	<table name="FeatureComponents">
 		<col key="yes" def="s38">Feature_</col>
 		<col key="yes" def="s72">Component_</col>
+		<row><td>AlwaysInstall</td><td>ISO19770_LocalTag</td></row>
+		<row><td>AlwaysInstall</td><td>ISO19770_SystemTag</td></row>
 		<row><td>AlwaysInstall</td><td>PleaseIgnore.IntelMap.Primary_output</td></row>
 		<row><td>AlwaysInstall</td><td>TestIntelReporter.Primary_output</td></row>
 	</table>
@@ -2136,6 +2144,8 @@
 		<col def="S0">FTPLocation</col>
 		<col def="S0">HTTPLocation</col>
 		<col def="S0">Miscellaneous</col>
+		<row><td>ISO19770_LocalTag</td><td/><td/><td>_2322D287_B628_4FC7_8D77_17B22D16F05D_FILTER</td><td/><td/><td/><td/></row>
+		<row><td>ISO19770_SystemTag</td><td/><td/><td>_7EAE7D63_BF4C_44C3_BF1E_C01184F0D96A_FILTER</td><td/><td/><td/><td/></row>
 		<row><td>PleaseIgnore.IntelMap.Primary_output</td><td/><td/><td>_109B848C_1715_4CFA_B548_4FF4C259E757_FILTER</td><td/><td/><td/><td/></row>
 		<row><td>TestIntelReporter.Primary_output</td><td/><td/><td>_CAAB8B0A_BFC6_47AB_B536_173F9EBAC8D5_FILTER</td><td/><td/><td/><td/></row>
 	</table>
@@ -3579,7 +3589,7 @@
 		<row><td>IDS_PROGMSG_XML_ROLLBACK_FILES</td><td>1033</td><td>Rolling back XML file changes...</td><td>0</td><td/><td>-1440661304</td></row>
 		<row><td>IDS_PROGMSG_XML_UPDATE_FILE</td><td>1033</td><td>Updating XML file %s...</td><td>0</td><td/><td>-1440661304</td></row>
 		<row><td>IDS_SETUPEXE_EXPIRE_MSG</td><td>1033</td><td>This setup works until %s. The setup will now exit.</td><td>0</td><td/><td>-1440661304</td></row>
-		<row><td>IDS_SHORTCUT_DISPLAY_NAME1</td><td>1033</td><td>Test Intel Map Reporting Tool</td><td>0</td><td/><td>-1440655064</td></row>
+		<row><td>IDS_SHORTCUT_DISPLAY_NAME1</td><td>1033</td><td>TESTIN~1|Test Intel Reporting Tool</td><td>0</td><td/><td>-1172188500</td></row>
 		<row><td>IDS_SQLBROWSE_INTRO</td><td>1033</td><td>From the list of servers below, select the database server you would like to target.</td><td>0</td><td/><td>-1440661304</td></row>
 		<row><td>IDS_SQLBROWSE_INTRO_DB</td><td>1033</td><td>From the list of catalog names below, select the database catalog you would like to target.</td><td>0</td><td/><td>-1440661304</td></row>
 		<row><td>IDS_SQLBROWSE_INTRO_TEMPLATE</td><td>1033</td><td>[IS_SQLBROWSE_INTRO]</td><td>0</td><td/><td>-1440661304</td></row>
@@ -3871,12 +3881,18 @@
 		<row><td>ID_STRING1</td><td>1033</td><td/><td>0</td><td/><td>-1440661304</td></row>
 		<row><td>ID_STRING2</td><td>1033</td><td>http://maps.pleaseignore.com/</td><td>0</td><td/><td>-1440663128</td></row>
 		<row><td>ID_STRING3</td><td>1033</td><td>Test Alliance Please Ignore</td><td>0</td><td/><td>-1440677496</td></row>
+		<row><td>ID_STRING4</td><td>1033</td><td>This installer database containers the logic and data required to install the Test Alliance Intel Reporting Tool.</td><td>0</td><td/><td>-1172205300</td></row>
+		<row><td>ID_STRING5</td><td>1033</td><td>Ranisa Kazuko</td><td>0</td><td/><td>-1172215252</td></row>
+		<row><td>ID_STRING6</td><td>1033</td><td>https://gate.eveonline.com/Profile/Ranisa%20Kazuko</td><td>0</td><td/><td>-1172200884</td></row>
+		<row><td>ID_STRING7</td><td>1033</td><td>TESTIN~1|Test Intel Reporting Tool</td><td>0</td><td/><td>-1172198740</td></row>
+		<row><td>ID_STRING8</td><td>1033</td><td>Test Intel Reporting Tool</td><td>0</td><td/><td>-1172190452</td></row>
 		<row><td>IIDS_UITEXT_FeatureUninstalled</td><td>1033</td><td>This feature will remain uninstalled.</td><td>0</td><td/><td>-1440661304</td></row>
 	</table>
 
 	<table name="ISSwidtagProperty">
 		<col key="yes" def="s72">Name</col>
 		<col def="s0">Value</col>
+		<row><td>TagCreatorRegid</td><td>regid.2010-06.com.pleaseignore</td></row>
 		<row><td>UniqueId</td><td>791F6417-044B-42E6-B787-37F350FCB037</td></row>
 	</table>
 
@@ -4024,6 +4040,7 @@
 		<row><td>ISSelfRegisterCosting</td><td/><td>2201</td><td/><td/></row>
 		<row><td>ISSelfRegisterFiles</td><td/><td>5601</td><td/><td/></row>
 		<row><td>ISSelfRegisterFinalize</td><td/><td>6601</td><td/><td/></row>
+		<row><td>ISSetAllUsers</td><td>Not Installed</td><td>10</td><td/><td/></row>
 		<row><td>ISUnSelfRegisterFiles</td><td/><td>2202</td><td/><td/></row>
 		<row><td>InstallFiles</td><td/><td>4000</td><td>InstallFiles</td><td/></row>
 		<row><td>InstallFinalize</td><td/><td>6600</td><td>InstallFinalize</td><td/></row>
@@ -4111,7 +4128,7 @@ UwBpAG4AZwBsAGUASQBtAGEAZwBlAAEARQB4AHAAcgBlAHMAcwA=
 		<row><td>ISTheme</td><td>InstallShield Blue.theme</td></row>
 		<row><td>ISUSLock</td><td>{CE1152C4-05A1-4293-94AA-F792CACE01EC}</td></row>
 		<row><td>ISUSSignature</td><td>{AADD1DB1-3D36-4225-AEE1-101555A1866B}</td></row>
-		<row><td>ISVisitedViews</td><td>viewAssistant,viewUpgradePaths,viewUpdateService,viewProject</td></row>
+		<row><td>ISVisitedViews</td><td>viewAssistant,viewUpgradePaths,viewUpdateService,viewProject,viewUI,viewTextMessages,viewRelease,viewShortcuts,viewSystemSearch,viewCustomActions,viewAppFiles,viewObjects</td></row>
 		<row><td>Limited</td><td>1</td></row>
 		<row><td>LockPermissionMode</td><td>1</td></row>
 		<row><td>MsiExecCmdLineOptions</td><td/></row>
@@ -4124,6 +4141,8 @@ UwBpAG4AZwBsAGUASQBtAGEAZwBlAAEARQB4AHAAcgBlAHMAcwA=
 		<row><td>SccEnabled</td><td>0</td></row>
 		<row><td>SccPath</td><td/></row>
 		<row><td>SchemaVersion</td><td>773</td></row>
+		<row><td>SwidtagLocalComponent</td><td>ISO19770_LocalTag</td></row>
+		<row><td>SwidtagSystemComponent</td><td>ISO19770_SystemTag</td></row>
 		<row><td>Type</td><td>MSIE</td></row>
 	</table>
 
@@ -4141,6 +4160,7 @@ UwBpAG4AZwBsAGUASQBtAGEAZwBlAAEARQB4AHAAcgBlAHMAcwA=
 		<row><td>FileCost</td><td/><td>900</td><td>FileCost</td><td/></row>
 		<row><td>FindRelatedProducts</td><td/><td>430</td><td>FindRelatedProducts</td><td/></row>
 		<row><td>ISPreventDowngrade</td><td>ISFOUNDNEWERPRODUCTVERSION</td><td>450</td><td>ISPreventDowngrade</td><td/></row>
+		<row><td>ISSetAllUsers</td><td>Not Installed</td><td>10</td><td/><td/></row>
 		<row><td>InstallWelcome</td><td>Not Installed</td><td>1210</td><td>InstallWelcome</td><td/></row>
 		<row><td>IsolateComponents</td><td/><td>950</td><td>IsolateComponents</td><td/></row>
 		<row><td>LaunchConditions</td><td>Not Installed</td><td>410</td><td>LaunchConditions</td><td/></row>
@@ -4417,6 +4437,8 @@ UwBpAG4AZwBsAGUASQBtAGEAZwBlAAEARQB4AHAAcgBlAHMAcwA=
 		<col def="L0">Value</col>
 		<col def="S255">ISComments</col>
 		<row><td>ALLUSERS</td><td>1</td><td/></row>
+		<row><td>ARPCONTACT</td><td>##ID_STRING5##</td><td/></row>
+		<row><td>ARPHELPLINK</td><td>##ID_STRING6##</td><td/></row>
 		<row><td>ARPINSTALLLOCATION</td><td/><td/></row>
 		<row><td>ARPPRODUCTICON</td><td>ARPPRODUCTICON.exe</td><td/></row>
 		<row><td>ARPSIZE</td><td/><td/></row>
@@ -4488,8 +4510,8 @@ UwBpAG4AZwBsAGUASQBtAGEAZwBlAAEARQB4AHAAcgBlAHMAcwA=
 		<row><td>PROGMSG_IIS_ROLLBACKWEBSERVICEEXTENSIONS</td><td>##IDS_PROGMSG_IIS_ROLLBACKWEBSERVICEEXTENSIONS##</td><td/></row>
 		<row><td>PROGRAMFILETOLAUNCHATEND</td><td>[INSTALLDIR]TestIntelReporter.Primary output</td><td/></row>
 		<row><td>ProductCode</td><td>{48E48101-E8D4-4297-A6DC-F83581B81756}</td><td/></row>
-		<row><td>ProductName</td><td>Test Intel Map Reporting Tool</td><td/></row>
-		<row><td>ProductVersion</td><td>0.2.1</td><td/></row>
+		<row><td>ProductName</td><td>Test Intel Reporting Tool</td><td/></row>
+		<row><td>ProductVersion</td><td>0.3.0</td><td/></row>
 		<row><td>ProgressType0</td><td>install</td><td/></row>
 		<row><td>ProgressType1</td><td>Installing</td><td/></row>
 		<row><td>ProgressType2</td><td>installed</td><td/></row>
@@ -4654,6 +4676,7 @@ UwBpAG4AZwBsAGUASQBtAGEAZwBlAAEARQB4AHAAcgBlAHMAcwA=
 		<col def="S255">ISComments</col>
 		<col def="S255">ISShortcutName</col>
 		<col def="I4">ISAttributes</col>
+		<row><td>NewShortcut1</td><td>StartupFolder</td><td>##ID_STRING7##</td><td>TestIntelReporter.Primary_output</td><td>AlwaysInstall</td><td>/startup</td><td/><td/><td/><td/><td>1</td><td/><td/><td/><td/><td/><td/><td/><td/></row>
 		<row><td>_Built</td><td>testin_1_test_intel_map_reporting_tool</td><td>##IDS_SHORTCUT_DISPLAY_NAME1##</td><td>TestIntelReporter.Primary_output</td><td>AlwaysInstall</td><td/><td/><td/><td/><td/><td>1</td><td/><td/><td/><td/><td/><td/><td/><td/></row>
 	</table>
 
