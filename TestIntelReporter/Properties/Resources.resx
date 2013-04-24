@@ -146,7 +146,7 @@
     <value>{0:N0} Sent</value>
   </data>
   <data name="IntelCount_Zero" xml:space="preserve">
-    <value>0 Sent</value>
+    <value>Nothing Sent</value>
   </data>
   <data name="IntelStatus_Auth" xml:space="preserve">
     <value>The server seems to be convinced that you are a Goon spy.  Of course, there are more mundane explainations like you changed your password or AUTH is simply having a bad day.  Because I like you, I'll keep trying to log in every couple of minutes to see if AUTH is feeling better.</value>

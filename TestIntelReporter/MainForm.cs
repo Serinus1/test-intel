@@ -23,6 +23,8 @@ namespace TestIntelReporter {
         private readonly List<Label> channelFlags = new List<Label>();
         // List of channel upload counts
         private readonly List<Label> channelCounts = new List<Label>();
+        // Message we receive from Main() when another instance is run
+        private readonly uint wakeupMessage;
 
         // Number of times DaBigRedBoat has shown up in a message
         private int noveltyCount;
@@ -37,12 +39,20 @@ namespace TestIntelReporter {
         public MainForm() {
             InitializeComponent();
 
+            // Register the 'wake up' message
+            try {
+                this.wakeupMessage = NativeMethods.RegisterWindowMessage(Program.mutexName);
+            } catch {
+                this.wakeupMessage = 0;
+            }
+
             // Update some fields
             this.Icon = Properties.Resources.AppIcon;
             labelAppName.Text = string.Format(
                 Application.CurrentCulture,
                 labelAppName.Text,
                 Application.ProductVersion);
+
             // Finish initialization
             this.settings = Settings.Default;
             if (!String.IsNullOrEmpty(settings.Username)) {
@@ -58,6 +68,19 @@ namespace TestIntelReporter {
         }
 
         /// <summary>
+        ///     Looking for the wake-up message.
+        /// </summary>
+        protected override void WndProc(ref Message m) {
+            if ((this.wakeupMessage != 0) && (this.wakeupMessage == m.Msg)) {
+                this.Visible = true;
+                this.WindowState = FormWindowState.Normal;
+                this.BringToFront();
+            } else {
+                base.WndProc(ref m);
+            }
+        }
+
+        /// <summary>
         ///     Starts up the intel reporting component.
         /// </summary>
         protected override void OnShown(EventArgs e) {
@@ -67,7 +90,7 @@ namespace TestIntelReporter {
         }
 
         /// <summary>
-        ///     Recenter the panels
+        ///     Recenter the panels when returning from minimization.
         /// </summary>
         protected override void OnResize(EventArgs e) {
             if (this.WindowState != FormWindowState.Minimized) {
@@ -329,7 +352,7 @@ namespace TestIntelReporter {
                 var count = channel.IntelCount;
                 label.Text = FormatCount(
                     channel.IntelCount,
-                    Resources.IntelCount_Zero,
+                    String.Empty,
                     Resources.IntelCount_One,
                     Resources.IntelCount_Many);
             }

@@ -144,7 +144,7 @@ namespace TestIntelReporter.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 0 Sent.
+        ///   Looks up a localized string similar to Nothing Sent.
         /// </summary>
         internal static string IntelCount_Zero {
             get {
