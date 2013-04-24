@@ -74,7 +74,8 @@ namespace TestIntelReporter {
             if ((this.wakeupMessage != 0) && (this.wakeupMessage == m.Msg)) {
                 this.Visible = true;
                 this.WindowState = FormWindowState.Normal;
-                this.BringToFront();
+                this.TopMost = true;
+                this.TopMost = false;
             } else {
                 base.WndProc(ref m);
             }

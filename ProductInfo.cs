@@ -16,7 +16,7 @@ internal static class ProductInfo {
 
     // Content for AssemblyVersion*Attribute
     // TODO: We want this to autoincrement or...something.
-    internal const string ProductVersion = ProductVersionPrefix + "0.13";
+    internal const string ProductVersion = ProductVersionPrefix + "0.14";
 
     // Content for AssemblyConfigurationAttribute
 #if DEBUG
