@@ -67,22 +67,39 @@ namespace TestIntelReporter {
         }
 
         /// <summary>
+        ///     Recenter the panels
+        /// </summary>
+        protected override void OnResize(EventArgs e) {
+            if (this.WindowState != FormWindowState.Minimized) {
+                this.CenterPanel(this.panelAuthentication);
+                this.CenterPanel(this.panelAuthError);
+                this.CenterPanel(this.panelChannels);
+                this.CenterPanel(this.panelStatus);
+            }
+            base.OnResize(e);
+        }
+
+        /// <summary>
         ///     Actives the specified pseudo-dialog within the parent window.
         ///     The operation includes centering, z-order manipulation, and
         ///     focus changes.
         /// </summary>
         private void ShowPanel(Control panel, Control focus) {
             // Recenter and show a child panel
-            var parent = panel.Parent;
-            if (parent != null) {
-                var margin = parent.ClientSize - panel.Size;
-                margin.Height /= 2;
-                margin.Width /= 2;
-                panel.Location = parent.ClientRectangle.Location + margin;
-            }
+            this.CenterPanel(panel);
             panel.BringToFront();
             panel.Visible = true;
             (focus ?? panel).Focus();
+        }
+
+        /// <summary>
+        ///     Recenter a pseudo-dialog within the window.
+        /// </summary>
+        private void CenterPanel(Control panel) {
+            var margin = this.ClientSize - panel.Size;
+            margin.Height /= 2;
+            margin.Width /= 2;
+            panel.Location = this.ClientRectangle.Location + margin;
         }
 
         /// <summary>
