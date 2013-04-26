@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -36,6 +35,8 @@ namespace PleaseIgnore.IntelMap {
         ///     midnight, 1 Jan 1970 GMT.
         /// </returns>
         public static double ToUnixTime(this DateTime timestamp) {
+            Contract.Ensures(!double.IsInfinity(Contract.Result<double>()));
+            Contract.Ensures(!double.IsNaN(Contract.Result<double>()));
             return Math.Floor((timestamp.ToUniversalTime() - Epoch).TotalSeconds);
         }
 
@@ -57,6 +58,7 @@ namespace PleaseIgnore.IntelMap {
         public static WebResponse Post(this WebRequest webRequest, byte[] payload) {
             Contract.Requires<ArgumentNullException>(webRequest != null, "webRequest");
             Contract.Requires<ArgumentNullException>(payload != null, "payload");
+            Contract.Ensures(Contract.Result<WebResponse>() != null);
             return Post(webRequest, payload, 0, payload.Length);
         }
 
@@ -88,6 +90,7 @@ namespace PleaseIgnore.IntelMap {
             Contract.Requires<ArgumentOutOfRangeException>(offset >= 0, "offset");
             Contract.Requires<ArgumentOutOfRangeException>(count >= 0, "count");
             Contract.Requires<ArgumentException>(offset + count <= payload.Length);
+            Contract.Ensures(Contract.Result<WebResponse>() != null);
 
             try {
                 Trace.WriteLine("<< " + Encoding.UTF8.GetString(payload, offset, count),
@@ -135,6 +138,8 @@ namespace PleaseIgnore.IntelMap {
             Contract.Requires<ArgumentNullException>(variables != null, "variables");
             Contract.Requires<ArgumentException>(Contract.ForAll(variables,
                 x => !String.IsNullOrEmpty(x.Key)));
+            Contract.Ensures(Contract.Result<WebResponse>() != null);
+
             // Compute an upper bounds on the payload length
             var maxLength = variables.Sum(x => 2 + 9 * x.Key.Length
                 + 9 * (x.Value ?? String.Empty).Length);
@@ -173,19 +178,18 @@ namespace PleaseIgnore.IntelMap {
         /// </returns>
         public static string ReadContent(this WebResponse webResponse) {
             Contract.Requires<ArgumentNullException>(webResponse != null, "webResponse");
+            Contract.Ensures(Contract.Result<string>() != null);
             try {
                 using (var stream = webResponse.GetResponseStream()) {
                     using (var reader = new StreamReader(stream)) {
-                        try {
-                            var responseData = reader.ReadToEnd();
-                            Trace.WriteLine(">> " + responseData, WebTraceCategory);
-                            return responseData;
-                        } catch (Exception e) {
-                            Trace.WriteLine("!! " + e.Message, WebTraceCategory);
-                            throw;
-                        }
+                        var responseData = reader.ReadToEnd();
+                        Trace.WriteLine(">> " + responseData, WebTraceCategory);
+                        return responseData;
                     }
                 }
+            } catch (Exception e) {
+                Trace.WriteLine("!! " + e.Message, WebTraceCategory);
+                throw;
             } finally {
                 webResponse.Close();
             }
