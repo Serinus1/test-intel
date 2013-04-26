@@ -17,6 +17,8 @@ Project("{6141683F-8A12-4E36-9623-2EB02B2C2303}") = "TestIntelInstaller", "TestI
 		{8A11D8A0-4617-453C-AE27-3D7F3A4B2BA7} = {8A11D8A0-4617-453C-AE27-3D7F3A4B2BA7}
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PleaseIgnore.IntelMap.Tests", "PleaseIgnore.IntelMap.Tests\PleaseIgnore.IntelMap.Tests.csproj", "{C8285E6F-3FC5-48E0-BB96-EA6EECC1429C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		CD_ROM|Any CPU = CD_ROM|Any CPU
@@ -63,6 +65,18 @@ Global
 		{7AAC149D-442D-4347-8482-0CB5F2D24DAC}.Release|Any CPU.Build.0 = SingleImage
 		{7AAC149D-442D-4347-8482-0CB5F2D24DAC}.SingleImage|Any CPU.ActiveCfg = SingleImage
 		{7AAC149D-442D-4347-8482-0CB5F2D24DAC}.SingleImage|Any CPU.Build.0 = SingleImage
+		{C8285E6F-3FC5-48E0-BB96-EA6EECC1429C}.CD_ROM|Any CPU.ActiveCfg = Release|Any CPU
+		{C8285E6F-3FC5-48E0-BB96-EA6EECC1429C}.CD_ROM|Any CPU.Build.0 = Release|Any CPU
+		{C8285E6F-3FC5-48E0-BB96-EA6EECC1429C}.Code Analysis|Any CPU.ActiveCfg = Release|Any CPU
+		{C8285E6F-3FC5-48E0-BB96-EA6EECC1429C}.Code Analysis|Any CPU.Build.0 = Release|Any CPU
+		{C8285E6F-3FC5-48E0-BB96-EA6EECC1429C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C8285E6F-3FC5-48E0-BB96-EA6EECC1429C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C8285E6F-3FC5-48E0-BB96-EA6EECC1429C}.DVD-5|Any CPU.ActiveCfg = Debug|Any CPU
+		{C8285E6F-3FC5-48E0-BB96-EA6EECC1429C}.DVD-5|Any CPU.Build.0 = Debug|Any CPU
+		{C8285E6F-3FC5-48E0-BB96-EA6EECC1429C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C8285E6F-3FC5-48E0-BB96-EA6EECC1429C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C8285E6F-3FC5-48E0-BB96-EA6EECC1429C}.SingleImage|Any CPU.ActiveCfg = Release|Any CPU
+		{C8285E6F-3FC5-48E0-BB96-EA6EECC1429C}.SingleImage|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
