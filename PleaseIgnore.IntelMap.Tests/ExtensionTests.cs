@@ -132,5 +132,26 @@ namespace PleaseIgnore.IntelMap.Tests {
             mockStream.Verify(x => x.Close(), Times.Once());
             mockRequest.Verify(x => x.GetResponse(), Times.Once());
         }
+
+        /// <summary>
+        ///     Tests the <see cref="IntelExtensions.ReadContent"/> member.
+        /// </summary>
+        [TestMethod]
+        public void ReadContent() {
+            var stream = new MemoryStream(Encoding.UTF8.GetBytes(testString), false);
+
+            var mockResponse = new Mock<WebResponse>(MockBehavior.Strict);
+            mockResponse.Setup(x => x.GetResponseStream())
+                .Returns(stream);
+            mockResponse.Setup(x => x.Close());
+
+            // Perform the actual operation
+            var response = mockResponse.Object;
+            Assert.AreEqual(testString, response.ReadContent());
+
+            // Make sure certain methods were called appropriately
+            mockResponse.Verify(x => x.GetResponseStream(), Times.Once());
+            mockResponse.Verify(x => x.Close(), Times.Once());
+        }
     }
 }
