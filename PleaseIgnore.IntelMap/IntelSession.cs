@@ -1,10 +1,8 @@
-﻿using System;
+﻿using PleaseIgnore.IntelMap.Properties;
+using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.Globalization;
-using System.IO;
-using System.Linq;
 using System.Net;
 using System.Security.Authentication;
 using System.Security.Cryptography;
@@ -16,6 +14,7 @@ namespace PleaseIgnore.IntelMap {
     ///     Provides low-level access to the reporting features of the Test
     ///     Alliance Intel Map.
     /// </summary>
+    /// <threadsafety static="true" instance="false"/>
     public sealed class IntelSession : IDisposable {
         // The Unix time epoc
         private static readonly DateTime Epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
@@ -42,8 +41,8 @@ namespace PleaseIgnore.IntelMap {
         private readonly string username;
         // The session id
         private readonly string session;
-        // Set to true once we are disposed
-        private bool disposed;
+        // The service access Uri
+        private readonly Uri serviceUri;
         // Number of consecutive server errors
         private int serverErrors;
 
@@ -67,29 +66,74 @@ namespace PleaseIgnore.IntelMap {
         ///     Failed to contact the web server.
         /// </exception>
         /// <seealso cref="HashPassword"/>
-        public IntelSession(string username, string passwordHash) {
+        public IntelSession(string username, string passwordHash)
+            : this(username, passwordHash, null) {
+        }
+
+        /// <summary>
+        ///     Creates a new instance of the <see cref="IntelSession"/> class
+        ///     and authenticates with the map server using a specified service
+        ///     <see cref="Uri"/>.
+        /// </summary>
+        /// <param name="username">
+        ///     The user's AUTH name.
+        /// </param>
+        /// <param name="passwordHash">
+        ///     An SHA1 hash of the user's password.
+        /// </param>
+        /// <param name="serviceUri">
+        ///     <see cref="Uri"/> to use when contacting the Intel Map reporting
+        ///     service.
+        /// </param>
+        /// <remarks>
+        ///     <see cref="IntelSession(string,string,Uri)"/> is primarily intended
+        ///     for use with unit testing.  Normal users will make use of the
+        ///     <see cref="IntelSession(string,string)"/> implementation.
+        /// </remarks>
+        /// <exception cref="AuthenticationException">
+        ///     The authentication failed.
+        /// </exception>
+        /// <exception cref="IntelException">
+        ///     Unexpected response returned from the server.
+        /// </exception>
+        /// <exception cref="WebException">
+        ///     Failed to contact the web server.
+        /// </exception>
+        /// <exception cref="NotSupportedException">
+        ///     <paramref name="serviceUri"/> uses a URI scheme not supported
+        ///     by <see cref="WebRequest"/>.
+        /// </exception>
+        /// <seealso cref="HashPassword"/>
+        public IntelSession(string username, string passwordHash, Uri serviceUri) {
             Contract.Requires<ArgumentException>(!String.IsNullOrEmpty(username));
             Contract.Requires<ArgumentException>(!String.IsNullOrEmpty(passwordHash));
+            Contract.Requires<ArgumentException>((serviceUri == null) || serviceUri.IsAbsoluteUri);
 
-            var response = SendRequest(new Dictionary<string, string>() {
+            this.username = username;
+            this.serviceUri = serviceUri ?? ReportUrl;
+
+            var request = WebRequest.Create(this.serviceUri);
+            var response = request.Post(new Dictionary<string, string>() {
                 { "username", username },
                 { "password", passwordHash },
                 { "action", "AUTH" },
                 { "version", "2.2.0" }
             });
+            var responseBody = response.ReadContent();
 
             Match match;
-            if ((match = AuthResponse.Match(response)).Success) {
+            if ((match = AuthResponse.Match(responseBody)).Success) {
                 // Successfully authenticated
-                this.username = username;
                 this.session  = match.Groups[1].Value;
-                this.Users = int.Parse(match.Groups[2].Value, CultureInfo.InvariantCulture);
-            } else if ((match = ErrorResponse.Match(response)).Success) {
+                this.Users = match.Groups[2].ToInt32();
+                this.IsConnected = true;
+            } else if ((match = ErrorResponse.Match(responseBody)).Success) {
                 // Authentication failed
                 throw new AuthenticationException(match.Groups[2].Value);
             } else {
                 // The server responded with something unexpected
-                throw new IntelException();
+                throw new WebException(Resources.IntelException,
+                    WebExceptionStatus.ProtocolError);
             }
         }
 
@@ -97,7 +141,7 @@ namespace PleaseIgnore.IntelMap {
         ///     Gets a flag indicating whether our session with the intel
         ///     reporting server is still valid.
         /// </summary>
-        public bool IsConnected { get { return !this.disposed && (this.serverErrors < maxServerErrors); } }
+        public bool IsConnected { get; private set; }
 
         /// <summary>
         ///     Gets the number of users currently connected to the server.
@@ -134,33 +178,37 @@ namespace PleaseIgnore.IntelMap {
             if (!this.IsConnected)
                 return false;
 
-            var response = SendRequest(new Dictionary<string, string>() {
-                { "session", this.session },
-                { "action", "ALIVE" },
-            });
+            try {
+                var request = WebRequest.Create(this.serviceUri);
+                var response = request.Post(new Dictionary<string, string>() {
+                    { "session", this.session },
+                    { "action", "ALIVE" },
+                });
+                var responseBody = response.ReadContent();
 
-            Match match;
-            if ((match = AliveResponse.Match(response)).Success) {
-                // Successful ping of the server
-                this.Users = int.Parse(
-                    match.Groups[1].Value,
-                    CultureInfo.InvariantCulture);
-                this.serverErrors = 0;
-                return true;
-            } else if ((match = ErrorResponse.Match(response)).Success) {
-                if (match.Groups[1].Value == "502") {
-                    // Our session has expired
-                    this.OnClosed();
-                    return false;
+                Match match;
+                if ((match = AliveResponse.Match(responseBody)).Success) {
+                    // Successful ping of the server
+                    this.Users = match.Groups[1].ToInt32();
+                    return true;
+                } else if ((match = ErrorResponse.Match(responseBody)).Success) {
+                    if (match.Groups[1].Value == "502") {
+                        // Our session has expired
+                        this.OnClosed();
+                        return false;
+                    } else {
+                        // The server responded with something unexpected
+                        throw new WebException(Resources.IntelException,
+                            WebExceptionStatus.ProtocolError);
+                    }
                 } else {
                     // The server responded with something unexpected
-                    ++this.serverErrors;
-                    throw new IntelException();
+                    throw new WebException(Resources.IntelException,
+                        WebExceptionStatus.ProtocolError);
                 }
-            } else {
-                // The server responded with something unexpected
-                ++this.serverErrors;
-                throw new IntelException();
+            } catch {
+                this.OnError();
+                throw;
             }
         }
 
@@ -184,36 +232,43 @@ namespace PleaseIgnore.IntelMap {
             if (!this.IsConnected)
                 return false;
 
-            var response = SendRequest(new Dictionary<string, string>() {
-                { "session", session },
-                { "inteltime", ToUnixTime(timestamp)
-                    .ToString("F0", CultureInfo.InvariantCulture) },
-                { "action", "INTEL" },
-                { "region", channel },
-                // XXX: The \r is to make our report match the perl version EXACTLY
-                { "intel", message + '\r' }
-            });
+            try {
+                var request = WebRequest.Create(this.serviceUri);
+                var response = request.Post(new Dictionary<string, string>() {
+                    { "session", session },
+                    { "inteltime", timestamp.ToUnixTime()
+                        .ToString("F0", CultureInfo.InvariantCulture) },
+                    { "action", "INTEL" },
+                    { "region", channel },
+                    // XXX: The \r is to make our report match the perl version EXACTLY
+                    { "intel", message + '\r' }
+                });
+                var responseBody = response.ReadContent();
 
-            Match match;
-            if ((match = IntelResponse.Match(response)).Success) {
-                // Successfully reported intel
-                ++this.ReportsSent;
-                this.serverErrors = 0;
-                return true;
-            } else if ((match = ErrorResponse.Match(response)).Success) {
-                if (match.Groups[1].Value == "502") {
-                    // Our session has expired
-                    this.OnClosed();
-                    return false;
+                Match match;
+                if ((match = IntelResponse.Match(responseBody)).Success) {
+                    // Successfully reported intel
+                    ++this.ReportsSent;
+                    this.serverErrors = 0;
+                    return true;
+                } else if ((match = ErrorResponse.Match(responseBody)).Success) {
+                    if (match.Groups[1].Value == "502") {
+                        // Our session has expired
+                        this.OnClosed();
+                        return false;
+                    } else {
+                        // The server responded with something unexpected
+                        throw new WebException(Resources.IntelException,
+                            WebExceptionStatus.ProtocolError);
+                    }
                 } else {
                     // The server responded with something unexpected
-                    ++this.serverErrors;
-                    throw new IntelException();
+                    throw new WebException(Resources.IntelException,
+                        WebExceptionStatus.ProtocolError);
                 }
-            } else {
-                // The server responded with something unexpected
-                ++this.serverErrors;
-                throw new IntelException();
+            } catch {
+                this.OnError();
+                throw;
             }
         }
 
@@ -222,15 +277,18 @@ namespace PleaseIgnore.IntelMap {
         /// </summary>
         public void Dispose() {
             Contract.Ensures(this.IsConnected == false);
-            if (disposed)
+            if (!this.IsConnected)
                 return;
 
             try {
-                SendRequest(new Dictionary<string, string>() {
+                var request = WebRequest.Create(this.serviceUri);
+                var response = request.Post(new Dictionary<string, string>() {
                     { "username", this.username },
                     { "session", this.session },
                     { "action", "LOGOFF" },
                 });
+                // ReadContent() handles tracing the response
+                var responseBody = response.ReadContent();
             } catch (WebException) {
                 // We don't actually care...
             } finally {
@@ -241,13 +299,25 @@ namespace PleaseIgnore.IntelMap {
         /// <inheritdoc/>
         public override string ToString() {
             return String.Format(
-                CultureInfo.InvariantCulture,
-                this.disposed
-                    ? Properties.Resources.IntelSession_Disposed
-                    : Properties.Resources.IntelSession_Connected,
+                CultureInfo.CurrentCulture,
+                this.IsConnected
+                    ? Properties.Resources.IntelSession_Connected
+                    : Properties.Resources.IntelSession_Disposed,
                 this.GetType().Name,
                 this.Users,
                 this.ReportsSent);
+        }
+
+        /// <summary>
+        ///     Signals that an error has occured contacting the server.
+        /// </summary>
+        /// <remarks>
+        ///     
+        /// </remarks>
+        private void OnError() {
+            if (++this.serverErrors == maxServerErrors) {
+                this.OnClosed();
+            }
         }
 
         /// <summary>
@@ -255,13 +325,12 @@ namespace PleaseIgnore.IntelMap {
         ///     closed.
         /// </summary>
         private void OnClosed() {
-            Contract.Ensures(this.IsConnected == false);
-            this.disposed = true;
+            Contract.Ensures(!this.IsConnected);
+            this.IsConnected = false;
             this.Users = 0;
 
             var handler = this.Closed;
             this.Closed = null;
-
             if (handler != null) {
                 handler(this, EventArgs.Empty);
             }
@@ -271,39 +340,7 @@ namespace PleaseIgnore.IntelMap {
         private void ObjectInvariant() {
             Contract.Invariant(this.Users >= 0);
             Contract.Invariant(this.ReportsSent >= 0);
-        }
-
-        /// <summary>
-        ///     Gets the current list of intel channels from the intel
-        ///     map reporting server.
-        /// </summary>
-        /// <returns>
-        ///     An <see cref="Array"/> of <see cref="String"/> identifying
-        ///     the desired intel channels for monitoring.
-        /// </returns>
-        /// <exception cref="WebException">
-        ///     Could not access the intel server.
-        /// </exception>
-        public static string[] GetIntelChannels() {
-            // TODO: Throw an exception if the response from the server is "wrong"
-            Contract.Ensures(Contract.Result<string[]>() != null);
-
-            var request = WebRequest.Create(ChannelsUrl);
-            using (var response = request.GetResponse()) {
-                using (var reader = new StreamReader(response.GetResponseStream())) {
-                    string line;
-                    var list = new List<string>();
-
-                    while ((line = reader.ReadLine()) != null) {
-                        var fields = line.Split(ChannelSeparators, 2);
-                        if (!string.IsNullOrEmpty(fields[0])) {
-                            list.Add(fields[0]);
-                        }
-                    }
-
-                    return list.ToArray();
-                }
-            }
+            Contract.Invariant(!this.IsConnected || (this.serverErrors < maxServerErrors));
         }
 
         /// <summary>
@@ -319,75 +356,11 @@ namespace PleaseIgnore.IntelMap {
         [Pure]
         public static string HashPassword(string password) {
             Contract.Requires<ArgumentException>(!String.IsNullOrEmpty(password));
-
+            Contract.Ensures(Contract.Result<String>() != null);
+            Contract.Ensures(Contract.Result<String>().Length == 40);
             using (var sha = SHA1.Create()) {
-                var hash = sha.ComputeHash(Encoding.UTF8.GetBytes(password));
-                return BitConverter.ToString(hash).ToLowerInvariant().Replace("-", "");
+                return sha.ComputeHash(Encoding.UTF8.GetBytes(password)).ToLowerHexString();
             }
-        }
-
-        /// <summary>
-        ///     Internal function to combine the POST variables and execute them on
-        ///     the server.
-        /// </summary>
-        /// <param name="parameters">
-        ///     Dictionary of post parameters.  The value will be URL encoded and each
-        ///     key/value pair will be joined with '&amp;'.
-        /// </param>
-        /// <returns>
-        ///     The content body returned from the server.
-        /// </returns>
-        private static string SendRequest(IDictionary<string, string> parameters) {
-            Contract.Requires<ArgumentNullException>(parameters != null);
-            Contract.Requires<ArgumentException>(Contract.ForAll(parameters, x => !String.IsNullOrEmpty(x.Key)));
-            Contract.Requires<ArgumentException>(Contract.ForAll(parameters, x => !String.IsNullOrEmpty(x.Value)));
-            Contract.Ensures(Contract.Result<string>() != null);
-
-            try {
-                var requestText = String.Join("&",
-                    parameters.Select(x => x.Key + '=' + UrlEscape(x.Value)));
-                Trace.WriteLine("<< " + requestText, typeof(IntelSession).FullName);
-                var requestBody = Encoding.UTF8.GetBytes(requestText);
-
-                var request = WebRequest.Create(ReportUrl);
-                request.Method = "POST";
-                request.ContentType = "application/x-www-form-urlencoded";
-                request.ContentLength = requestBody.Length;
-
-                using (var stream = request.GetRequestStream()) {
-                    stream.Write(requestBody, 0, requestBody.Length);
-                }
-
-                using (var response = request.GetResponse()) {
-                    using (var reader = new StreamReader(response.GetResponseStream())) {
-                        var responseBody = reader.ReadLine() ?? String.Empty;
-                        Trace.WriteLine(">> " + responseBody, typeof(IntelSession).FullName);
-                        return responseBody;
-                    }
-                }
-            } catch (WebException e) {
-                Trace.WriteLine("!! " + e.Message, typeof(IntelSession).FullName);
-                throw;
-            }
-        }
-
-        /// <summary>
-        ///     Variant of <see cref="Uri.EscapeDataString"/> that converts
-        ///     spaces into '+' instead of '%20'.
-        /// </summary>
-        [Pure]
-        private static string UrlEscape(string stringToEscape) {
-            Contract.Requires(stringToEscape != null);
-            return Uri.EscapeDataString(stringToEscape).Replace("%20", "+");
-        }
-
-        /// <summary>
-        ///     Converts a <see cref="DateTime"/> into "unix time" (seconds
-        ///     elapsed since midnight UTC 1970-1-1, ignoring leap seconds).
-        /// </summary>
-        [Pure]
-        private static double ToUnixTime(DateTime timestamp) {
-            return Math.Floor((timestamp - Epoch).TotalSeconds);
         }
     }
 }

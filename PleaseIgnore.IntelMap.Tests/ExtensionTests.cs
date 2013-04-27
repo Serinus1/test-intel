@@ -1,11 +1,11 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
-using Moq.Protected;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace PleaseIgnore.IntelMap.Tests {
     /// <summary>
@@ -23,6 +23,24 @@ namespace PleaseIgnore.IntelMap.Tests {
         public void ToUnixTime() {
             // Example from Wikipedia
             Assert.AreEqual(1095357343, new DateTime(2004, 9, 16, 17, 55, 43, DateTimeKind.Utc).ToUnixTime());
+        }
+
+        /// <summary>
+        ///     Tests the <see cref="IntelExtensions.ToInt32()"/> member.
+        /// </summary>
+        [TestMethod]
+        public void ToInt32() {
+            var match = new Regex(@"(\d*)").Match("12345");
+            Assert.AreEqual(12345, match.Groups[1].ToInt32());
+        }
+
+        /// <summary>
+        ///     Tests the <see cref="IntelExtensions.ToLowerHexString()"/> member.
+        /// </summary>
+        [TestMethod]
+        public void ToLowerHexString() {
+            var bytes = new byte[] { 0x12, 0x34, 0x56, 0xFE, 0xDC, 0xBA };
+            Assert.AreEqual("123456fedcba", bytes.ToLowerHexString());
         }
 
         /// <summary>

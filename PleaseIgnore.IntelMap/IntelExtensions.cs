@@ -2,23 +2,27 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace PleaseIgnore.IntelMap {
     /// <summary>
     ///     Series of helper methods to assist with the construction of
     ///     classes within PleaseIgnore.IntelMap.
     /// </summary>
+    /// <threadsafety static="true" instance="false"/>
     internal static class IntelExtensions {
         // The Unix time epoc
         private static readonly DateTime Epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         // The 'unreserved' characters from RFC 3986
         private const string Unreserved = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~";
         // Convert a number 0...15 to hex
-        private const string HexString = "0123456789ABCDEF";
+        private const string HexUpperString = "0123456789ABCDEF";
+        private const string HexLowerString = "0123456789abcdef";
         // Category for Network Tracing
         private const string WebTraceCategory = "PleaseIgnore.IntelMap";
 
@@ -220,11 +224,57 @@ namespace PleaseIgnore.IntelMap {
                     } else {
                         // Everything else
                         stream.WriteByte((byte)'%');
-                        stream.WriteByte((byte)HexString[current / 16]);
-                        stream.WriteByte((byte)HexString[current % 16]);
+                        stream.WriteByte((byte)HexUpperString[current / 16]);
+                        stream.WriteByte((byte)HexUpperString[current % 16]);
                     }
                 }
             }
+        }
+
+        /// <summary>
+        ///     Converts a byte array into a hex string using lower-case
+        ///     characters for A-F.
+        /// </summary>
+        /// <param name="array">
+        ///     Byte array to convert to a hex string.
+        /// </param>
+        /// <returns>
+        ///     The hex string representation of <paramref name="array"/>.
+        /// </returns>
+        public static string ToLowerHexString(this byte[] array) {
+            Contract.Requires<ArgumentNullException>(array != null, "array");
+            Contract.Ensures(Contract.Result<string>() != null);
+            Contract.Ensures(Contract.Result<string>().Length == array.Length * 2);
+
+            if (array.Length == 0) {
+                return String.Empty;
+            } else {
+                StringBuilder builder = new StringBuilder(array.Length * 2);
+                foreach (var current in array) {
+                    builder.Append(HexLowerString[current / 16]);
+                    builder.Append(HexLowerString[current % 16]);
+                }
+                return builder.ToString();
+            }
+        }
+
+        /// <summary>
+        ///     Parse an integer found in a Regular Expression match.
+        /// </summary>
+        /// <param name="capture">
+        ///     Regular expression <see cref="Capture"/> to parse.
+        /// </param>
+        /// <returns>
+        ///     The integer represented by the string matched by
+        ///     <paramref name="capture"/>.
+        /// </returns>
+        /// <remarks>
+        ///     <see cref="ToInt32"/> decodes <paramref name="capture"/>
+        ///     according to the invariant culture.
+        /// </remarks>
+        public static int ToInt32(this Capture capture) {
+            Contract.Requires<ArgumentNullException>(capture != null, "capture");
+            return int.Parse(capture.Value, CultureInfo.InvariantCulture);
         }
     }
 }
