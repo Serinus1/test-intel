@@ -17,6 +17,32 @@ namespace PleaseIgnore.IntelMap.Tests {
         const string testStringEncoded = "ABC+%CE%B1%CE%B2%CE%B3";
 
         /// <summary>
+        ///     Tests the <see cref="IntelExtensions.LastDowntime"/> member.
+        /// </summary>
+        [TestMethod]
+        public void LastDowntime() {
+            var now = DateTime.UtcNow;
+            var lastDowntime = IntelExtensions.LastDowntime;
+
+            Assert.IsTrue(lastDowntime <= now);
+            Assert.IsTrue(now < lastDowntime + new TimeSpan(24, 0, 0));
+            Assert.AreEqual(new TimeSpan(11, 0, 0), lastDowntime - lastDowntime.Date);
+        }
+
+        /// <summary>
+        ///     Tests the <see cref="IntelExtensions.NextDowntime"/> member.
+        /// </summary>
+        [TestMethod]
+        public void NextDowntime() {
+            var now = DateTime.UtcNow;
+            var nextDowntime = IntelExtensions.NextDowntime;
+
+            Assert.IsTrue(now < nextDowntime);
+            Assert.IsTrue(nextDowntime <= now + new TimeSpan(24, 0, 0));
+            Assert.AreEqual(new TimeSpan(11, 0, 0), nextDowntime - nextDowntime.Date);
+        }
+
+        /// <summary>
         ///     Tests the <see cref="IntelExtensions.ToUnixTime()"/> member.
         /// </summary>
         [TestMethod]

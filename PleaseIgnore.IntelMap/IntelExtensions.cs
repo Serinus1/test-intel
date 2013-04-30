@@ -25,6 +25,34 @@ namespace PleaseIgnore.IntelMap {
         private const string HexLowerString = "0123456789abcdef";
         // Category for Network Tracing
         private const string WebTraceCategory = "PleaseIgnore.IntelMap";
+        // Downtime in ticks from beginning of day
+        private const Int64 DowntimeTicks = 11L * 3600 * 1000 * 10000;
+        // Length of a day in ticks
+        private const Int64 DayTicks = 24L * 3600 * 1000 * 10000;
+
+        /// <summary>
+        ///     Gets the time and date of the most recent scheduled Tranquility
+        ///     downtime.
+        /// </summary>
+        public static DateTime LastDowntime {
+            get {
+                var nowTicks = DateTime.UtcNow.Ticks;
+                var eveTicks = nowTicks - DowntimeTicks;
+                return new DateTime(
+                    eveTicks - eveTicks % DayTicks + DowntimeTicks,
+                    DateTimeKind.Utc);
+            }
+        }
+
+        /// <summary>
+        ///     Gets the time and date of the next scheduled Tranquility
+        ///     downtime.
+        /// </summary>
+        public static DateTime NextDowntime {
+            get {
+                return LastDowntime + new TimeSpan(DayTicks);
+            }
+        }
 
         /// <summary>
         ///     Converts the value of the current <see cref="DateTime"/>
