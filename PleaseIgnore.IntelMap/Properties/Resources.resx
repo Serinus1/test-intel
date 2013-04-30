@@ -123,6 +123,12 @@
   <data name="ArgumentException_WrongObject" xml:space="preserve">
     <value>IAsyncResult object did not come from the corresponding async method on this type.</value>
   </data>
+  <data name="IntelChannel_NoName" xml:space="preserve">
+    <value>(No Name)</value>
+  </data>
+  <data name="IntelChannel_ToString" xml:space="preserve">
+    <value>{0}: Name={1}, Status={2}</value>
+  </data>
   <data name="IntelException" xml:space="preserve">
     <value>The TEST Intel Map server responded in an expected manner.</value>
   </data>

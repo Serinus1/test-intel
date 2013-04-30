@@ -24,7 +24,7 @@ namespace PleaseIgnore.IntelMap {
         private const string HexUpperString = "0123456789ABCDEF";
         private const string HexLowerString = "0123456789abcdef";
         // Category for Network Tracing
-        private const string WebTraceCategory = "PleaseIgnore.IntelMap";
+        public const string WebTraceCategory = "PleaseIgnore.IntelMap";
         // Downtime in ticks from beginning of day
         private const Int64 DowntimeTicks = 11L * 3600 * 1000 * 10000;
         // Length of a day in ticks

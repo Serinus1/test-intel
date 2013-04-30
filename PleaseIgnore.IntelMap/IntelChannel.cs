@@ -1,5 +1,5 @@
-﻿using System;
-using System.Collections.Concurrent;
+﻿using PleaseIgnore.IntelMap.Properties;
+using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
@@ -66,8 +66,12 @@ namespace PleaseIgnore.IntelMap {
     ///     lead to behavior defects or loss of thread safety.</note>
     /// </remarks>
     /// <threadsafety static="true" instance="true"/>
-    [DefaultEvent("IntelReported")]
+    [DefaultEvent("IntelReported"), DefaultProperty("Name")]
     public class IntelChannel : Component, INotifyPropertyChanged {
+        // Internal members should be referenced by any other class within
+        // PleaseIgnore.IntelMap.  They are made internal purely for the
+        // benefit of implementing unit tests.
+        
         // Regular Expression used to break apart each entry in the log file.
         private static readonly Regex Parser = new Regex(
             "^\uFEFF?" + @"\[\s*(\d{4})\.(\d{2})\.(\d{2})\s+(\d{2}):(\d{2}):(\d{2})\s*\](.*)$",
@@ -87,14 +91,15 @@ namespace PleaseIgnore.IntelMap {
         // The default value for expireLog
         private const string defaultExpireLog = "00:30:00";
 
-        // The channel file name stub
-        private readonly string channelFileName;
         // Synchronization primitive
-        private readonly object syncRoot = new object();
+        internal readonly object syncRoot = new object();
         // Raises the periodic timer for log scanning
         private readonly Timer logTimer;
         // The local file system watcher object
         private FileSystemWatcher watcher;
+        // The channel file name stub
+        [ContractPublicPropertyName("Name")]
+        private string channelFileName;
         // The path to search for EVE chat logs
         [ContractPublicPropertyName("Path")]
         private string logDirectory = defaultLogDirectory;
@@ -102,7 +107,7 @@ namespace PleaseIgnore.IntelMap {
         [ContractPublicPropertyName("Status")]
         private volatile IntelChannelStatus status;
         // The currently processed log file
-        private TextReader reader;
+        private StreamReader reader;
         // The last time we parsed a log entry from the current log
         private DateTime lastEntry;
         // The time to wait before calling a log file "dead"
@@ -116,10 +121,48 @@ namespace PleaseIgnore.IntelMap {
         /// <summary>
         ///     Initializes a new instance of the <see cref="IntelChannel"/> class.
         /// </summary>
-        public IntelChannel(string name) {
-            Contract.Requires<ArgumentException>(!String.IsNullOrEmpty(name));
+        public IntelChannel() : this(null, null) {
+        }
+
+        /// <summary>
+        ///     Initializes a new instance of the <see cref="IntelChannel"/> class
+        ///     with the specified <see cref="Name"/>.
+        /// </summary>
+        /// <param name="name">
+        ///     The initial value for <see cref="Name"/>.
+        /// </param>
+        public IntelChannel(string name)
+            : this(name, null) {
+        }
+
+        /// <summary>
+        ///     Initializes a new instance of the <see cref="IntelChannel"/> class
+        ///     with the specified <see cref="Container"/>.
+        /// </summary>
+        /// <param name="container">
+        ///     Optional parent <see cref="Container"/>.
+        /// </param>
+        public IntelChannel(IContainer container)
+            : this(null, container) {
+        }
+
+        /// <summary>
+        ///     Initializes a new instance of the <see cref="IntelChannel"/> class
+        ///     with the specified <see cref="Name"/> and <see cref="Container"/>.
+        /// </summary>
+        /// <param name="name">
+        ///     The initial value for <see cref="Name"/>.
+        /// </param>
+        /// <param name="container">
+        ///     Optional parent <see cref="Container"/>.
+        /// </param>
+        public IntelChannel(string name, IContainer container) {
             this.channelFileName = name;
             this.logTimer = new Timer(this.timer_Callback);
+
+            if (container != null) {
+                container.Add(this);
+            }
         }
 
         /// <inheritdoc/>
@@ -150,6 +193,7 @@ namespace PleaseIgnore.IntelMap {
         /// <summary>
         ///     Gets or sets the directory to search for log files.
         /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string Path {
             get {
                 Contract.Ensures(!String.IsNullOrEmpty(Contract.Result<string>()));
@@ -157,17 +201,52 @@ namespace PleaseIgnore.IntelMap {
             }
             set {
                 Contract.Requires<ArgumentException>(!String.IsNullOrEmpty(value));
-                throw new NotImplementedException();
+                lock (this.syncRoot) {
+                    if (value != this.logDirectory) {
+                        this.logDirectory = value;
+                        if (this.watcher != null) {
+                            try {
+                                this.watcher.Path = value;
+                                this.ScanFiles();
+                            } catch (ArgumentException) {
+                                this.watcher.Dispose();
+                                this.watcher = null;
+                                this.Status = IntelChannelStatus.InvalidPath;
+                            }
+                        }
+                        this.OnPropertyChanged(new PropertyChangedEventArgs("Path"));
+                    }
+                }
             }
         }
 
         /// <summary>
-        ///     Gets the channel name of this <see cref="IntelChannel"/>
+        ///     Gets or sets the channel name of this <see cref="IntelChannel"/>
         /// </summary>
+        /// <remarks>
+        ///     The channel name cannot be modified when <see cref="IsRunning"/>
+        ///     is <see langword="true"/>.
+        /// </remarks>
+        [DefaultValue((string)null)]
         public string Name {
             get {
-                Contract.Ensures(!String.IsNullOrEmpty(Contract.Result<string>()));
-                return this.channelFileName;
+                Contract.Ensures(!String.IsNullOrEmpty(Contract.Result<string>())
+                        || !this.IsRunning);
+                if (!String.IsNullOrEmpty(this.channelFileName)) {
+                    return this.channelFileName;
+                } else if (this.Site != null) {
+                    return this.Site.Name;
+                } else {
+                    return null;
+                }
+            }
+            set {
+                lock (this.syncRoot) {
+                    if (this.IsRunning) {
+                        throw new InvalidOperationException();
+                    }
+                    this.channelFileName = value;
+                }
             }
         }
 
@@ -219,6 +298,7 @@ namespace PleaseIgnore.IntelMap {
         ///     Gets or sets the time between log entries before declaring
         ///     that the channel is no longer being monitored.
         /// </summary>
+        [DefaultValue(typeof(TimeSpan), defaultExpireLog)]
         public TimeSpan LogExpiration {
             get {
                 Contract.Ensures(Contract.Result<TimeSpan>() > TimeSpan.Zero);
@@ -246,7 +326,10 @@ namespace PleaseIgnore.IntelMap {
             Contract.Requires<ObjectDisposedException>(
                 Status != IntelChannelStatus.Disposed,
                 null);
+            Contract.Requires<InvalidOperationException>(
+                !String.IsNullOrEmpty(Name));
             Contract.Ensures(Status != IntelChannelStatus.Stopped);
+            Contract.Ensures(IsRunning);
 
             lock (this.syncRoot) {
                 if (this.status == IntelChannelStatus.Stopped) {
@@ -261,7 +344,8 @@ namespace PleaseIgnore.IntelMap {
         /// </summary>
         public void Stop() {
             Contract.Ensures((Status == IntelChannelStatus.Stopped)
-                && (Status != IntelChannelStatus.Disposed));
+                || (Status == IntelChannelStatus.Disposed));
+            Contract.Ensures(!IsRunning);
 
             lock(this.syncRoot) {
                 if ((this.status != IntelChannelStatus.Stopped)
@@ -297,6 +381,16 @@ namespace PleaseIgnore.IntelMap {
             }
         }
 
+        /// <inheritdoc/>
+        public override string ToString() {
+            return String.Format(
+                CultureInfo.CurrentCulture,
+                Resources.IntelChannel_ToString,
+                this.GetType().Name,
+                this.Name ?? Resources.IntelChannel_NoName,
+                this.Status);
+        }
+
         /// <summary>
         ///     Creates the instance of <see cref="FileSystemWatcher"/> used
         ///     to monitor the file system.
@@ -317,8 +411,8 @@ namespace PleaseIgnore.IntelMap {
             var watcher = new FileSystemWatcher();
             watcher.BeginInit();
 
-            watcher.Changed += watcher_Changed;
-            watcher.Created += watcher_Created;
+            watcher.Changed += this.watcher_Changed;
+            watcher.Created += this.watcher_Created;
             watcher.EnableRaisingEvents = true;
             watcher.Filter = this.Name + "_*.txt";
             watcher.IncludeSubdirectories = false;
@@ -340,7 +434,7 @@ namespace PleaseIgnore.IntelMap {
         ///     synchronized members so should not attempt to perform any
         ///     additional synchronization itself.
         /// </remarks>
-        protected void OnIntelReported(IntelEventArgs e) {
+        internal protected void OnIntelReported(IntelEventArgs e) {
             Contract.Requires<ArgumentNullException>(e != null, "e");
 
             ThreadPool.QueueUserWorkItem(delegate(object state) {
@@ -367,7 +461,7 @@ namespace PleaseIgnore.IntelMap {
         ///     synchronized members so should not attempt to perform any
         ///     additional synchronization itself.
         /// </remarks>
-        protected void OnPropertyChanged(PropertyChangedEventArgs e) {
+        internal protected void OnPropertyChanged(PropertyChangedEventArgs e) {
             Contract.Requires<ArgumentNullException>(e != null, "e");
             Debug.Assert(String.IsNullOrEmpty(e.PropertyName)
                 || (GetType().GetProperty(e.PropertyName) != null));
@@ -388,7 +482,7 @@ namespace PleaseIgnore.IntelMap {
         ///     <see cref="OnFileCreated"/> will be called with synchronized
         ///     access to the object state.
         /// </remarks>
-        protected void OnStart() {
+        protected virtual void OnStart() {
             Contract.Requires<InvalidOperationException>(
                 Status == IntelChannelStatus.Starting);
             Contract.Ensures((Status == IntelChannelStatus.Active)
@@ -403,36 +497,7 @@ namespace PleaseIgnore.IntelMap {
             }
 
             // Open the log file with the latest timestamp in its filename
-            try {
-                var downtime = IntelExtensions.LastDowntime;
-                new DirectoryInfo(this.Path)
-                    .GetFiles(this.Name + "_*.txt", SearchOption.TopDirectoryOnly)
-                    .Select(x => new {
-                        File = x,
-                        Match = FilenameParser.Match(x.Name)
-                    })
-                    .Where(x => x.Match.Success)
-                    .Select(x => new {
-                        File = x.File,
-                        Timestamp = new DateTime(
-                            x.Match.Groups[1].ToInt32(),
-                            x.Match.Groups[2].ToInt32(),
-                            x.Match.Groups[3].ToInt32(),
-                            x.Match.Groups[4].ToInt32(),
-                            x.Match.Groups[5].ToInt32(),
-                            x.Match.Groups[6].ToInt32(),
-                            DateTimeKind.Utc)
-                    })
-                    .Where(x => x.Timestamp > downtime)
-                    .OrderByDescending(x => x.Timestamp)
-                    .FirstOrDefault(x => this.OpenFile(x.File));
-            } catch (DirectoryNotFoundException) {
-            }
-
-            // If we haven't managed to set a status yet, do so
-            if (this.status == IntelChannelStatus.Starting) {
-                this.Status = IntelChannelStatus.Waiting;
-            }
+            this.ScanFiles();
         }
 
         /// <summary>
@@ -489,6 +554,7 @@ namespace PleaseIgnore.IntelMap {
                 try {
                     this.watcher = this.CreateFileSystemWatcher();
                     this.Status = IntelChannelStatus.Waiting;
+                    this.ScanFiles();
                 } catch (ArgumentException) {
                     // Still doesn't seem to exist
                 }
@@ -499,6 +565,7 @@ namespace PleaseIgnore.IntelMap {
                 try {
                     string line;
                     while ((line = reader.ReadLine()) != null) {
+                        Trace.WriteLine("R " + line, IntelExtensions.WebTraceCategory);
                         var match = Parser.Match(line);
                         if (match.Success) {
                             var e = new IntelEventArgs(
@@ -533,7 +600,7 @@ namespace PleaseIgnore.IntelMap {
         ///     <see cref="OnStop()"/> will be called with synchronized
         ///     access to the object state.
         /// </remarks>
-        protected void OnStop() {
+        protected virtual void OnStop() {
             Contract.Requires<InvalidOperationException>(
                 Status == IntelChannelStatus.Stopping);
             Contract.Ensures(Status == IntelChannelStatus.Stopped);
@@ -552,6 +619,48 @@ namespace PleaseIgnore.IntelMap {
         }
 
         /// <summary>
+        ///     Rescans the active directory looking for valid log files
+        /// </summary>
+        /// <returns>
+        ///     <see langword="true"/> if we were able to open a log file;
+        ///     otherwise, <see langword="false"/>.
+        /// </returns>
+        protected bool ScanFiles() {
+            try {
+                var downtime = IntelExtensions.LastDowntime;
+                var file = new DirectoryInfo(this.Path)
+                    .GetFiles(this.Name + "_*.txt", SearchOption.TopDirectoryOnly)
+                    .Select(x => new {
+                        File = x,
+                        Match = FilenameParser.Match(x.Name)
+                    })
+                    .Where(x => x.Match.Success)
+                    .Select(x => new {
+                        File = x.File,
+                        Timestamp = new DateTime(
+                            x.Match.Groups[1].ToInt32(),
+                            x.Match.Groups[2].ToInt32(),
+                            x.Match.Groups[3].ToInt32(),
+                            x.Match.Groups[4].ToInt32(),
+                            x.Match.Groups[5].ToInt32(),
+                            x.Match.Groups[6].ToInt32(),
+                            DateTimeKind.Utc)
+                    })
+                    .Where(x => x.Timestamp > downtime)
+                    .OrderByDescending(x => x.Timestamp)
+                    .FirstOrDefault(x => this.OpenFile(x.File));
+
+                if (file == null) {
+                    this.CloseFile();
+                }
+
+                return file != null;
+            } catch (IOException) {
+                return false;
+            }
+        }
+
+        /// <summary>
         ///     Closes the existing log file and opens a new log file.
         /// </summary>
         /// <param name="fileInfo">
@@ -561,7 +670,7 @@ namespace PleaseIgnore.IntelMap {
         ///     <see langword="true"/> if we were able to open the file;
         ///     otherwise, <see langword="false"/>.
         /// </returns>
-        protected bool OpenFile(FileInfo fileInfo) {
+        internal protected bool OpenFile(FileInfo fileInfo) {
             Contract.Requires<ArgumentNullException>(fileInfo != null, "fileInfo");
             //Contract.Ensures(Status == IntelChannelStatus.Active);
             var oldStatus = this.status;
@@ -588,6 +697,10 @@ namespace PleaseIgnore.IntelMap {
             try {
                 stream = fileInfo.Open(FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
                 stream.Seek(0, SeekOrigin.End);
+                // XXX: We rely upon StreamReader's BOM detection.  EVE seems
+                // to generate Little Endian UTF-16 log files.  We could hard
+                // code that, but we don't know if that would cause other
+                // problems.
                 this.reader = new StreamReader(stream, true);
                 this.status = IntelChannelStatus.Active;
                 this.LogFile = fileInfo;
@@ -710,7 +823,8 @@ namespace PleaseIgnore.IntelMap {
 
         [ContractInvariantMethod]
         private void ObjectInvariant() {
-            Contract.Invariant(!String.IsNullOrEmpty(this.channelFileName));
+            Contract.Invariant(!String.IsNullOrEmpty(this.channelFileName)
+                    || !this.IsRunning);
             Contract.Invariant(!String.IsNullOrEmpty(this.logDirectory));
 
             Contract.Invariant(this.IntelCount >= 0);

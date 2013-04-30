@@ -79,6 +79,24 @@ namespace PleaseIgnore.IntelMap.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to (No Name).
+        /// </summary>
+        internal static string IntelChannel_NoName {
+            get {
+                return ResourceManager.GetString("IntelChannel_NoName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}: Name={1}, Status={2}.
+        /// </summary>
+        internal static string IntelChannel_ToString {
+            get {
+                return ResourceManager.GetString("IntelChannel_ToString", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The TEST Intel Map server responded in an expected manner..
         /// </summary>
         internal static string IntelException {
