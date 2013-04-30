@@ -416,7 +416,8 @@ namespace PleaseIgnore.IntelMap {
             watcher.EnableRaisingEvents = true;
             watcher.Filter = this.Name + "_*.txt";
             watcher.IncludeSubdirectories = false;
-            watcher.NotifyFilter = NotifyFilters.Size | NotifyFilters.LastWrite;
+            watcher.NotifyFilter = NotifyFilters.Size | NotifyFilters.LastWrite
+                | NotifyFilters.DirectoryName | NotifyFilters.FileName;
             watcher.Path = this.Path;
 
             watcher.EndInit();
@@ -755,7 +756,7 @@ namespace PleaseIgnore.IntelMap {
         /// <summary>
         ///     Updates the timer for <see cref="OnTick"/>
         /// </summary>
-        internal void UpdateTimer() {
+        private void UpdateTimer() {
             switch (this.status) {
             case IntelChannelStatus.Active:
             case IntelChannelStatus.InvalidPath:
@@ -783,7 +784,7 @@ namespace PleaseIgnore.IntelMap {
         /// <summary>
         ///     Handler for <see cref="FileSystemWatcher.Created"/> event.
         /// </summary>
-        internal void watcher_Created(object sender, FileSystemEventArgs e) {
+        private void watcher_Created(object sender, FileSystemEventArgs e) {
             Contract.Requires(e != null);
             ThreadPool.QueueUserWorkItem(delegate(object state) {
                 Contract.Requires(state is FileSystemEventArgs);
@@ -798,7 +799,7 @@ namespace PleaseIgnore.IntelMap {
         /// <summary>
         ///     Handler for <see cref="FileSystemWatcher.Created"/> event.
         /// </summary>
-        internal void watcher_Changed(object sender, FileSystemEventArgs e) {
+        private void watcher_Changed(object sender, FileSystemEventArgs e) {
             Contract.Requires(e != null);
             ThreadPool.QueueUserWorkItem(delegate(object state) {
                 Contract.Requires(state is FileSystemEventArgs);
@@ -813,7 +814,7 @@ namespace PleaseIgnore.IntelMap {
         /// <summary>
         ///     Handler for the <see cref="Timer"/> callback
         /// </summary>
-        internal void timer_Callback(object state) {
+        private void timer_Callback(object state) {
             lock (this.syncRoot) {
                 if (this.IsRunning) {
                     this.OnTick();

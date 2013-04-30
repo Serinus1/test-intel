@@ -273,35 +273,42 @@ namespace PleaseIgnore.IntelMap.Tests {
         /// </summary>
         [TestMethod]
         public void DirectorySearch() {
-            using (var directory = new TempDirectory()) {
-                using (var channel = new IntelChannel(channelName)) {
-                    channel.Path = directory.FullName;
+            using (var sync = new AutoResetEvent(false)) {
+                using (var directory = new TempDirectory()) {
+                    using (var channel = new IntelChannel(channelName)) {
+                        channel.Path = directory.FullName;
+                        channel.PropertyChanged += (sender, e) => {
+                            if (e.PropertyName == "LogFile") {
+                                sync.Set();
+                            }
+                        };
 
-                    // Make sure 'something' exists before the test
-                    var file1 = new TempFile(channelName, directory);
-                    using (file1.Open(FileMode.Create, FileAccess.Write, FileShare.Read)) {
+                        // Make sure 'something' exists before the test
+                        var file1 = new TempFile(channelName, directory);
+                        using (file1.Open(FileMode.Create, FileAccess.Write, FileShare.Read)) {
+                        }
+
+                        // Start the component
+                        channel.Start();
+
+                        // Make sure it is logging the appropriate file
+                        Assert.IsTrue(sync.WaitOne(5000), "Did not raise PropertyChanged for file1");
+                        Assert.AreEqual(IntelChannelStatus.Active, channel.Status);
+                        Assert.IsNotNull(channel.LogFile);
+                        Assert.AreEqual(file1.Name, channel.LogFile.Name, true);
+
+                        // Create a new file to monitor
+                        Thread.Sleep(2000);
+                        var file2 = new TempFile(channelName, directory);
+                        using (file2.Open(FileMode.Create, FileAccess.Write, FileShare.Read)) {
+                        }
+
+                        // Make sure it is logging the appropriate file
+                        Assert.IsTrue(sync.WaitOne(5000), "Did not raise PropertyChanged for file2");
+                        Assert.AreEqual(IntelChannelStatus.Active, channel.Status);
+                        Assert.IsNotNull(channel.LogFile);
+                        Assert.AreEqual(file2.Name, channel.LogFile.Name, true);
                     }
-
-                    // Start the component
-                    channel.Start();
-                    
-                    // Make sure it is logging the appropriate file
-                    Thread.Sleep(1000);
-                    Assert.AreEqual(IntelChannelStatus.Active, channel.Status);
-                    Assert.IsNotNull(channel.LogFile);
-                    Assert.AreEqual(file1.Name, channel.LogFile.Name, true);
-
-                    // Create a new file to monitor
-                    Thread.Sleep(2000);
-                    var file2 = new TempFile(channelName, directory);
-                    using (file2.Open(FileMode.Create, FileAccess.Write, FileShare.Read)) {
-                    }
-
-                    // Make sure it is logging the appropriate file
-                    Thread.Sleep(1000);
-                    Assert.AreEqual(IntelChannelStatus.Active, channel.Status);
-                    Assert.IsNotNull(channel.LogFile);
-                    Assert.AreEqual(file2.Name, channel.LogFile.Name, true);
                 }
             }
         }
