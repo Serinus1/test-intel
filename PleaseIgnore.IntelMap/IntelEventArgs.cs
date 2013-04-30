@@ -6,6 +6,8 @@ namespace PleaseIgnore.IntelMap {
     /// <summary>
     ///     Provides data for the intel reporting events.
     /// </summary>
+    /// <threadsafety static="true" instance="true"/>
+    [Serializable]
     public class IntelEventArgs : EventArgs {
         /// <summary>
         ///     Initializes a new instance of <see cref="IntelEventArgs"/> class.
@@ -19,11 +21,11 @@ namespace PleaseIgnore.IntelMap {
         /// <param name="message">
         ///     The content of the log entry.
         /// </param>
-        public IntelEventArgs(IntelChannel channel, DateTime timestamp,
+        public IntelEventArgs(string channel, DateTime timestamp,
                 string message) {
-            Contract.Requires<ArgumentNullException>(channel != null, "channel");
+            Contract.Requires<ArgumentException>(!String.IsNullOrEmpty(channel));
             Contract.Requires<ArgumentException>(timestamp.Kind == DateTimeKind.Utc);
-            Contract.Requires<ArgumentException>(!String.IsNullOrWhiteSpace(message));
+            Contract.Requires<ArgumentException>(!String.IsNullOrEmpty(message));
 
             this.Channel = channel;
             this.Timestamp = timestamp;
@@ -37,7 +39,7 @@ namespace PleaseIgnore.IntelMap {
         ///     The instance of <see cref="IntelChannel"/> that parsed and reported
         ///     this log entry.
         /// </value>
-        public IntelChannel Channel { get; private set; }
+        public string Channel { get; private set; }
 
         /// <summary>
         ///     Gets the timestamp of the log entry.
@@ -59,15 +61,16 @@ namespace PleaseIgnore.IntelMap {
                 CultureInfo.CurrentCulture,
                 "{0}: [{1} - {2:u}] {3}",
                 GetType().Name,
-                this.Channel.Name,
+                this.Channel,
                 this.Timestamp,
                 this.Message);
         }
 
         [ContractInvariantMethod]
         private void ObjectInvariant() {
-            Contract.Invariant(this.Channel != null);
-            Contract.Invariant(!String.IsNullOrWhiteSpace(this.Message));
+            Contract.Invariant(!String.IsNullOrEmpty(this.Channel));
+            Contract.Invariant(Timestamp.Kind == DateTimeKind.Utc);
+            Contract.Invariant(!String.IsNullOrEmpty(this.Message));
         }
     }
 }
