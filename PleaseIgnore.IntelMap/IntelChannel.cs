@@ -67,7 +67,7 @@ namespace PleaseIgnore.IntelMap {
     /// </remarks>
     /// <threadsafety static="true" instance="true"/>
     [DefaultEvent("IntelReported"), DefaultProperty("Name")]
-    public class IntelChannel : Component, INotifyPropertyChanged {
+    public class IntelChannel : Component, IIntelChannel {
         // Internal members should be referenced by any other class within
         // PleaseIgnore.IntelMap.  They are made internal purely for the
         // benefit of implementing unit tests.
@@ -195,11 +195,9 @@ namespace PleaseIgnore.IntelMap {
         /// </summary>
         public string Path {
             get {
-                Contract.Ensures(!String.IsNullOrEmpty(Contract.Result<string>()));
                 return this.logDirectory;
             }
             set {
-                Contract.Requires<ArgumentException>(!String.IsNullOrEmpty(value));
                 lock (this.syncRoot) {
                     if (value != this.logDirectory) {
                         this.logDirectory = value;
@@ -229,12 +227,12 @@ namespace PleaseIgnore.IntelMap {
         [DefaultValue((string)null)]
         public string Name {
             get {
-                Contract.Ensures(!String.IsNullOrEmpty(Contract.Result<string>())
-                        || !this.IsRunning);
-                if (!String.IsNullOrEmpty(this.channelFileName)) {
-                    return this.channelFileName;
-                } else if (this.Site != null) {
-                    return this.Site.Name;
+                var channelName = this.channelFileName;
+                var site = this.Site;
+                if (!String.IsNullOrEmpty(channelName)) {
+                    return channelName;
+                } else if (site != null) {
+                    return site.Name;
                 } else {
                     return null;
                 }
@@ -322,14 +320,6 @@ namespace PleaseIgnore.IntelMap {
         ///     method enables <see cref="IntelReported"/> events.
         /// </summary>
         public void Start() {
-            Contract.Requires<ObjectDisposedException>(
-                Status != IntelChannelStatus.Disposed,
-                null);
-            Contract.Requires<InvalidOperationException>(
-                !String.IsNullOrEmpty(Name));
-            Contract.Ensures(Status != IntelChannelStatus.Stopped);
-            Contract.Ensures(IsRunning);
-
             lock (this.syncRoot) {
                 if (this.status == IntelChannelStatus.Stopped) {
                     this.Status = IntelChannelStatus.Starting;
@@ -342,10 +332,6 @@ namespace PleaseIgnore.IntelMap {
         ///     Stops the <see cref="IntelChannel"/> from providing location data and events.
         /// </summary>
         public void Stop() {
-            Contract.Ensures((Status == IntelChannelStatus.Stopped)
-                || (Status == IntelChannelStatus.Disposed));
-            Contract.Ensures(!IsRunning);
-
             lock(this.syncRoot) {
                 if ((this.status != IntelChannelStatus.Stopped)
                         || (this.status == IntelChannelStatus.Disposed)) {

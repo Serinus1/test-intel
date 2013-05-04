@@ -28,8 +28,8 @@ namespace PleaseIgnore.IntelMap {
         // Thread Synchronization object
         private readonly object syncRoot = new object();
         // List of active IntelChannel objects
-        private readonly List<IntelChannel> channels
-            = new List<IntelChannel>();
+        private readonly List<IIntelChannel> channels
+            = new List<IIntelChannel>();
         // Timer object used to fetch updated channel lists
         private readonly Timer updateTimer;
         // The current channel processing state
@@ -46,7 +46,7 @@ namespace PleaseIgnore.IntelMap {
         private int uploadCount;
         // URI to use when fetching the channel list
         [ContractPublicPropertyName("ChannelListUri")]
-        private Uri channelListUri;
+        private Uri channelListUri = IntelExtensions.ChannelsUrl;
         // Directory to use when overriding the IntelChannel's Path
         [ContractPublicPropertyName("Path")]
         public string logDirectory;
@@ -372,12 +372,12 @@ namespace PleaseIgnore.IntelMap {
         ///     <see cref="IntelChannel.Site"/> must be initialzied to a proper
         ///     linking instance of <see cref="ISite"/>.
         /// </remarks>
-        protected virtual IntelChannel CreateChannel(string channelName) {
+        protected virtual IIntelChannel CreateChannel(string channelName) {
             Contract.Requires<ArgumentException>(!String.IsNullOrEmpty(channelName));
-            Contract.Ensures(Contract.Result<IntelChannel>() != null);
-            Contract.Ensures(Contract.Result<IntelChannel>().Site != null);
-            Contract.Ensures(Contract.Result<IntelChannel>().Site.Container == this);
-            Contract.Ensures(Contract.Result<IntelChannel>().Name == channelName);
+            Contract.Ensures(Contract.Result<IIntelChannel>() != null);
+            Contract.Ensures(Contract.Result<IIntelChannel>().Site != null);
+            Contract.Ensures(Contract.Result<IIntelChannel>().Site.Container == this);
+            Contract.Ensures(Contract.Result<IIntelChannel>().Name == channelName);
 
             var channel = new IntelChannel();
             channel.Site = new ChannelSite(this, channel, channelName);
@@ -512,6 +512,7 @@ namespace PleaseIgnore.IntelMap {
                     }
                 }
                 // Schedule the next update
+                this.OnUpdateStatus();
                 if (this.updateInterval.HasValue) {
                     this.updateTimer.Change(this.updateInterval.Value, TimeSpan.Zero);
                 }

@@ -52,6 +52,37 @@ namespace PleaseIgnore.IntelMap.Tests {
         }
 
         /// <summary>
+        ///     Tests the <see cref="IntelExtensions.Combine()"/> member.
+        /// </summary>
+        [TestMethod]
+        public void Combine() {
+            Assert.AreEqual(IntelChannelStatus.Active,
+                IntelExtensions.Combine(
+                    IntelChannelStatus.Waiting,
+                    IntelChannelStatus.Active));
+            Assert.AreEqual(IntelChannelStatus.Active,
+                IntelExtensions.Combine(
+                    IntelChannelStatus.Active,
+                    IntelChannelStatus.Waiting));
+            Assert.AreEqual(IntelChannelStatus.FatalError,
+                IntelExtensions.Combine(
+                    IntelChannelStatus.FatalError,
+                    IntelChannelStatus.Active));
+            Assert.AreEqual(IntelChannelStatus.FatalError,
+                IntelExtensions.Combine(
+                    IntelChannelStatus.Active,
+                    IntelChannelStatus.FatalError));
+            Assert.AreEqual(IntelChannelStatus.InvalidPath,
+                IntelExtensions.Combine(
+                    IntelChannelStatus.InvalidPath,
+                    IntelChannelStatus.Active));
+            Assert.AreEqual(IntelChannelStatus.InvalidPath,
+                IntelExtensions.Combine(
+                    IntelChannelStatus.Active,
+                    IntelChannelStatus.InvalidPath));
+        }
+
+        /// <summary>
         ///     Tests the <see cref="IntelExtensions.ToInt32()"/> member.
         /// </summary>
         [TestMethod]
