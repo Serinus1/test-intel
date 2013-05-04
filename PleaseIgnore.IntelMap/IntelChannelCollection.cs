@@ -1,211 +1,54 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.Collections.ObjectModel;
 using System.Diagnostics.Contracts;
-using System.IO;
 using System.Linq;
-using System.Net;
 
 namespace PleaseIgnore.IntelMap {
     /// <summary>
-    ///     Manages the list of <see cref="IntelChannel"/> watched by an instance
-    ///     of <see cref="IntelReporter"/>.
+    ///     Specialization of <see cref="System.ComponentModel.ComponentCollection"/>
+    ///     providing a list of <see cref="IntelChannel"/>.
     /// </summary>
-    [DebuggerDisplay("Count = {Count}")]
-    [DebuggerTypeProxy(typeof(IntelChannelCollection.DebugView))]
-    public sealed class IntelChannelCollection : ICollection<IntelChannel>,
-            ICollection {
-        // The parent instance of IntelReporter
-        private readonly IntelReporter parent;
-        // The actual collection of IntelChannel objects
-        private readonly List<IntelChannel> list = new List<IntelChannel>(16);
-        // Used to protect client reads from our modifications
-        private readonly object syncRoot = new object();
-        // The last time we attempted to download the channel list
-        private DateTime? lastDownload;
-        
-        internal IntelChannelCollection(IntelReporter reporter) {
-            Contract.Requires(reporter != null);
-            this.parent = reporter;
+    public class IntelChannelCollection : ReadOnlyCollection<IntelChannel> {
+        /// <summary>
+        ///     Initializes a new instance of <see cref="IntelChannelCollection"/>.
+        /// </summary>
+        /// <param name="list">
+        ///     The list to expose to the user.
+        /// </param>
+        /// <remarks>
+        ///     <paramref name="list"/> is not copied by
+        ///     <see cref="IntelChannelCollection(IList{IntelChannel})"/>, so
+        ///     a synchronized copy must be made by the container.
+        /// </remarks>
+        public IntelChannelCollection(IList<IntelChannel> list)
+                : base(list) {
+            Contract.Requires<ArgumentNullException>(list != null, "list");
+            Contract.Requires<ArgumentException>(Contract.ForAll(list, x => x != null));
         }
 
         /// <summary>
-        ///     Gets the number of channels currently being tracked by the
-        ///     <see cref="IntelChannelCollection"/>.
+        ///     Gets any <see cref="IntelChannel"/> monitoring the specified
+        ///     channel.
         /// </summary>
-        public int Count { get { return list.Count; } }
-
-        bool ICollection<IntelChannel>.IsReadOnly { get { return true; } }
-
-        bool ICollection.IsSynchronized { get { return true; } }
-
-        object ICollection.SyncRoot { get { return this.syncRoot; } }
-
-        void ICollection<IntelChannel>.Add(IntelChannel item) {
-            throw new NotSupportedException();
-        }
-
-        void ICollection<IntelChannel>.Clear() {
-            throw new NotSupportedException();
-        }
-
-        /// <summary>
-        ///     Determines whether the <see cref="IntelChannelCollection"/> is
-        ///     tracking a specific <see cref="IntelChannel"/>.
-        /// </summary>
-        /// <param name="item">
-        ///     The object to locate in the <see cref="IntelChannelCollection"/>.
+        /// <param name="name">
+        ///     The <see cref="IntelChannel.Name"/> to fetch.
         /// </param>
         /// <returns>
-        ///     <see langword="true"/> if <paramref name="item"/> is found in the
-        ///     <see cref="IntelChannelCollection"/>; otherwise,
-        ///     <see langword="false"/>. 
+        ///     An instance of <see cref="IntelChannel"/> with the
+        ///     <see cref="IntelChannel.Name"/> specified by
+        ///     <paramref name="name"/> or <see langword="null"/> if
+        ///     no such channel is being monitored.
         /// </returns>
-        public bool Contains(IntelChannel item) {
-            lock (this.syncRoot) {
-                return list.Contains(item);
-            }
-        }
-
-        /// <summary>
-        ///     Copies the elements of the <see cref="IntelChannelCollection"/>
-        ///     to an <see cref="Array"/>, starting at a particular
-        ///     <see cref="Array"/> index.
-        /// </summary>
-        /// <param name="array"></param>
-        /// <param name="arrayIndex"></param>
-        public void CopyTo(IntelChannel[] array, int arrayIndex) {
-            lock (this.syncRoot) {
-                list.CopyTo(array, arrayIndex);
-            }
-        }
-
-        void ICollection.CopyTo(Array array, int index) {
-            lock (this.syncRoot) {
-                ((ICollection)list).CopyTo(array, index);
-            }
-        }
-
-        bool ICollection<IntelChannel>.Remove(IntelChannel item) {
-            throw new NotSupportedException();
-        }
-
-        /// <summary>
-        ///     Returns an enumerator that iterates through the
-        ///     <see cref="IntelChannelCollection"/>.
-        /// </summary>
-        /// <returns>
-        ///     A <see cref="IEnumerator{T}"/> that can be used to iterate
-        ///     through the <see cref="IntelChannelCollection"/>.
-        /// </returns>
-        /// <remarks>
-        ///     The <see cref="IEnumerator{T}"/> returned by
-        ///     <see cref="GetEnumerator()"/> enumerates against a snapshot
-        ///     of the <see cref="IntelChannelCollection"/>.  This makes the
-        ///     <see cref="IEnumerator{T}"/> thread safe, but will not reflect
-        ///     updates to the channel list.
-        /// </remarks>
-        public IEnumerator<IntelChannel> GetEnumerator() {
-            lock (this.syncRoot) {
-                ICollection<IntelChannel> clone = list.ToArray();
-                return clone.GetEnumerator();
-            }
-        }
-
-        IEnumerator IEnumerable.GetEnumerator() {
-            return this.GetEnumerator();
-        }
-
-        /// <summary>
-        ///     Updates the channel list (if appropriate) and then pings each channel
-        ///     to perform a log scan.
-        /// </summary>
-        /// <returns>
-        ///     The number of new intel messages parsed from the log files.
-        /// </returns>
-        internal int Tick() {
-            var now = DateTime.UtcNow;
-            var period = parent.ChannelDownloadPeriod;
-            if ((!lastDownload.HasValue || now > lastDownload + period)
-                    && parent.CanSend(false)) {
-                // Get the updated channel list
-                string[] channels = null;
-                try {
-                    channels = IntelSession.GetIntelChannels();
-                } catch (WebException e) {
-                    parent.ReportFailure(e);
-                } catch (IntelException e) {
-                    parent.ReportFailure(e);
-                }
-
-                // Remove stale channels
-                if ((channels != null) && (channels.Length > 0)) {
-                    lastDownload = now;
-                    lock (this.syncRoot) {
-                        // TODO: Should we keep lock while dealing with files?
-                        foreach (var channel in list
-                                .Where(x => !channels.Contains(x.Name))
-                                .ToList()) {
-                            channel.Close();
-                            list.Remove(channel);
-                        }
-
-                        foreach (var name in channels
-                                .Where(x => !list.Any(y => y.Name == x))
-                                .ToList()) {
-                            var channel = new IntelChannel(parent, name);
-                            channel.Rescan();
-                            list.Add(channel);
-                        }
-                        
-                        // TODO: Notify clients correctly (however that is)
-                        parent.OnPropertyChanged("Channels");
-                    } //lock (this.syncRoot) {
-                } //if ((channels != null) && (channels.Length > 0)) {
-            } //if ((!lastDownload.HasValue || now > lastDownload + period)
-
-            return list.Sum(x => x.Tick());
-        }
-
-        /// <summary>
-        ///     Notifies all channels of a change in the file system.
-        /// </summary>
-        internal void OnFileEvent(FileSystemEventArgs e) {
-            Contract.Requires(e != null);
-            list.ForEach(x => x.OnFileEvent(e));
-        }
-
-        /// <summary>
-        ///     Forces all channels to reopen their log files.
-        /// </summary>
-        internal void RescanAll() {
-            list.ForEach(x => x.Rescan());
-        }
-
-        /// <summary>
-        ///     Forces all channels to release their log files.
-        /// </summary>
-        internal void CloseAll() {
-            list.ForEach(x => x.Close());
-        }
-
-        /// <summary>
-        ///     Debug Proxy Viewer for <see cref="IntelChannelCollection"/>.
-        /// </summary>
-        private class DebugView {
-            private readonly IntelChannelCollection collection;
-
-            public DebugView(IntelChannelCollection collection) {
-                this.collection = collection;
-            }
-
-            [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
-            public IntelChannel[] Values {
-                get {
-                    return (collection != null)
-                        ? collection.list.ToArray()
-                        : new IntelChannel[0];
+        public IntelChannel this[string name] {
+            get {
+                if (name == null) {
+                    return null;
+                } else {
+                    return this.FirstOrDefault(x => String.Equals(
+                        x.Name,
+                        name,
+                        StringComparison.OrdinalIgnoreCase));
                 }
             }
         }

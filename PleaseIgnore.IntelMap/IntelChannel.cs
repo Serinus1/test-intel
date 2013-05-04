@@ -193,7 +193,6 @@ namespace PleaseIgnore.IntelMap {
         /// <summary>
         ///     Gets or sets the directory to search for log files.
         /// </summary>
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string Path {
             get {
                 Contract.Ensures(!String.IsNullOrEmpty(Contract.Result<string>()));
@@ -379,6 +378,7 @@ namespace PleaseIgnore.IntelMap {
                 // We really can't touch anything safely
                 this.status = IntelChannelStatus.Disposed;
             }
+            base.Dispose(disposing);
         }
 
         /// <inheritdoc/>

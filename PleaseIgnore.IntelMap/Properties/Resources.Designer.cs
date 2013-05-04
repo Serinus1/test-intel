@@ -97,7 +97,16 @@ namespace PleaseIgnore.IntelMap.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The TEST Intel Map server responded in an expected manner..
+        ///   Looks up a localized string similar to IntelChannelCollection is automatically populated and cannot be directly modified..
+        /// </summary>
+        internal static string IntelChannelCollection_ReadOnly {
+            get {
+                return ResourceManager.GetString("IntelChannelCollection_ReadOnly", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The Test Alliance Intel Map server responded in an expected manner..
         /// </summary>
         internal static string IntelException {
             get {

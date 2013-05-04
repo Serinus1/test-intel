@@ -19,13 +19,6 @@ namespace PleaseIgnore.IntelMap {
         // The Unix time epoc
         private static readonly DateTime Epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
-        // The base URL for requests on the intel map server
-        private static readonly Uri BaseUrl = new Uri("http://map.pleaseignore.com/");
-        // The URL for quering the channel list
-        private static readonly Uri ChannelsUrl = new Uri(BaseUrl, "intelchannels.pl");
-        // The URL for reporting intel
-        private static readonly Uri ReportUrl = new Uri(BaseUrl, "report.pl");
-
         // Field separators for the channel list
         private static readonly char[] ChannelSeparators = new char[] { ',' };
 
@@ -110,7 +103,7 @@ namespace PleaseIgnore.IntelMap {
             Contract.Requires<ArgumentException>((serviceUri == null) || serviceUri.IsAbsoluteUri);
 
             this.username = username;
-            this.serviceUri = serviceUri ?? ReportUrl;
+            this.serviceUri = serviceUri ?? IntelExtensions.ReportUrl;
 
             var request = WebRequest.Create(this.serviceUri);
             var response = request.Post(new Dictionary<string, string>() {

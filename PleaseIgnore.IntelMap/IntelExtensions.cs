@@ -26,9 +26,21 @@ namespace PleaseIgnore.IntelMap {
         // Category for Network Tracing
         public const string WebTraceCategory = "PleaseIgnore.IntelMap";
         // Downtime in ticks from beginning of day
-        private const Int64 DowntimeTicks = 11L * 3600 * 1000 * 10000;
-        // Length of a day in ticks
-        private const Int64 DayTicks = 24L * 3600 * 1000 * 10000;
+        private const Int64 DowntimeTicks = 11L * TimeSpan.TicksPerHour;
+        // Priority list of IntelChannelStatus
+        private static readonly IntelChannelStatus[] StatusPriority = new IntelChannelStatus[] {
+            IntelChannelStatus.FatalError,
+            IntelChannelStatus.InvalidPath,
+            IntelChannelStatus.Active,
+            IntelChannelStatus.Waiting
+        };
+
+        // The base URL for requests on the intel map server
+        public readonly static Uri BaseUrl = new Uri("http://map.pleaseignore.com/");
+        // The URL for quering the channel list
+        public readonly static Uri ChannelsUrl = new Uri(BaseUrl, "intelchannels.pl");
+        // The URL for reporting intel
+        public readonly static Uri ReportUrl = new Uri(BaseUrl, "report.pl");
 
         /// <summary>
         ///     Gets the time and date of the most recent scheduled Tranquility
@@ -39,7 +51,7 @@ namespace PleaseIgnore.IntelMap {
                 var nowTicks = DateTime.UtcNow.Ticks;
                 var eveTicks = nowTicks - DowntimeTicks;
                 return new DateTime(
-                    eveTicks - eveTicks % DayTicks + DowntimeTicks,
+                    eveTicks - eveTicks % TimeSpan.TicksPerDay + DowntimeTicks,
                     DateTimeKind.Utc);
             }
         }
@@ -50,8 +62,33 @@ namespace PleaseIgnore.IntelMap {
         /// </summary>
         public static DateTime NextDowntime {
             get {
-                return LastDowntime + new TimeSpan(DayTicks);
+                return LastDowntime + new TimeSpan(TimeSpan.TicksPerDay);
             }
+        }
+
+        /// <summary>
+        ///     Runs an action against each member of a collection.
+        /// </summary>
+        /// <typeparam name="T">
+        ///     The type of the elements of <paramref name="source"/>.
+        /// </typeparam>
+        /// <param name="source">
+        ///     An <see cref="IEnumerable{T}"/> to process.
+        /// </param>
+        /// <param name="action">
+        ///     A function to execute on each member of <paramref name="source"/>.
+        /// </param>
+        /// <returns>
+        ///     The collection <paramref name="source"/> after <paramref name="action"/>
+        ///     has been executed on each member.
+        /// </returns>
+        public static IEnumerable<T> ForEach<T>(this IEnumerable<T> source, Action<T> action) {
+            Contract.Requires<ArgumentNullException>(source != null, "source");
+            Contract.Requires<ArgumentNullException>(action != null, "action");
+            foreach (var item in source) {
+                action(item);
+            }
+            return source;
         }
 
         /// <summary>
@@ -70,6 +107,27 @@ namespace PleaseIgnore.IntelMap {
             Contract.Ensures(!double.IsInfinity(Contract.Result<double>()));
             Contract.Ensures(!double.IsNaN(Contract.Result<double>()));
             return Math.Floor((timestamp.ToUniversalTime() - Epoch).TotalSeconds);
+        }
+
+        /// <summary>
+        ///     Picks the highest priority status out of an array of
+        ///     <see cref="IntelChannelStatus"/>.
+        /// </summary>
+        /// <param name="array">
+        ///     An array of <see cref="IntelChannelStatus"/> values.
+        /// </param>
+        /// <returns>
+        ///     The highest priority status from <paramref name="array"/>.
+        /// </returns>
+        public static IntelChannelStatus Combine(params IntelChannelStatus[] array) {
+            Contract.Requires(array != null);
+            Contract.Requires(array.Length > 0);
+            foreach (var status in StatusPriority) {
+                if (array.Any(x => x == status)) {
+                    return status;
+                }
+            }
+            return array[0];
         }
 
         /// <summary>

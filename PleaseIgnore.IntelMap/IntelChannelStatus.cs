@@ -33,14 +33,24 @@ namespace PleaseIgnore.IntelMap {
         /// </summary>
         Stopping = 4,
         /// <summary>
+        ///     <see cref="IntelChannel.Dispose"/> has been called and the
+        ///     component is currently shutting down.
+        /// </summary>
+        Disposing = 5,
+        /// <summary>
         ///     The call to <see cref="IntelChannel.Dispose()"/> has been
         ///     completed.
         /// </summary>
-        Disposed = 5,
+        Disposed = 6,
         /// <summary>
         ///     The <see cref="IntelChannel"/> is disabled due to an illegal
         ///     or non-existant <see cref="IntelChannel.Path"/>
         /// </summary>
-        InvalidPath = 6
+        InvalidPath = 7,
+        /// <summary>
+        ///     A fatal error has occured and the <see cref="IntelChannel"/>
+        ///     can no longer operate.
+        /// </summary>
+        FatalError = 8
     }
 }
