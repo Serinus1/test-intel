@@ -266,6 +266,22 @@ namespace PleaseIgnore.IntelMap {
         }
 
         /// <summary>
+        ///     Sends a log entry to the intel reporting server.
+        /// </summary>
+        /// <param name="e">
+        ///     An instance of <see cref="IntelEventArgs"/> containing the
+        ///     information to report.
+        /// </param>
+        /// <returns>
+        ///     <see langword="true"/> if our session is still valid;
+        ///     otherwise, <see langword="false"/>.
+        /// </returns>
+        public bool Report(IntelEventArgs e) {
+            Contract.Requires<ArgumentNullException>(e != null, "e");
+            return this.Report(e.Channel, e.Timestamp, e.Message);
+        }
+
+        /// <summary>
         ///     Closes this session with the intel reporting server.
         /// </summary>
         public void Dispose() {

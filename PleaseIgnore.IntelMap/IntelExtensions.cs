@@ -103,6 +103,7 @@ namespace PleaseIgnore.IntelMap {
         ///     timestamp, specifically the number of seconds elapsed since
         ///     midnight, 1 Jan 1970 GMT.
         /// </returns>
+        [Pure]
         public static double ToUnixTime(this DateTime timestamp) {
             Contract.Ensures(!double.IsInfinity(Contract.Result<double>()));
             Contract.Ensures(!double.IsNaN(Contract.Result<double>()));
@@ -119,6 +120,7 @@ namespace PleaseIgnore.IntelMap {
         /// <returns>
         ///     The highest priority status from <paramref name="array"/>.
         /// </returns>
+        [Pure]
         public static IntelChannelStatus Combine(params IntelChannelStatus[] array) {
             Contract.Requires(array != null);
             Contract.Requires(array.Length > 0);
@@ -128,6 +130,31 @@ namespace PleaseIgnore.IntelMap {
                 }
             }
             return array[0];
+        }
+
+        /// <summary>
+        ///     Tests if a value of the <see cref="IntelChannelStatus"/>
+        ///     enumeration refers to a "running" state.
+        /// </summary>
+        /// <param name="status">
+        ///     Value of <see cref="IntelChannelStatus"/> to test.
+        /// </param>
+        /// <returns>
+        ///     <see langword="true"/> if the value of <paramref name="status"/>
+        ///     refers to a normal operating state; otherwise, 
+        ///     <see langword="false"/> if it's in a stopped state.
+        /// </returns>
+        [Pure]
+        public static bool IsRunning(this IntelChannelStatus status) {
+            switch (status) {
+            case IntelChannelStatus.Active:
+            case IntelChannelStatus.InvalidPath:
+            case IntelChannelStatus.Starting:
+            case IntelChannelStatus.Waiting:
+                return true;
+            default:
+                return false;
+            }
         }
 
         /// <summary>
@@ -327,6 +354,7 @@ namespace PleaseIgnore.IntelMap {
         /// <returns>
         ///     The hex string representation of <paramref name="array"/>.
         /// </returns>
+        [Pure]
         public static string ToLowerHexString(this byte[] array) {
             Contract.Requires<ArgumentNullException>(array != null, "array");
             Contract.Ensures(Contract.Result<string>() != null);
@@ -358,6 +386,7 @@ namespace PleaseIgnore.IntelMap {
         ///     <see cref="ToInt32"/> decodes <paramref name="capture"/>
         ///     according to the invariant culture.
         /// </remarks>
+        [Pure]
         public static int ToInt32(this Capture capture) {
             Contract.Requires<ArgumentNullException>(capture != null, "capture");
             return int.Parse(capture.Value, CultureInfo.InvariantCulture);

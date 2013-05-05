@@ -18,12 +18,13 @@ namespace PleaseIgnore.IntelMap {
     ///     of <see cref="IntelReporter"/>.
     /// </summary>
     /// <threadsafety static="true" instance="true"/>
+    [DefaultEvent("IntelReported")]
     public class IntelChannelContainer : Component, IContainer, INestedContainer,
             INotifyPropertyChanged {
         // Default value of the ChannelUpdateInterval property
-        private const string defaultUpdateInterval = "24:00:00";
+        internal const string defaultUpdateInterval = "24:00:00";
         // Default value of the RetryInterval property
-        private const string defaultRetryInterval = "00:15:00";
+        internal const string defaultRetryInterval = "00:15:00";
         
         // Thread Synchronization object
         private readonly object syncRoot = new object();
@@ -37,10 +38,14 @@ namespace PleaseIgnore.IntelMap {
         private volatile IntelChannelStatus status;
         // The update period for the channel list
         [ContractPublicPropertyName("ChannelUpdateInterval")]
-        private TimeSpan? updateInterval = TimeSpan.Parse(defaultUpdateInterval, CultureInfo.InvariantCulture);
+        private TimeSpan? updateInterval = TimeSpan.Parse(
+                defaultUpdateInterval,
+                CultureInfo.InvariantCulture);
         // The network retry period for the channel list
         [ContractPublicPropertyName("RetryInterval")]
-        private TimeSpan retryInterval = TimeSpan.Parse(defaultRetryInterval, CultureInfo.InvariantCulture);
+        private TimeSpan retryInterval = TimeSpan.Parse(
+                defaultRetryInterval,
+                CultureInfo.InvariantCulture);
         // The intel upload count
         [ContractPublicPropertyName("IntelCount")]
         private int uploadCount;
@@ -50,8 +55,6 @@ namespace PleaseIgnore.IntelMap {
         // Directory to use when overriding the IntelChannel's Path
         [ContractPublicPropertyName("Path")]
         public string logDirectory;
-        // The last time we downloaded the channel list
-        private DateTime? lastDownload;
         // The contents of the channel list the last time we fetched it
         private string[] channelList;
 
@@ -150,32 +153,15 @@ namespace PleaseIgnore.IntelMap {
                 return this.updateInterval;
             }
             set {
+                Contract.Requires<InvalidOperationException>(!IsRunning);
                 Contract.Requires<ArgumentOutOfRangeException>(
                         !value.HasValue || (value > TimeSpan.Zero),
                         "value");
                 Contract.Ensures(ChannelUpdateInterval == value);
-                lock (this.syncRoot) {
-                    if (this.updateInterval != value) {
-                        var hadValue = this.updateInterval.HasValue;
-                        var hasValue = value.HasValue;
-                        this.updateInterval = value;
-                        if (!hasValue && (this.channelList != null)) {
-                            // Don't download again
-                            this.updateTimer.Change(Timeout.Infinite, Timeout.Infinite);
-                        } else if (this.IsRunning && hasValue && !hadValue) {
-                            // We'll need to download the channel list
-                            if (lastDownload.HasValue) {
-                                // TODO: Avoid triggering OnUpdateList multiple times
-                                var diff = DateTime.UtcNow - this.lastDownload.Value;
-                                if (diff > TimeSpan.Zero) {
-                                    this.updateTimer.Change(diff, TimeSpan.Zero);
-                                } else {
-                                    this.updateTimer.Change(0, Timeout.Infinite);
-                                }
-                            }
-                        }
-                        this.OnPropertyChanged(new PropertyChangedEventArgs("ChannelUpdatePeriod"));
-                    }
+
+                if (this.updateInterval != value) {
+                    this.updateInterval = value;
+                    this.OnPropertyChanged(new PropertyChangedEventArgs("ChannelUpdatePeriod"));
                 }
             }
         }
@@ -191,16 +177,14 @@ namespace PleaseIgnore.IntelMap {
                 return this.retryInterval;
             }
             set {
+                Contract.Requires<InvalidOperationException>(!IsRunning);
                 Contract.Requires<ArgumentOutOfRangeException>(
                         value > TimeSpan.Zero,
                         "value");
                 Contract.Ensures(RetryInterval == value);
-                lock (this.syncRoot) {
-                    // TODO: Update the timer to reflect new retry period
-                    if (this.retryInterval != value) {
-                        this.retryInterval = value;
-                        this.OnPropertyChanged(new PropertyChangedEventArgs("RetryInterval"));
-                    }
+                if (this.retryInterval != value) {
+                    this.retryInterval = value;
+                    this.OnPropertyChanged(new PropertyChangedEventArgs("RetryInterval"));
                 }
             }
         }
@@ -216,21 +200,15 @@ namespace PleaseIgnore.IntelMap {
                 return (this.channelListUri ?? IntelExtensions.ChannelsUrl).OriginalString;
             }
             set {
+                Contract.Requires<InvalidOperationException>(!IsRunning);
                 var uri = (value != null) ? new Uri(value) : IntelExtensions.ChannelsUrl;
                 if (!uri.IsAbsoluteUri) {
                     // TODO: Proper exception
                     throw new ArgumentException();
                 }
-
-                lock (this.syncRoot) {
-                    if (this.channelListUri != uri) {
-                        this.channelListUri = uri;
-                        if (this.IsRunning) {
-                            // TODO: Avoid triggering OnUpdateList multiple times
-                            this.updateTimer.Change(0, Timeout.Infinite);
-                        }
-                        this.OnPropertyChanged(new PropertyChangedEventArgs("ChannelListUri"));
-                    }
+                if (this.channelListUri != uri) {
+                    this.channelListUri = uri;
+                    this.OnPropertyChanged(new PropertyChangedEventArgs("ChannelListUri"));
                 }
             }
         }
@@ -490,7 +468,6 @@ namespace PleaseIgnore.IntelMap {
                     // Initializing the channel list
                     this.channels.AddRange(list.Select(x => this.CreateChannel(x)));
                     this.channelList = list;
-                    this.lastDownload = DateTime.UtcNow;
                     this.channels.ForEach(x => x.Start());
                     this.OnPropertyChanged(new PropertyChangedEventArgs("Channels"));
                 } else {
@@ -504,7 +481,6 @@ namespace PleaseIgnore.IntelMap {
                         .ToList();
                     this.channels.AddRange(toAdd);
                     this.channelList = list;
-                    this.lastDownload = DateTime.UtcNow;
                     toRemove.ForEach(x => x.Dispose());
                     toAdd.ForEach(x => x.Start());
                     if ((toAdd.Count > 0) || (toRemove.Count > 0)) {

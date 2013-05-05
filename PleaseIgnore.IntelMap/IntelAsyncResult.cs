@@ -9,26 +9,23 @@ namespace PleaseIgnore.IntelMap {
     ///     Implementation of <see cref="IAsyncResult"/>, providing common
     ///     support for asynchronous function calls in PleaseIgnore.
     /// </summary>
-    /// <typeparam name="TOwner">
-    ///     The object type that creates this <see cref="IntelAsyncResult`2"/>.
-    /// </typeparam>
     /// <typeparam name="TResult">
     ///     The return <see cref="Type"/> of the <c>End<var>Name</var></c>
     ///     call.
     /// </typeparam>
-    internal class IntelAsyncResult<TOwner, TResult> : IAsyncResult
-            where TOwner : class {
+    internal class IntelAsyncResult<TResult> : IAsyncResult {
         // The callback to call when execution has completed
         private readonly AsyncCallback callback;
         // The value of AsyncState
+        [ContractPublicPropertyName("AsyncState")]
         private readonly object state;
-        // The object that created this IntelAsyncResult
-        private readonly TOwner owner;
         // Number of waits made on End*()
         private int waitCount;
         // Set to true once the asynchronous execution has completed
+        [ContractPublicPropertyName("IsCompleted")]
         private bool completed;
         // Set to true if the execution was completed synchronously
+        [ContractPublicPropertyName("CompletedSynchronously")]
         private bool synchronous;
         // The return value of a successful asynchronous execution
         private TResult result;
@@ -42,9 +39,6 @@ namespace PleaseIgnore.IntelMap {
         ///     Initializes a new instance of the <see cref="IntelAsyncResult`2"/>
         ///     class.
         /// </summary>
-        /// <param name="owner">
-        ///     The instance of <see cref="TOwner"/> that created this object.
-        /// </param>
         /// <param name="callback">
         ///     The <see cref="AsyncCallback"/> to call when the asynchronous
         ///     operation completes.  This can be <see langword="null"/>.
@@ -53,9 +47,12 @@ namespace PleaseIgnore.IntelMap {
         ///     The value of <see cref="AsyncState"/>.  This can be
         ///     <see langword="null"/>.
         /// </param>
-        protected IntelAsyncResult(TOwner owner, AsyncCallback callback, object state) {
-            Contract.Requires(owner != null);
-            this.owner = owner;
+        /// <exception cref="ArgumentNullException">
+        ///     <paramref name="owner"/> is <see langword="null"/>.
+        /// </exception>
+        protected IntelAsyncResult(AsyncCallback callback, object state) {
+            Contract.Ensures(this.AsyncState == state);
+            Contract.Ensures(!this.IsCompleted);
             this.callback = callback;
             this.state = state;
         }
@@ -84,27 +81,29 @@ namespace PleaseIgnore.IntelMap {
         /// </summary>
         public WaitHandle AsyncWaitHandle {
             get {
+                Contract.Ensures(Contract.Result<WaitHandle>() != null);
+
                 var handle = new ManualResetEvent(false);
                 var oldhandle = Interlocked.CompareExchange(
                     ref this.waitHandle,
                     handle,
                     null);
+                // XXX: CodeContracts doesn't seem to realize that CompareExchange
+                // (above) will leave this.waitHandle as not null.
                 Contract.Assume(this.waitHandle != null);
+
                 if (this.completed) {
                     this.waitHandle.Set();
                 }
                 if (oldhandle != null) {
+                    // XXX: CompareExchange returns the /original/ value.  If the
+                    // original value is not null, it was not replaced, so we need
+                    // to delete the new object we created.
                     handle.Close();
                 }
                 return this.waitHandle;
             }
         }
-
-        /// <summary>
-        ///     Gets the instance of <see cref="TOwner"/> executing this
-        ///     <see cref="IAsyncResult"/>.
-        /// </summary>
-        protected TOwner Owner { get { return this.owner; } }
 
         /// <summary>
         ///     Signals that the asychronous operation has completed
@@ -113,16 +112,24 @@ namespace PleaseIgnore.IntelMap {
         /// <param name="result">
         ///     The return code for the <c>End*()</c> method.
         /// </param>
+        /// <param name="completeSynchronously">
+        ///     The value to assign to <see cref="CompletedSynchronously"/>.
+        /// </param>
         /// <remarks>
         ///     If a callback was provided at <see cref="IntelAsyncResult"/>
         ///     initialization, it will be queued onto the
         ///     <see cref="ThreadPool"/>.
         /// </remarks>
-        protected void AsyncComplete(TResult result) {
-            Debug.Assert(!this.completed);
+        protected void Complete(TResult result, bool completeSynchronously) {
+            Contract.Requires<InvalidOperationException>(!this.IsCompleted);
+            Contract.Ensures(this.CompletedSynchronously == completeSynchronously);
+            Contract.Ensures(this.IsCompleted);
+
             this.completed = true;
             this.result = result;
+            this.synchronous = completeSynchronously;
             Thread.MemoryBarrier();
+
             if (this.waitHandle != null) {
                 this.waitHandle.Set();
             }
@@ -139,17 +146,25 @@ namespace PleaseIgnore.IntelMap {
         /// <param name="exception">
         ///     The exception to throw from the <c>End*()</c> method.
         /// </param>
+        /// <param name="completeSynchronously">
+        ///     The value to assign to <see cref="CompletedSynchronously"/>.
+        /// </param>
         /// <remarks>
         ///     If a callback was provided at <see cref="IntelAsyncResult"/>
         ///     initialization, it will be queued onto the
         ///     <see cref="ThreadPool"/>.
         /// </remarks>
-        protected void AsyncComplete(Exception exception) {
+        protected void Complete(Exception exception, bool completeSynchronously) {
             Contract.Requires(exception != null);
-            Debug.Assert(!this.completed);
+            Contract.Requires<InvalidOperationException>(!this.IsCompleted);
+            Contract.Ensures(this.CompletedSynchronously == completeSynchronously);
+            Contract.Ensures(this.IsCompleted);
+
             this.completed = true;
             this.exception = exception;
+            this.synchronous = completeSynchronously;
             Thread.MemoryBarrier();
+
             if (this.waitHandle != null) {
                 this.waitHandle.Set();
             }
@@ -160,71 +175,32 @@ namespace PleaseIgnore.IntelMap {
         }
 
         /// <summary>
-        ///     Signals that the asychronous operation has completed
-        ///     successfully, but the client should be notified synchronously.
-        /// </summary>
-        /// <param name="result">
-        ///     The return code for the <c>End*()</c> method.
-        /// </param>
-        /// <remarks>
-        ///     If a callback was provided at <see cref="IntelAsyncResult"/>
-        ///     initialization, it will be called immediately.
-        /// </remarks>
-        protected void SyncComplete(TResult result) {
-            Debug.Assert(!this.completed);
-            this.completed = true;
-            this.synchronous = true;
-            this.result = result;
-            Thread.MemoryBarrier();
-            if (this.waitHandle != null) {
-                this.waitHandle.Set();
-            }
-
-            if (callback != null) {
-                callback(this);
-            }
-        }
-
-        /// <summary>
-        ///     Signals that the asychronous operation was aborted due to an
-        ///     error, but the client should be notified synchronously.
-        /// </summary>
-        /// <param name="exception">
-        ///     The exception to throw from the <c>End*()</c> method.
-        /// </param>
-        /// <remarks>
-        ///     If a callback was provided at <see cref="IntelAsyncResult"/>
-        ///     initialization, it will be called immediately.
-        /// </remarks>
-        protected void SyncComplete(Exception exception) {
-            Contract.Requires(exception != null);
-            Debug.Assert(!this.completed);
-            this.completed = true;
-            this.synchronous = true;
-            this.exception = exception;
-            Thread.MemoryBarrier();
-            if (this.waitHandle != null) {
-                this.waitHandle.Set();
-            }
-
-            if (callback != null) {
-                callback(this);
-            }
-        }
-
-        /// <summary>
         ///     Waits for the asynchronous call to complete, returning the queued
         ///     value or throwing an exception as appropriate.
         /// </summary>
+        /// <param name="methodName">
+        ///     The name of the function being used to wait on this
+        ///     <see cref="IntelAsyncResult"/>.
+        /// </param>
         /// <returns>
         ///     The value provided to <see cref="AsyncComplete(TResult)"/> or
         ///     <see cref="SyncComplete(TResult)"/>.
         /// </returns>
-        internal TResult Wait(TOwner owner, string methodName) {
-            if (this.owner != owner) {
-                throw new ArgumentException(Properties.Resources
-                    .ArgumentException_WrongObject);
-            }
+        /// <exception cref="ArgumentException">
+        ///     <paramref name="methodName"/> is <see langword="null"/> or
+        ///     <see cref="String.Empty"/>.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        ///     A call has already been made to <see cref="Wait"/> on this
+        ///     instance of <see cref="IntelAsyncResult"/>.
+        /// </exception>
+        /// <exception cref="Exception">
+        ///     Any exception registered by calling
+        ///     <see cref="Complete(Exception, bool)"/>.
+        /// </exception>
+        public TResult Wait(string methodName) {
+            Contract.Requires<ArgumentException>(!String.IsNullOrEmpty(methodName));
+            Contract.Ensures(this.completed);
 
             var old = Interlocked.CompareExchange(ref waitCount, 1, 0);
             if (old != 0) {
@@ -236,6 +212,7 @@ namespace PleaseIgnore.IntelMap {
 
             if (!this.completed) {
                 this.AsyncWaitHandle.WaitOne();
+                Contract.Assert(this.completed);
             }
 
             if (this.exception != null) {
