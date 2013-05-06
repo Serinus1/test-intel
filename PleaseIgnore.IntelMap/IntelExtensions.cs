@@ -28,11 +28,11 @@ namespace PleaseIgnore.IntelMap {
         // Downtime in ticks from beginning of day
         private const Int64 DowntimeTicks = 11L * TimeSpan.TicksPerHour;
         // Priority list of IntelChannelStatus
-        private static readonly IntelChannelStatus[] StatusPriority = new IntelChannelStatus[] {
-            IntelChannelStatus.FatalError,
-            IntelChannelStatus.InvalidPath,
-            IntelChannelStatus.Active,
-            IntelChannelStatus.Waiting
+        private static readonly IntelStatus[] StatusPriority = new IntelStatus[] {
+            IntelStatus.FatalError,
+            IntelStatus.InvalidPath,
+            IntelStatus.Active,
+            IntelStatus.Waiting
         };
 
         // The base URL for requests on the intel map server
@@ -112,16 +112,16 @@ namespace PleaseIgnore.IntelMap {
 
         /// <summary>
         ///     Picks the highest priority status out of an array of
-        ///     <see cref="IntelChannelStatus"/>.
+        ///     <see cref="IntelStatus"/>.
         /// </summary>
         /// <param name="array">
-        ///     An array of <see cref="IntelChannelStatus"/> values.
+        ///     An array of <see cref="IntelStatus"/> values.
         /// </param>
         /// <returns>
         ///     The highest priority status from <paramref name="array"/>.
         /// </returns>
         [Pure]
-        public static IntelChannelStatus Combine(params IntelChannelStatus[] array) {
+        public static IntelStatus Combine(params IntelStatus[] array) {
             Contract.Requires(array != null);
             Contract.Requires(array.Length > 0);
             foreach (var status in StatusPriority) {
@@ -133,11 +133,11 @@ namespace PleaseIgnore.IntelMap {
         }
 
         /// <summary>
-        ///     Tests if a value of the <see cref="IntelChannelStatus"/>
+        ///     Tests if a value of the <see cref="IntelStatus"/>
         ///     enumeration refers to a "running" state.
         /// </summary>
         /// <param name="status">
-        ///     Value of <see cref="IntelChannelStatus"/> to test.
+        ///     Value of <see cref="IntelStatus"/> to test.
         /// </param>
         /// <returns>
         ///     <see langword="true"/> if the value of <paramref name="status"/>
@@ -145,12 +145,12 @@ namespace PleaseIgnore.IntelMap {
         ///     <see langword="false"/> if it's in a stopped state.
         /// </returns>
         [Pure]
-        public static bool IsRunning(this IntelChannelStatus status) {
+        public static bool IsRunning(this IntelStatus status) {
             switch (status) {
-            case IntelChannelStatus.Active:
-            case IntelChannelStatus.InvalidPath:
-            case IntelChannelStatus.Starting:
-            case IntelChannelStatus.Waiting:
+            case IntelStatus.Active:
+            case IntelStatus.InvalidPath:
+            case IntelStatus.Starting:
+            case IntelStatus.Waiting:
                 return true;
             default:
                 return false;

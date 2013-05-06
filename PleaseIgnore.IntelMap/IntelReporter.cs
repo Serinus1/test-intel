@@ -37,7 +37,7 @@ namespace PleaseIgnore.IntelMap {
         private ISynchronizeInvoke synchronizingObject;
         // The current channel processing state
         [ContractPublicPropertyName("Status")]
-        private IntelChannelStatus status;
+        private IntelStatus status;
         // The time to wait between sending keep alives
         [ContractPublicPropertyName("KeepAliveInterval")]
         private TimeSpan keepAlivePeriod = TimeSpan.Parse(
@@ -70,7 +70,7 @@ namespace PleaseIgnore.IntelMap {
         /// </summary>
         public IntelReporter() : this(null) {
             Contract.Ensures(Container == null);
-            Contract.Ensures(Status == IntelChannelStatus.Stopped);
+            Contract.Ensures(Status == IntelStatus.Stopped);
             Contract.Ensures(!IsRunning);
         }
 
@@ -80,7 +80,7 @@ namespace PleaseIgnore.IntelMap {
         /// </summary>
         public IntelReporter(IContainer container) {
             Contract.Ensures(this.Container == container);
-            Contract.Ensures(Status == IntelChannelStatus.Stopped);
+            Contract.Ensures(Status == IntelStatus.Stopped);
             Contract.Ensures(!IsRunning);
             this.channels = new IntelChannelContainer();
             this.channels.IntelReported += channels_IntelReported;
@@ -116,7 +116,7 @@ namespace PleaseIgnore.IntelMap {
         ///     Gets a value indicating the operating state of this
         ///     <see cref="IntelReporter"/>.
         /// </summary>
-        public IntelChannelStatus Status {
+        public IntelStatus Status {
             get { return this.status; }
             private set {
                 Contract.Ensures(Status == value);
@@ -331,10 +331,10 @@ namespace PleaseIgnore.IntelMap {
         /// </summary>
         public void Start() {
             Contract.Requires<ObjectDisposedException>(
-                    Status != IntelChannelStatus.Disposed,
+                    Status != IntelStatus.Disposed,
                     null);
             Contract.Requires<InvalidOperationException>(
-                    Status != IntelChannelStatus.FatalError);
+                    Status != IntelStatus.FatalError);
             Contract.Ensures(IsRunning);
             this.channels.Start();
         }
@@ -352,9 +352,9 @@ namespace PleaseIgnore.IntelMap {
         /// <inheritdoc/>
         protected override void Dispose(bool disposing) {
             if (disposing) {
-                this.Status = IntelChannelStatus.Disposing;
+                this.Status = IntelStatus.Disposing;
                 this.channels.Dispose();
-                this.Status = IntelChannelStatus.Disposed;
+                this.Status = IntelStatus.Disposed;
             }
             base.Dispose(disposing);
         }
@@ -385,7 +385,7 @@ namespace PleaseIgnore.IntelMap {
                 this.session = new IntelSession(this.username, this.passwordHash);
                 this.timerSession.Change(this.keepAlivePeriod, this.keepAlivePeriod);
                 this.lastIntel = DateTime.UtcNow;
-                this.Status = IntelChannelStatus.Active;
+                this.Status = IntelStatus.Active;
                 this.OnPropertyChanged(new PropertyChangedEventArgs("Users"));
                 return this.session;
             } else {
@@ -461,14 +461,14 @@ namespace PleaseIgnore.IntelMap {
                 if (this.lastIntel + this.sessionTimeout < DateTime.UtcNow) {
                     // Session has expired
                     session.Dispose();
-                    this.Status = IntelChannelStatus.Waiting;
+                    this.Status = IntelStatus.Waiting;
                     this.OnPropertyChanged(new PropertyChangedEventArgs("Users"));
                 } else {
                     // Maintain the session
                     try {
                         var users = session.Users;
                         if (session.KeepAlive()) {
-                            this.Status = IntelChannelStatus.Active;
+                            this.Status = IntelStatus.Active;
                         }
                         if (users != session.Users) {
                             this.OnPropertyChanged(new PropertyChangedEventArgs("Users"));

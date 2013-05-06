@@ -105,7 +105,7 @@ namespace PleaseIgnore.IntelMap {
         private string logDirectory = defaultLogDirectory;
         // The current component status
         [ContractPublicPropertyName("Status")]
-        private volatile IntelChannelStatus status;
+        private volatile IntelStatus status;
         // The currently processed log file
         private StreamReader reader;
         // The last time we parsed a log entry from the current log
@@ -208,7 +208,7 @@ namespace PleaseIgnore.IntelMap {
                             } catch (ArgumentException) {
                                 this.watcher.Dispose();
                                 this.watcher = null;
-                                this.Status = IntelChannelStatus.InvalidPath;
+                                this.Status = IntelStatus.InvalidPath;
                             }
                         }
                         this.OnPropertyChanged(new PropertyChangedEventArgs("Path"));
@@ -262,7 +262,7 @@ namespace PleaseIgnore.IntelMap {
         ///     Gets the current operational status of the
         ///     <see cref="IntelChannel"/> object.
         /// </summary>
-        public IntelChannelStatus Status {
+        public IntelStatus Status {
             get {
                 return this.status;
             }
@@ -284,10 +284,10 @@ namespace PleaseIgnore.IntelMap {
         public bool IsRunning {
             get {
                 var status = this.status;
-                return (status == IntelChannelStatus.Active)
-                    || (status == IntelChannelStatus.InvalidPath)
-                    || (status == IntelChannelStatus.Starting)
-                    || (status == IntelChannelStatus.Waiting);
+                return (status == IntelStatus.Active)
+                    || (status == IntelStatus.InvalidPath)
+                    || (status == IntelStatus.Starting)
+                    || (status == IntelStatus.Waiting);
             }
         }
 
@@ -321,8 +321,8 @@ namespace PleaseIgnore.IntelMap {
         /// </summary>
         public void Start() {
             lock (this.syncRoot) {
-                if (this.status == IntelChannelStatus.Stopped) {
-                    this.Status = IntelChannelStatus.Starting;
+                if (this.status == IntelStatus.Stopped) {
+                    this.Status = IntelStatus.Starting;
                     this.OnStart();
                 }
             }
@@ -333,9 +333,9 @@ namespace PleaseIgnore.IntelMap {
         /// </summary>
         public void Stop() {
             lock(this.syncRoot) {
-                if ((this.status != IntelChannelStatus.Stopped)
-                        || (this.status == IntelChannelStatus.Disposed)) {
-                    this.Status = IntelChannelStatus.Stopping;
+                if ((this.status != IntelStatus.Stopped)
+                        || (this.status == IntelStatus.Disposed)) {
+                    this.Status = IntelStatus.Stopping;
                     this.OnStop();
                     this.UpdateTimer();
                 }
@@ -344,13 +344,13 @@ namespace PleaseIgnore.IntelMap {
 
         /// <inheritdoc/>
         protected override void Dispose(bool disposing) {
-            Contract.Ensures(Status == IntelChannelStatus.Disposed);
+            Contract.Ensures(Status == IntelStatus.Disposed);
             if (disposing) {
                 lock (this.syncRoot) {
-                    if (this.status != IntelChannelStatus.Disposed) {
+                    if (this.status != IntelStatus.Disposed) {
                         // Normal shutdown
                         this.Stop();
-                        this.Status = IntelChannelStatus.Disposed;
+                        this.Status = IntelStatus.Disposed;
 
                         // Dispose child objects
                         this.logTimer.Dispose();
@@ -362,7 +362,7 @@ namespace PleaseIgnore.IntelMap {
                 }
             } else {
                 // We really can't touch anything safely
-                this.status = IntelChannelStatus.Disposed;
+                this.status = IntelStatus.Disposed;
             }
             base.Dispose(disposing);
         }
@@ -471,16 +471,16 @@ namespace PleaseIgnore.IntelMap {
         /// </remarks>
         protected virtual void OnStart() {
             Contract.Requires<InvalidOperationException>(
-                Status == IntelChannelStatus.Starting);
-            Contract.Ensures((Status == IntelChannelStatus.Active)
-                || (Status == IntelChannelStatus.Waiting)
-                || (Status == IntelChannelStatus.InvalidPath));
+                Status == IntelStatus.Starting);
+            Contract.Ensures((Status == IntelStatus.Active)
+                || (Status == IntelStatus.Waiting)
+                || (Status == IntelStatus.InvalidPath));
 
             // Create the file system watcher object
             try {
                 this.watcher = this.CreateFileSystemWatcher();
             } catch(ArgumentException) {
-                this.Status = IntelChannelStatus.InvalidPath;
+                this.Status = IntelStatus.InvalidPath;
             }
 
             // Open the log file with the latest timestamp in its filename
@@ -540,7 +540,7 @@ namespace PleaseIgnore.IntelMap {
                 // Try (again) to create the watcher object
                 try {
                     this.watcher = this.CreateFileSystemWatcher();
-                    this.Status = IntelChannelStatus.Waiting;
+                    this.Status = IntelStatus.Waiting;
                     this.ScanFiles();
                 } catch (ArgumentException) {
                     // Still doesn't seem to exist
@@ -589,8 +589,8 @@ namespace PleaseIgnore.IntelMap {
         /// </remarks>
         protected virtual void OnStop() {
             Contract.Requires<InvalidOperationException>(
-                Status == IntelChannelStatus.Stopping);
-            Contract.Ensures(Status == IntelChannelStatus.Stopped);
+                Status == IntelStatus.Stopping);
+            Contract.Ensures(Status == IntelStatus.Stopped);
 
             if (this.reader != null) {
                 this.reader.Close();
@@ -602,7 +602,7 @@ namespace PleaseIgnore.IntelMap {
                 this.OnPropertyChanged(new PropertyChangedEventArgs("LogFile"));
             }
 
-            this.Status = IntelChannelStatus.Stopped;
+            this.Status = IntelStatus.Stopped;
         }
 
         /// <summary>
@@ -676,8 +676,8 @@ namespace PleaseIgnore.IntelMap {
             // Clear the status (defer raising PropertyChanged)
             this.LogFile = null;
             this.status = (this.watcher != null)
-                ? IntelChannelStatus.Waiting
-                : IntelChannelStatus.InvalidPath;
+                ? IntelStatus.Waiting
+                : IntelStatus.InvalidPath;
             
             // Try to open the file stream
             FileStream stream = null;
@@ -689,7 +689,7 @@ namespace PleaseIgnore.IntelMap {
                 // code that, but we don't know if that would cause other
                 // problems.
                 this.reader = new StreamReader(stream, true);
-                this.status = IntelChannelStatus.Active;
+                this.status = IntelStatus.Active;
                 this.LogFile = fileInfo;
                 this.lastEntry = DateTime.UtcNow;
             } catch (IOException) {
@@ -719,8 +719,8 @@ namespace PleaseIgnore.IntelMap {
         ///     Closes the existing log file
         /// </summary>
         protected void CloseFile() {
-            Contract.Ensures((Status == IntelChannelStatus.Waiting)
-                || (Status == IntelChannelStatus.InvalidPath));
+            Contract.Ensures((Status == IntelStatus.Waiting)
+                || (Status == IntelStatus.InvalidPath));
 
             if (this.reader != null) {
                 try {
@@ -735,8 +735,8 @@ namespace PleaseIgnore.IntelMap {
                 this.OnPropertyChanged(new PropertyChangedEventArgs("LogFile"));
             }
             this.Status = (this.watcher != null)
-                ? IntelChannelStatus.Waiting
-                : IntelChannelStatus.InvalidPath;
+                ? IntelStatus.Waiting
+                : IntelStatus.InvalidPath;
         }
 
         /// <summary>
@@ -744,8 +744,8 @@ namespace PleaseIgnore.IntelMap {
         /// </summary>
         private void UpdateTimer() {
             switch (this.status) {
-            case IntelChannelStatus.Active:
-            case IntelChannelStatus.InvalidPath:
+            case IntelStatus.Active:
+            case IntelStatus.InvalidPath:
                 // Operations that require us to ping the filesystem regularly
                 if (!this.timerEnabled) {
                     this.logTimer.Change(timerPeriod, timerPeriod);
@@ -753,7 +753,7 @@ namespace PleaseIgnore.IntelMap {
                 }
                 break;
 
-            case IntelChannelStatus.Disposed:
+            case IntelStatus.Disposed:
                 // The timer object is no longer valid
                 break;
 

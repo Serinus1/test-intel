@@ -167,7 +167,7 @@
     <Compile Include="IntelChannel.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="IntelChannelStatus.cs" />
+    <Compile Include="IntelStatus.cs" />
     <Compile Include="IntelEventArgs.cs" />
     <Compile Include="IntelExtensions.cs" />
     <Compile Include="IntelReporter.cs">

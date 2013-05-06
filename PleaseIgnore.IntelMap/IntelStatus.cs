@@ -7,7 +7,7 @@ namespace PleaseIgnore.IntelMap {
     /// <summary>
     ///     Represents the current condition of a <see cref="IntelChannel"/>.
     /// </summary>
-    public enum IntelChannelStatus {
+    public enum IntelStatus {
         /// <summary>
         ///     <see cref="IntelChannel.Start"/> has not yet been called
         /// </summary>

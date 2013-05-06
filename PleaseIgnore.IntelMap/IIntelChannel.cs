@@ -20,7 +20,7 @@ namespace PleaseIgnore.IntelMap {
         ///     Gets the current operational status of the
         ///     <see cref="IntelChannel"/> object.
         /// </summary>
-        IntelChannelStatus Status { get; }
+        IntelStatus Status { get; }
 
         /// <summary>
         ///     Gets the channel name of this <see cref="IntelChannel"/>
@@ -56,8 +56,8 @@ namespace PleaseIgnore.IntelMap {
         public event EventHandler Disposed;
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public IntelChannelStatus Status {
-            get { return default(IntelChannelStatus); }
+        public IntelStatus Status {
+            get { return default(IntelStatus); }
         }
 
         public string Name {
@@ -84,17 +84,17 @@ namespace PleaseIgnore.IntelMap {
 
         public void Start() {
             Contract.Requires<ObjectDisposedException>(
-                Status != IntelChannelStatus.Disposed,
+                Status != IntelStatus.Disposed,
                 null);
             Contract.Requires<InvalidOperationException>(
                 !String.IsNullOrEmpty(Name));
-            Contract.Ensures(Status != IntelChannelStatus.Stopped);
+            Contract.Ensures(Status != IntelStatus.Stopped);
             Contract.Ensures(IsRunning);
         }
 
         public void Stop() {
-            Contract.Ensures((Status == IntelChannelStatus.Stopped)
-                || (Status == IntelChannelStatus.Disposed));
+            Contract.Ensures((Status == IntelStatus.Stopped)
+                || (Status == IntelStatus.Disposed));
             Contract.Ensures(!IsRunning);
         }
 

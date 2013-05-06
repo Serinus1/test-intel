@@ -88,7 +88,7 @@ namespace PleaseIgnore.IntelMap.Tests {
         [TestMethod]
         public void Constructor() {
             var container = new IntelChannelContainer();
-            Assert.AreEqual(IntelChannelStatus.Stopped, container.Status);
+            Assert.AreEqual(IntelStatus.Stopped, container.Status);
             Assert.IsFalse(container.IsRunning);
         }
 
@@ -100,7 +100,7 @@ namespace PleaseIgnore.IntelMap.Tests {
         public void Dispose() {
             var container = new IntelChannelContainer();
             container.Dispose();
-            Assert.AreEqual(IntelChannelStatus.Disposed, container.Status);
+            Assert.AreEqual(IntelStatus.Disposed, container.Status);
             Assert.IsFalse(container.IsRunning);
         }
 
@@ -138,7 +138,7 @@ namespace PleaseIgnore.IntelMap.Tests {
                 container.Start();
                 containerMock.Protected().Verify("OnStart", Times.Once());
 
-                Assert.AreEqual(IntelChannelStatus.Waiting, container.Status);
+                Assert.AreEqual(IntelStatus.Waiting, container.Status);
                 Assert.IsTrue(container.IsRunning);
             }
         }
@@ -170,7 +170,7 @@ namespace PleaseIgnore.IntelMap.Tests {
             container.Stop();
             containerMock.Protected().Verify("OnStop", Times.Once());
 
-            Assert.AreEqual(IntelChannelStatus.Stopped, container.Status);
+            Assert.AreEqual(IntelStatus.Stopped, container.Status);
             Assert.IsFalse(container.IsRunning);
         }
 
@@ -184,12 +184,12 @@ namespace PleaseIgnore.IntelMap.Tests {
 
             var chan1Mock = new Mock<IIntelChannel>(MockBehavior.Strict);
             chan1Mock.SetupProperty(x => x.Site);
-            chan1Mock.SetupGet(x => x.Status).Returns(IntelChannelStatus.Waiting);
+            chan1Mock.SetupGet(x => x.Status).Returns(IntelStatus.Waiting);
             chan1Mock.SetupGet(x => x.Name).Returns(channelList[0]);
             chan1Mock.Setup(x => x.Start()).Verifiable();
             var chan2Mock = new Mock<IIntelChannel>(MockBehavior.Strict);
             chan2Mock.SetupProperty(x => x.Site);
-            chan2Mock.SetupGet(x => x.Status).Returns(IntelChannelStatus.Active);
+            chan2Mock.SetupGet(x => x.Status).Returns(IntelStatus.Active);
             chan2Mock.SetupGet(x => x.Name).Returns(channelList[1]);
             chan2Mock.Setup(x => x.Start()).Verifiable();
 
@@ -231,7 +231,7 @@ namespace PleaseIgnore.IntelMap.Tests {
                 Assert.AreEqual(chan2Mock.Object, chan2);
                 chan2Mock.Verify(x => x.Start(), Times.Once());
 
-                Assert.AreEqual(IntelChannelStatus.Active, container.Status);
+                Assert.AreEqual(IntelStatus.Active, container.Status);
             }
         }
 
@@ -245,12 +245,12 @@ namespace PleaseIgnore.IntelMap.Tests {
 
             var chan1Mock = new Mock<IIntelChannel>(MockBehavior.Strict);
             chan1Mock.SetupProperty(x => x.Site);
-            chan1Mock.SetupGet(x => x.Status).Returns(IntelChannelStatus.Waiting);
+            chan1Mock.SetupGet(x => x.Status).Returns(IntelStatus.Waiting);
             chan1Mock.SetupGet(x => x.Name).Returns(channelList[0]);
             chan1Mock.Setup(x => x.Start()).Verifiable();
             var chan2Mock = new Mock<IIntelChannel>(MockBehavior.Strict);
             chan2Mock.SetupProperty(x => x.Site);
-            chan2Mock.SetupGet(x => x.Status).Returns(IntelChannelStatus.Active);
+            chan2Mock.SetupGet(x => x.Status).Returns(IntelStatus.Active);
             chan2Mock.SetupGet(x => x.Name).Returns(channelList[1]);
             chan2Mock.Setup(x => x.Start()).Verifiable();
 
@@ -309,7 +309,7 @@ namespace PleaseIgnore.IntelMap.Tests {
                 chan1Mock.Raise(x => x.IntelReported += null, e3);
                 Thread.Sleep(100);
 
-                Assert.AreEqual(IntelChannelStatus.Active, container.Status);
+                Assert.AreEqual(IntelStatus.Active, container.Status);
             }
 
             CollectionAssert.AreEquivalent(

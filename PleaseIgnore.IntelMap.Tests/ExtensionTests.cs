@@ -56,30 +56,30 @@ namespace PleaseIgnore.IntelMap.Tests {
         /// </summary>
         [TestMethod]
         public void Combine() {
-            Assert.AreEqual(IntelChannelStatus.Active,
+            Assert.AreEqual(IntelStatus.Active,
                 IntelExtensions.Combine(
-                    IntelChannelStatus.Waiting,
-                    IntelChannelStatus.Active));
-            Assert.AreEqual(IntelChannelStatus.Active,
+                    IntelStatus.Waiting,
+                    IntelStatus.Active));
+            Assert.AreEqual(IntelStatus.Active,
                 IntelExtensions.Combine(
-                    IntelChannelStatus.Active,
-                    IntelChannelStatus.Waiting));
-            Assert.AreEqual(IntelChannelStatus.FatalError,
+                    IntelStatus.Active,
+                    IntelStatus.Waiting));
+            Assert.AreEqual(IntelStatus.FatalError,
                 IntelExtensions.Combine(
-                    IntelChannelStatus.FatalError,
-                    IntelChannelStatus.Active));
-            Assert.AreEqual(IntelChannelStatus.FatalError,
+                    IntelStatus.FatalError,
+                    IntelStatus.Active));
+            Assert.AreEqual(IntelStatus.FatalError,
                 IntelExtensions.Combine(
-                    IntelChannelStatus.Active,
-                    IntelChannelStatus.FatalError));
-            Assert.AreEqual(IntelChannelStatus.InvalidPath,
+                    IntelStatus.Active,
+                    IntelStatus.FatalError));
+            Assert.AreEqual(IntelStatus.InvalidPath,
                 IntelExtensions.Combine(
-                    IntelChannelStatus.InvalidPath,
-                    IntelChannelStatus.Active));
-            Assert.AreEqual(IntelChannelStatus.InvalidPath,
+                    IntelStatus.InvalidPath,
+                    IntelStatus.Active));
+            Assert.AreEqual(IntelStatus.InvalidPath,
                 IntelExtensions.Combine(
-                    IntelChannelStatus.Active,
-                    IntelChannelStatus.InvalidPath));
+                    IntelStatus.Active,
+                    IntelStatus.InvalidPath));
         }
 
         /// <summary>

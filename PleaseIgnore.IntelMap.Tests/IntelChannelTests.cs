@@ -24,7 +24,7 @@ namespace PleaseIgnore.IntelMap.Tests {
 
             Assert.AreEqual(channelName, channel.Name);
             Assert.AreEqual(container, channel.Container);
-            Assert.AreEqual(IntelChannelStatus.Stopped, channel.Status);
+            Assert.AreEqual(IntelStatus.Stopped, channel.Status);
             Assert.IsFalse(channel.IsRunning);
         }
 
@@ -35,7 +35,7 @@ namespace PleaseIgnore.IntelMap.Tests {
         public void Dispose() {
             var channel = new IntelChannel();
             channel.Dispose();
-            Assert.AreEqual(IntelChannelStatus.Disposed, channel.Status);
+            Assert.AreEqual(IntelStatus.Disposed, channel.Status);
             Assert.IsFalse(channel.IsRunning);
         }
 
@@ -120,7 +120,7 @@ namespace PleaseIgnore.IntelMap.Tests {
 
                 channel.Stop();
                 Assert.IsFalse(channel.IsRunning);
-                Assert.AreEqual(IntelChannelStatus.Stopped, channel.Status);
+                Assert.AreEqual(IntelStatus.Stopped, channel.Status);
             }
         }
 
@@ -293,7 +293,7 @@ namespace PleaseIgnore.IntelMap.Tests {
 
                         // Make sure it is logging the appropriate file
                         Assert.IsTrue(sync.WaitOne(5000), "Did not raise PropertyChanged for file1");
-                        Assert.AreEqual(IntelChannelStatus.Active, channel.Status);
+                        Assert.AreEqual(IntelStatus.Active, channel.Status);
                         Assert.IsNotNull(channel.LogFile);
                         Assert.AreEqual(file1.Name, channel.LogFile.Name, true);
 
@@ -305,7 +305,7 @@ namespace PleaseIgnore.IntelMap.Tests {
 
                         // Make sure it is logging the appropriate file
                         Assert.IsTrue(sync.WaitOne(5000), "Did not raise PropertyChanged for file2");
-                        Assert.AreEqual(IntelChannelStatus.Active, channel.Status);
+                        Assert.AreEqual(IntelStatus.Active, channel.Status);
                         Assert.IsNotNull(channel.LogFile);
                         Assert.AreEqual(file2.Name, channel.LogFile.Name, true);
                     }

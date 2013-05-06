@@ -35,7 +35,7 @@ namespace PleaseIgnore.IntelMap {
         private readonly Timer updateTimer;
         // The current channel processing state
         [ContractPublicPropertyName("Status")]
-        private volatile IntelChannelStatus status;
+        private volatile IntelStatus status;
         // The update period for the channel list
         [ContractPublicPropertyName("ChannelUpdateInterval")]
         private TimeSpan? updateInterval = TimeSpan.Parse(
@@ -63,7 +63,7 @@ namespace PleaseIgnore.IntelMap {
         ///     class.
         /// </summary>
         public IntelChannelContainer() : this(null) {
-            Contract.Ensures(Status == IntelChannelStatus.Stopped);
+            Contract.Ensures(Status == IntelStatus.Stopped);
             Contract.Ensures(Container == null);
         }
 
@@ -72,7 +72,7 @@ namespace PleaseIgnore.IntelMap {
         ///     class and adds it to the specified container.
         /// </summary>
         public IntelChannelContainer(IContainer container) {
-            Contract.Ensures(Status == IntelChannelStatus.Stopped);
+            Contract.Ensures(Status == IntelStatus.Stopped);
             Contract.Ensures(Container == container);
             this.updateTimer = new Timer(this.timer_Callback);
             if (container != null) {
@@ -94,7 +94,7 @@ namespace PleaseIgnore.IntelMap {
         ///     Gets the current operational status of the
         ///     <see cref="IntelChannelContainer"/> object and its children.
         /// </summary>
-        public IntelChannelStatus Status {
+        public IntelStatus Status {
             get { return this.status; }
             private set {
                 Contract.Ensures(Status == value);
@@ -112,10 +112,10 @@ namespace PleaseIgnore.IntelMap {
         public bool IsRunning {
             get {
                 var status = this.status;
-                return (status == IntelChannelStatus.Active)
-                    || (status == IntelChannelStatus.InvalidPath)
-                    || (status == IntelChannelStatus.Starting)
-                    || (status == IntelChannelStatus.Waiting);
+                return (status == IntelStatus.Active)
+                    || (status == IntelStatus.InvalidPath)
+                    || (status == IntelStatus.Starting)
+                    || (status == IntelStatus.Waiting);
             }
         }
 
@@ -259,21 +259,21 @@ namespace PleaseIgnore.IntelMap {
         /// </summary>
         public void Start() {
             Contract.Requires<ObjectDisposedException>(
-                    Status != IntelChannelStatus.Disposed,
+                    Status != IntelStatus.Disposed,
                     null);
             Contract.Requires<InvalidOperationException>(
-                    Status != IntelChannelStatus.FatalError);
+                    Status != IntelStatus.FatalError);
             Contract.Ensures(IsRunning);
 
             lock (this.syncRoot) {
-                if (this.status == IntelChannelStatus.Stopped) {
+                if (this.status == IntelStatus.Stopped) {
                     try {
-                        this.Status = IntelChannelStatus.Starting;
+                        this.Status = IntelStatus.Starting;
                         this.OnStart();
-                        this.Status = IntelChannelStatus.Waiting;
+                        this.Status = IntelStatus.Waiting;
                         this.OnPropertyChanged(new PropertyChangedEventArgs("IsRunning"));
                     } catch {
-                        this.Status = IntelChannelStatus.FatalError;
+                        this.Status = IntelStatus.FatalError;
                         throw;
                     }
                 }
@@ -290,11 +290,11 @@ namespace PleaseIgnore.IntelMap {
             lock (this.syncRoot) {
                 if (this.IsRunning) {
                     try {
-                        this.Status = IntelChannelStatus.Stopping;
+                        this.Status = IntelStatus.Stopping;
                         this.OnStop();
-                        this.Status = IntelChannelStatus.Stopped;
+                        this.Status = IntelStatus.Stopped;
                     } catch {
-                        this.Status = IntelChannelStatus.FatalError;
+                        this.Status = IntelStatus.FatalError;
                         throw;
                     } finally {
                         this.OnPropertyChanged(new PropertyChangedEventArgs("IsRunning"));
@@ -305,21 +305,21 @@ namespace PleaseIgnore.IntelMap {
 
         /// <inheritdoc/>
         protected override void Dispose(bool disposing) {
-            Contract.Ensures(Status == IntelChannelStatus.Disposed);
+            Contract.Ensures(Status == IntelStatus.Disposed);
             Contract.Ensures(!IsRunning);
 
             if (disposing) {
                 lock (this.syncRoot) {
-                    if (this.status != IntelChannelStatus.Disposed) {
+                    if (this.status != IntelStatus.Disposed) {
                         try {
-                            this.Status = IntelChannelStatus.Disposing;
+                            this.Status = IntelStatus.Disposing;
                             this.updateTimer.Dispose();
                             channels.ForEach(x => x.Dispose());
                         } catch {
                             // Ignore any exceptions during disposal
                         } finally {
                             channels.Clear();
-                            this.Status = IntelChannelStatus.Disposed;
+                            this.Status = IntelStatus.Disposed;
                         }
                     }
                 }
@@ -510,7 +510,7 @@ namespace PleaseIgnore.IntelMap {
             lock (this.syncRoot) {
                 if (this.IsRunning) {
                     this.Status = this.channels.Aggregate(
-                        IntelChannelStatus.Waiting,
+                        IntelStatus.Waiting,
                         (sum, x) => IntelExtensions.Combine(sum, x.Status));
                 }
             }
@@ -555,9 +555,9 @@ namespace PleaseIgnore.IntelMap {
             } catch {
                 // Fail on error
                 lock (this.syncRoot) {
-                    if (this.status != IntelChannelStatus.Disposed) {
+                    if (this.status != IntelStatus.Disposed) {
                         this.updateTimer.Dispose();
-                        this.Status = IntelChannelStatus.FatalError;
+                        this.Status = IntelStatus.FatalError;
                     }
                 }
                 throw;
@@ -599,7 +599,7 @@ namespace PleaseIgnore.IntelMap {
         /// <inheritdoc/>
         void IContainer.Remove(IComponent component) {
             // Called when the channel is being disposed
-            if (this.status != IntelChannelStatus.Disposing) {
+            if (this.status != IntelStatus.Disposing) {
                 lock (this.syncRoot) {
                     var count = this.channels.RemoveAll(x => x == component);
                     if (count > 0) {
