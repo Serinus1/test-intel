@@ -14,7 +14,6 @@ namespace PleaseIgnore.IntelMap.Tests {
     public class IntelSessionTests {
         const string testPassword = "ABC αβγ";
         const string testPasswordHash = "a79e978f450304a9a7660803fb3aff7ec631f641";
-        const string testScheme = "session-test";
         const string testUsername = "test-user";
         const string testSession = "01234567890abcdef";
         const string intelChannel = "random-intel";
@@ -23,31 +22,11 @@ namespace PleaseIgnore.IntelMap.Tests {
         const string intelTimeString = "1095357343";
         private readonly static DateTime intelTimestamp = new DateTime(2004, 9, 16, 17, 55, 43, DateTimeKind.Utc);
         // For routing into our Mock WebRequest
-        private readonly static Uri sessionUri = new Uri(testScheme + "://blah-blah-blah");
-
-        /// <summary>
-        ///     The currently assigned Mock for creating instances of
-        ///     <see cref="WebRequest"/>.
-        /// </summary>
-        private static IWebRequestCreate requestProxy;
-
-        /// <summary>
-        ///     We use a session-test://whatever URI to connect to our mock
-        /// </summary>
-        private class WebRequestCreateProxy : IWebRequestCreate {
-            public WebRequest Create(Uri uri) {
-                return requestProxy.Create(uri);
-            }
-        }
-
-        [ClassInitialize]
-        public static void InitScheme(TestContext context) {
-            WebRequest.RegisterPrefix(testScheme, new WebRequestCreateProxy());
-        }
+        private readonly static Uri sessionUri = new Uri(TestHelpers.TestScheme + "://blah-blah-blah");
 
         [TestCleanup]
-        public void TestCleanup() {
-            requestProxy = null;
+        public void Cleanup() {
+            TestHelpers.Cleanup();
         }
 
         /// <summary>
@@ -67,31 +46,7 @@ namespace PleaseIgnore.IntelMap.Tests {
         ///     Initialized instance of <see cref="IntelSession"/>.
         /// </returns>
         private IntelSession Login() {
-            var responseBody = Encoding.UTF8.GetBytes("200 AUTH " + testSession + " 5");
-            var responseStream = new MemoryStream(responseBody, false);
-            var responseMock = new Mock<WebResponse>();
-            responseMock.Setup(x => x.GetResponseStream())
-                .Returns(responseStream);
-            var response = responseMock.Object;
-
-            var requestBody = new StringBuilder();
-            var requestStreamMock = new Mock<Stream>();
-            requestStreamMock.Setup(x => x.Write(It.IsAny<byte[]>(), It.IsAny<int>(), It.IsAny<int>()))
-                .Callback((byte[] bytes, int index, int count)
-                    => requestBody.Append(Encoding.UTF8.GetString(bytes, index, count)));
-            var requestStream = requestStreamMock.Object;
-
-            var requestMock = new Mock<WebRequest>();
-            requestMock.Setup(x => x.GetRequestStream())
-                .Returns(requestStream);
-            requestMock.Setup(x => x.GetResponse())
-                .Returns(response);
-            var request = requestMock.Object;
-
-            var proxyMock = new Mock<IWebRequestCreate>(MockBehavior.Strict);
-            proxyMock.Setup(x => x.Create(sessionUri))
-                .Returns(request);
-            requestProxy = proxyMock.Object;
+            var requestBody = TestHelpers.CreateRequestMock(sessionUri, "200 AUTH " + testSession + " 5");
 
             var session = new IntelSession(testUsername, testPasswordHash, sessionUri);
             Assert.IsTrue(session.IsConnected);
@@ -102,78 +57,7 @@ namespace PleaseIgnore.IntelMap.Tests {
                     + "password=" + testPasswordHash
                     + "&action=AUTH&version=2.2.0",
                 requestBody.ToString());
-            proxyMock.Verify(x => x.Create(sessionUri), Times.Once());
             return session;
-        }
-
-        /// <summary>
-        ///     Sets up a proxy of <see cref="IWebRequestCreate"/> that will
-        ///     respond with a specific string as its payload.
-        /// </summary>
-        /// <returns>
-        ///     Instance of <see cref="StringBuilder"/> that will receive the
-        ///     request payload.
-        /// </returns>
-        private StringBuilder CreateRequestMock(string responseText) {
-            var responseBody = Encoding.UTF8.GetBytes(responseText);
-            var responseStream = new MemoryStream(responseBody, false);
-            var responseMock = new Mock<WebResponse>();
-            responseMock.Setup(x => x.GetResponseStream())
-                .Returns(responseStream);
-            var response = responseMock.Object;
-
-            var requestBody = new StringBuilder();
-            var requestStreamMock = new Mock<Stream>();
-            requestStreamMock.Setup(x => x.Write(It.IsAny<byte[]>(), It.IsAny<int>(), It.IsAny<int>()))
-                .Callback((byte[] bytes, int index, int count)
-                    => requestBody.Append(Encoding.UTF8.GetString(bytes, index, count)));
-            var requestStream = requestStreamMock.Object;
-
-            var requestMock = new Mock<WebRequest>();
-            requestMock.Setup(x => x.GetRequestStream())
-                .Returns(requestStream);
-            requestMock.Setup(x => x.GetResponse())
-                .Returns(response);
-            var request = requestMock.Object;
-
-            var proxyMock = new Mock<IWebRequestCreate>(MockBehavior.Strict);
-            proxyMock.Setup(x => x.Create(sessionUri))
-                .Returns(requestMock.Object);
-            requestProxy = proxyMock.Object;
-
-            return requestBody;
-        }
-
-
-        /// <summary>
-        ///     Sets up a proxy of <see cref="IWebRequestCreate"/> that will
-        ///     throw <see cref="WebException"/> when generating the response.
-        /// </summary>
-        /// <returns>
-        ///     Instance of <see cref="StringBuilder"/> that will receive the
-        ///     request payload.
-        /// </returns>
-        private StringBuilder CreateRequestError() {
-            var requestBody = new StringBuilder();
-            var requestStreamMock = new Mock<Stream>();
-            requestStreamMock.Setup(x => x.Write(It.IsAny<byte[]>(), It.IsAny<int>(), It.IsAny<int>()))
-                .Callback((byte[] bytes, int index, int count)
-                    => requestBody.Append(Encoding.UTF8.GetString(bytes, index, count)));
-            var requestStream = requestStreamMock.Object;
-
-            var requestMock = new Mock<WebRequest>();
-            requestMock.Setup(x => x.GetRequestStream())
-                .Returns(requestStream);
-            requestMock.Setup(x => x.GetResponse())
-                .Throws<WebException>();
-            var request = requestMock.Object;
-
-            var proxyMock = new Mock<IWebRequestCreate>(MockBehavior.Strict);
-            proxyMock.Setup(x => x.Create(sessionUri))
-                .Returns(requestMock.Object);
-            requestProxy = proxyMock.Object;
-
-            return requestBody;
         }
 
         /// <summary>
@@ -192,17 +76,7 @@ namespace PleaseIgnore.IntelMap.Tests {
         [TestMethod]
         [ExpectedException(typeof(WebException))]
         public void LoginError() {
-            var requestMock = new Mock<WebRequest>();
-            requestMock.Setup(x => x.GetRequestStream())
-                .Returns(new MemoryStream());
-            requestMock.Setup(x => x.GetResponse())
-                .Throws<WebException>();
-
-            var proxyMock = new Mock<IWebRequestCreate>(MockBehavior.Strict);
-            proxyMock.Setup(x => x.Create(sessionUri))
-                .Returns(requestMock.Object);
-            requestProxy = proxyMock.Object;
-
+            TestHelpers.CreateRequestError<WebException>(sessionUri);
             var session = new IntelSession(testUsername, testPasswordHash, sessionUri);
         }
 
@@ -213,7 +87,7 @@ namespace PleaseIgnore.IntelMap.Tests {
         [TestMethod]
         [ExpectedException(typeof(AuthenticationException))]
         public void LoginRejected() {
-            CreateRequestMock("500 ERROR AUTH");
+            TestHelpers.CreateRequestMock(sessionUri, "500 ERROR AUTH");
             var session = new IntelSession(testUsername, testPasswordHash, sessionUri);
         }
 
@@ -228,7 +102,7 @@ namespace PleaseIgnore.IntelMap.Tests {
             var closedCount = 0;
             session.Closed += (sender, e) => ++closedCount;
 
-            var requestBody = CreateRequestMock("201 AUTH Logged Off");
+            var requestBody = TestHelpers.CreateRequestMock(sessionUri, "201 AUTH Logged Off");
             session.Dispose();
 
             Assert.AreEqual(
@@ -249,7 +123,7 @@ namespace PleaseIgnore.IntelMap.Tests {
             var session = Login();
             session.Closed += (sender, e) => Assert.Fail("IntelSession.Closed raised inappropriately");
 
-            var requestBody = CreateRequestMock("203 ALIVE OK 15");
+            var requestBody = TestHelpers.CreateRequestMock(sessionUri, "203 ALIVE OK 15");
             session.KeepAlive();
 
             Assert.AreEqual("session=" + testSession + "&action=ALIVE", requestBody.ToString());
@@ -268,7 +142,7 @@ namespace PleaseIgnore.IntelMap.Tests {
             session.Closed += (sender, e) => Assert.Fail("IntelSession.Closed raised inappropriately");
 
             try {
-                var requestBody = CreateRequestMock("SOMETHING IS NOT RIGHT");
+                var requestBody = TestHelpers.CreateRequestMock(sessionUri, "SOMETHING IS NOT RIGHT");
                 session.KeepAlive();
             } catch {
                 Assert.IsTrue(session.IsConnected);
@@ -288,7 +162,7 @@ namespace PleaseIgnore.IntelMap.Tests {
             session.Closed += (sender, e) => ++closedCount;
 
             try {
-                var requestBody = CreateRequestMock("SOMETHING IS NOT RIGHT");
+                var requestBody = TestHelpers.CreateRequestMock(sessionUri, "SOMETHING IS NOT RIGHT");
                 session.KeepAlive();
             } catch (WebException) {
             }
@@ -296,7 +170,7 @@ namespace PleaseIgnore.IntelMap.Tests {
             Assert.AreEqual(0, closedCount);
 
             try {
-                var requestBody = CreateRequestError();
+                var requestBody = TestHelpers.CreateRequestError<WebException>(sessionUri);
                 session.KeepAlive();
             } catch (WebException) {
             }
@@ -304,7 +178,7 @@ namespace PleaseIgnore.IntelMap.Tests {
             Assert.AreEqual(0, closedCount);
 
             try {
-                var requestBody = CreateRequestMock("SOMETHING IS NOT RIGHT");
+                var requestBody = TestHelpers.CreateRequestMock(sessionUri, "SOMETHING IS NOT RIGHT");
                 session.KeepAlive();
             } catch (WebException) {
             }
@@ -322,7 +196,7 @@ namespace PleaseIgnore.IntelMap.Tests {
             var session = Login();
             session.Closed += (sender, e) => Assert.Fail("IntelSession.Closed raised inappropriately");
 
-            var requestBody = CreateRequestMock("202 INTEL Accepted");
+            var requestBody = TestHelpers.CreateRequestMock(sessionUri, "202 INTEL Accepted");
             session.Report(intelChannel, intelTimestamp, intelString);
 
             Assert.IsTrue(session.IsConnected);
@@ -347,7 +221,7 @@ namespace PleaseIgnore.IntelMap.Tests {
             session.Closed += (sender, e) => Assert.Fail("IntelSession.Closed raised inappropriately");
 
             try {
-                var requestBody = CreateRequestMock("SOMETHING IS NOT RIGHT");
+                var requestBody = TestHelpers.CreateRequestMock(sessionUri, "SOMETHING IS NOT RIGHT");
                 session.Report(intelChannel, intelTimestamp, intelString);
             } catch {
                 Assert.IsTrue(session.IsConnected);
@@ -367,7 +241,7 @@ namespace PleaseIgnore.IntelMap.Tests {
             session.Closed += (sender, e) => ++closedCount;
 
             try {
-                var requestBody = CreateRequestMock("SOMETHING IS NOT RIGHT");
+                var requestBody = TestHelpers.CreateRequestMock(sessionUri, "SOMETHING IS NOT RIGHT");
                 session.Report(intelChannel, intelTimestamp, intelString);
             } catch (WebException) {
             }
@@ -375,7 +249,7 @@ namespace PleaseIgnore.IntelMap.Tests {
             Assert.AreEqual(0, closedCount);
 
             try {
-                var requestBody = CreateRequestError();
+                var requestBody = TestHelpers.CreateRequestError<WebException>(sessionUri);
                 session.Report(intelChannel, intelTimestamp, intelString);
             } catch (WebException) {
             }
@@ -383,7 +257,7 @@ namespace PleaseIgnore.IntelMap.Tests {
             Assert.AreEqual(0, closedCount);
 
             try {
-                var requestBody = CreateRequestMock("SOMETHING IS NOT RIGHT");
+                var requestBody = TestHelpers.CreateRequestMock(sessionUri, "SOMETHING IS NOT RIGHT");
                 session.Report(intelChannel, intelTimestamp, intelString);
             } catch (WebException) {
             }

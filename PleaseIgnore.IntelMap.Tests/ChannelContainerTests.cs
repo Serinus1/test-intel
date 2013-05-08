@@ -13,74 +13,15 @@ using System.Reflection;
 namespace PleaseIgnore.IntelMap.Tests {
     [TestClass]
     public class ChannelContainerTests {
-        const string testScheme = "container-test";
         private readonly static string[] channelList = new string[] { "Channel1", "ChannelA" };
         // For routing into our Mock WebRequest
-        private readonly static Uri channelUri = new Uri(testScheme + "://blah-blah-blah");
-
-        /// <summary>
-        ///     The currently assigned Mock for creating instances of
-        ///     <see cref="WebRequest"/>.
-        /// </summary>
-        private static IWebRequestCreate requestProxy;
-
-        /// <summary>
-        ///     We use a session-test://whatever URI to connect to our mock
-        /// </summary>
-        private class WebRequestCreateProxy : IWebRequestCreate {
-            public WebRequest Create(Uri uri) {
-                return requestProxy.Create(uri);
-            }
-        }
-
-        [ClassInitialize]
-        public static void InitScheme(TestContext context) {
-            WebRequest.RegisterPrefix(testScheme, new WebRequestCreateProxy());
-        }
+        private readonly static Uri channelUri = new Uri(TestHelpers.TestScheme + "://blah-blah-blah");
 
         [TestCleanup]
-        public void TestCleanup() {
-            requestProxy = null;
+        public void Cleanup() {
+            TestHelpers.Cleanup();
         }
 
-        /// <summary>
-        ///     Sets up a proxy of <see cref="IWebRequestCreate"/> that will
-        ///     respond with a specific string as its payload.
-        /// </summary>
-        /// <returns>
-        ///     Instance of <see cref="StringBuilder"/> that will receive the
-        ///     request payload.
-        /// </returns>
-        private StringBuilder CreateRequestMock(string responseText) {
-            var responseBody = Encoding.UTF8.GetBytes(responseText);
-            var responseStream = new MemoryStream(responseBody, false);
-            var responseMock = new Mock<WebResponse>();
-            responseMock.Setup(x => x.GetResponseStream())
-                .Returns(responseStream);
-            var response = responseMock.Object;
-
-            var requestBody = new StringBuilder();
-            var requestStreamMock = new Mock<Stream>();
-            requestStreamMock.Setup(x => x.Write(It.IsAny<byte[]>(), It.IsAny<int>(), It.IsAny<int>()))
-                .Callback((byte[] bytes, int index, int count)
-                    => requestBody.Append(Encoding.UTF8.GetString(bytes, index, count)));
-            var requestStream = requestStreamMock.Object;
-
-            var requestMock = new Mock<WebRequest>();
-            requestMock.Setup(x => x.GetRequestStream())
-                .Returns(requestStream);
-            requestMock.Setup(x => x.GetResponse())
-                .Returns(response);
-            var request = requestMock.Object;
-
-            var proxyMock = new Mock<IWebRequestCreate>(MockBehavior.Strict);
-            proxyMock.Setup(x => x.Create(channelUri))
-                .Returns(requestMock.Object);
-            requestProxy = proxyMock.Object;
-
-            return requestBody;
-        }
-        
         /// <summary>
         ///     Verifies <see cref="IntelChannelContainer"/> initializes
         ///     correctly.
@@ -110,7 +51,7 @@ namespace PleaseIgnore.IntelMap.Tests {
         /// </summary>
         [TestMethod]
         public void GetChannelList() {
-            this.CreateRequestMock(String.Join("\r\n", channelList));
+            TestHelpers.CreateRequestMock(channelUri, String.Join("\r\n", channelList));
             var list = IntelChannelContainer.GetChannelList(channelUri);
             CollectionAssert.AreEqual(channelList, list);
         }
@@ -120,7 +61,7 @@ namespace PleaseIgnore.IntelMap.Tests {
         /// </summary>
         [TestMethod]
         public void Start() {
-            this.CreateRequestMock(String.Join("\r\n", channelList));
+            TestHelpers.CreateRequestMock(channelUri, String.Join("\r\n", channelList));
             var containerMock = new Mock<IntelChannelContainer>(MockBehavior.Loose) {
                 CallBase = true
             };
@@ -148,7 +89,7 @@ namespace PleaseIgnore.IntelMap.Tests {
         /// </summary>
         [TestMethod]
         public void Stop() {
-            this.CreateRequestMock(String.Join("\r\n", channelList));
+            TestHelpers.CreateRequestMock(channelUri, String.Join("\r\n", channelList));
             var containerMock = new Mock<IntelChannelContainer>(MockBehavior.Loose) {
                 CallBase = true
             };
@@ -180,7 +121,7 @@ namespace PleaseIgnore.IntelMap.Tests {
         /// </summary>
         [TestMethod]
         public void Channels() {
-            this.CreateRequestMock(String.Join("\r\n", channelList));
+            TestHelpers.CreateRequestMock(channelUri, String.Join("\r\n", channelList));
 
             var chan1Mock = new Mock<IIntelChannel>(MockBehavior.Strict);
             chan1Mock.SetupProperty(x => x.Site);
@@ -241,7 +182,7 @@ namespace PleaseIgnore.IntelMap.Tests {
         /// </summary>
         [TestMethod]
         public void IntelReported() {
-            this.CreateRequestMock(String.Join("\r\n", channelList));
+            TestHelpers.CreateRequestMock(channelUri, String.Join("\r\n", channelList));
 
             var chan1Mock = new Mock<IIntelChannel>(MockBehavior.Strict);
             chan1Mock.SetupProperty(x => x.Site);
