@@ -30,6 +30,8 @@ namespace PleaseIgnore.IntelMap {
         // Priority list of IntelChannelStatus
         private static readonly IntelStatus[] StatusPriority = new IntelStatus[] {
             IntelStatus.FatalError,
+            IntelStatus.AuthenticationError,
+            IntelStatus.NetworkError,
             IntelStatus.InvalidPath,
             IntelStatus.Active,
             IntelStatus.Waiting
@@ -151,6 +153,33 @@ namespace PleaseIgnore.IntelMap {
             case IntelStatus.InvalidPath:
             case IntelStatus.Starting:
             case IntelStatus.Waiting:
+            case IntelStatus.NetworkError:
+            case IntelStatus.AuthenticationError:
+                return true;
+            default:
+                return false;
+            }
+        }
+
+        /// <summary>
+        ///     Tests if a value of the <see cref="IntelStatus"/>
+        ///     enumeration refers to an "error" state.
+        /// </summary>
+        /// <param name="status">
+        ///     Value of <see cref="IntelStatus"/> to test.
+        /// </param>
+        /// <returns>
+        ///     <see langword="true"/> if the value of <paramref name="status"/>
+        ///     refers to an error state; otherwise, 
+        ///     <see langword="false"/> if it's in a stopped state.
+        /// </returns>
+        [Pure]
+        public static bool IsError(this IntelStatus status) {
+            switch (status) {
+            case IntelStatus.NetworkError:
+            case IntelStatus.AuthenticationError:
+            case IntelStatus.FatalError:
+            case IntelStatus.InvalidPath:
                 return true;
             default:
                 return false;

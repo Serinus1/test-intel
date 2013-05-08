@@ -16,7 +16,7 @@ namespace PleaseIgnore.IntelMap {
     ///     entries to the TEST Intel Map for distribution.
     /// </summary>
     [DefaultEvent("IntelReported")]
-    public sealed class IntelReporter : Component, INotifyPropertyChanged {
+    public class IntelReporter : Component, INotifyPropertyChanged {
         // The default value for RetryAuthenticationPeriod
         private const string defaultRetryAuthenticationPeriod = "01:00:00";
         // The default value for ChannelIdlePeriod
@@ -117,15 +117,16 @@ namespace PleaseIgnore.IntelMap {
         ///     <see cref="IntelReporter"/>.
         /// </summary>
         public IntelStatus Status {
-            get { return this.status; }
+            get {
+                return IntelExtensions.Combine(this.status, this.channels.Status);
+            }
             private set {
-                Contract.Ensures(Status == value);
                 if (this.status != value) {
                     var running = this.IsRunning;
                     this.status = value;
-                    this.OnPropertyChanged(new PropertyChangedEventArgs("Status"));
+                    this.OnPropertyChanged("Status");
                     if (this.IsRunning != running) {
-                        this.OnPropertyChanged(new PropertyChangedEventArgs("IsRunning"));
+                        this.OnPropertyChanged("IsRunning");
                     }
                 }
             }
@@ -159,9 +160,14 @@ namespace PleaseIgnore.IntelMap {
         /// </summary>
         [DefaultValue((object)null)]
         public ISynchronizeInvoke SynchronizingObject {
-            // TODO: Raise PropertyChanged
             get { return this.synchronizingObject; }
-            set { this.synchronizingObject = value; }
+            set {
+                Contract.Requires<InvalidOperationException>(!this.IsRunning);
+                if (this.synchronizingObject != value) {
+                    this.synchronizingObject = value;
+                    this.OnPropertyChanged("SynchronizingObject");
+                }
+            }
         }
 
         /// <summary>
@@ -196,7 +202,7 @@ namespace PleaseIgnore.IntelMap {
                 if (this.username != value) {
                     this.username = value;
                     this.lastAuthFailure = null;
-                    this.OnPropertyChanged(new PropertyChangedEventArgs("Username"));
+                    this.OnPropertyChanged("Username");
                 }
             }
         }
@@ -221,7 +227,7 @@ namespace PleaseIgnore.IntelMap {
                 if (this.passwordHash != value) {
                     this.passwordHash = value;
                     this.lastAuthFailure = null;
-                    this.OnPropertyChanged(new PropertyChangedEventArgs("PasswordHash"));
+                    this.OnPropertyChanged("PasswordHash");
                 }
             }
         }
@@ -274,7 +280,10 @@ namespace PleaseIgnore.IntelMap {
                     value > TimeSpan.Zero,
                     "value");
                 Contract.Requires<InvalidOperationException>(!IsRunning);
-                this.keepAlivePeriod = value;
+                if (this.keepAlivePeriod != value) {
+                    this.keepAlivePeriod = value;
+                    this.OnPropertyChanged("KeepAliveInterval");
+                }
             }
         }
 
@@ -294,7 +303,10 @@ namespace PleaseIgnore.IntelMap {
                     value > TimeSpan.Zero,
                     "value");
                 Contract.Requires<InvalidOperationException>(!IsRunning);
-                this.sessionTimeout = value;
+                if (this.sessionTimeout != value) {
+                    this.sessionTimeout = value;
+                    this.OnPropertyChanged("SessionTimeout");
+                }
             }
         }
 
@@ -320,7 +332,11 @@ namespace PleaseIgnore.IntelMap {
                     value > TimeSpan.Zero,
                     "value");
                 Contract.Requires<InvalidOperationException>(!IsRunning);
-                this.authRetryTimeout = value;
+                Contract.Ensures(this.AuthenticationRetryTimeout == value);
+                if (this.authRetryTimeout != value) {
+                    this.authRetryTimeout = value;
+                    this.OnPropertyChanged("AuthenticationRetryTimeout");
+                }
             }
         }
 
@@ -331,12 +347,30 @@ namespace PleaseIgnore.IntelMap {
         /// </summary>
         public void Start() {
             Contract.Requires<ObjectDisposedException>(
-                    Status != IntelStatus.Disposed,
+                    this.Status != IntelStatus.Disposed,
                     null);
             Contract.Requires<InvalidOperationException>(
-                    Status != IntelStatus.FatalError);
-            Contract.Ensures(IsRunning);
-            this.channels.Start();
+                    this.Status != IntelStatus.FatalError);
+            Contract.Ensures(this.IsRunning);
+
+            lock (this.syncRoot) {
+                try {
+                    if (this.Status == IntelStatus.Stopped) {
+                        this.Status = IntelStatus.Starting;
+                        this.channels.Start();
+                        try {
+                            this.GetSession(true);
+                        } catch (WebException) {
+                            this.Status = IntelStatus.NetworkError;
+                        } catch (AuthenticationException) {
+                            this.Status = IntelStatus.AuthenticationError;
+                        }
+                    }
+                } catch {
+                    this.Status = IntelStatus.FatalError;
+                    throw;
+                }
+            }
         }
 
         /// <summary>
@@ -345,18 +379,50 @@ namespace PleaseIgnore.IntelMap {
         ///     events will no longer be raised.
         /// </summary>
         public void Stop() {
-            Contract.Ensures(!IsRunning);
-            this.channels.Stop();
+            Contract.Ensures(!this.IsRunning);
+
+            lock (this.syncRoot) {
+                try {
+                    if (this.IsRunning) {
+                        this.Status = IntelStatus.Stopping;
+                        if (this.session != null) {
+                            this.session.Dispose();
+                            this.session = null;
+                        }
+                        this.channels.Stop();
+                        this.Status = IntelStatus.Stopped;
+                    }
+                } catch {
+                    this.Status = IntelStatus.FatalError;
+                    throw;
+                }
+            }
         }
 
         /// <inheritdoc/>
         protected override void Dispose(bool disposing) {
             if (disposing) {
-                this.Status = IntelStatus.Disposing;
-                this.channels.Dispose();
-                this.Status = IntelStatus.Disposed;
+                // Clean up
+                lock (this.syncRoot) {
+                    try {
+                        if (this.Status != IntelStatus.Disposed) {
+                            this.Status = IntelStatus.Disposing;
+                            if (this.session != null) {
+                                this.session.Dispose();
+                                this.session = null;
+                            }
+                            this.channels.Dispose();
+                        }
+                    } finally {
+                        this.Status = IntelStatus.Disposed;
+                        base.Dispose(disposing);
+                    }
+                }
+            } else {
+                // Cannot safely clean up
+                this.status = IntelStatus.Disposed;
+                this.Dispose(disposing);
             }
-            base.Dispose(disposing);
         }
 
         /// <summary>
@@ -386,9 +452,15 @@ namespace PleaseIgnore.IntelMap {
                 this.timerSession.Change(this.keepAlivePeriod, this.keepAlivePeriod);
                 this.lastIntel = DateTime.UtcNow;
                 this.Status = IntelStatus.Active;
-                this.OnPropertyChanged(new PropertyChangedEventArgs("Users"));
+                this.OnPropertyChanged("Users");
                 return this.session;
+            } else if (session != null) {
+                // Session has expired
+                this.session = null;
+                timerSession.Change(Timeout.Infinite, Timeout.Infinite);
+                return null;
             } else {
+                // No session open
                 return null;
             }
         }
@@ -415,19 +487,20 @@ namespace PleaseIgnore.IntelMap {
                     var session = this.GetSession(true);
                     if (session.Report(e)) {
                         ++this.IntelSent;
-                        this.OnPropertyChanged(new PropertyChangedEventArgs("IntelSent"));
+                        this.OnPropertyChanged("IntelSent");
                     } else {
                         ++this.IntelDropped;
-                        this.OnPropertyChanged(new PropertyChangedEventArgs("IntelDropped"));
+                        this.OnPropertyChanged("IntelDropped");
                     }
                 }
             } catch (WebException) {
-                // TODO: Change Status
+                this.Status = IntelStatus.NetworkError;
                 ++this.IntelDropped;
-                this.OnPropertyChanged(new PropertyChangedEventArgs("IntelDropped"));
+                this.OnPropertyChanged("IntelDropped");
             } catch (AuthenticationException) {
+                this.Status = IntelStatus.AuthenticationError;
                 ++this.IntelDropped;
-                this.OnPropertyChanged(new PropertyChangedEventArgs("IntelDropped"));
+                this.OnPropertyChanged("IntelDropped");
             }
         }
 
@@ -462,7 +535,7 @@ namespace PleaseIgnore.IntelMap {
                     // Session has expired
                     session.Dispose();
                     this.Status = IntelStatus.Waiting;
-                    this.OnPropertyChanged(new PropertyChangedEventArgs("Users"));
+                    this.OnPropertyChanged("Users");
                 } else {
                     // Maintain the session
                     try {
@@ -471,10 +544,11 @@ namespace PleaseIgnore.IntelMap {
                             this.Status = IntelStatus.Active;
                         }
                         if (users != session.Users) {
-                            this.OnPropertyChanged(new PropertyChangedEventArgs("Users"));
+                            this.OnPropertyChanged("Users");
                         }
                     } catch (WebException) {
-                        // TODO: Record status
+                        // TODO: Change status
+                        this.Status = IntelStatus.NetworkError;
                     }
                 }
             }
@@ -493,6 +567,11 @@ namespace PleaseIgnore.IntelMap {
         /// </summary>
         private void channels_PropertyChanged(object sender, PropertyChangedEventArgs e) {
             Contract.Requires(e != null);
+            if ((e.PropertyName == "ChannelUpdateInterval") || (e.PropertyName == "Channels")
+                    || (e.PropertyName == "Status") || (e.PropertyName == "Path")) {
+                // Property we forward
+                this.OnPropertyChanged(e);
+            }
         }
 
         /// <summary>
@@ -500,11 +579,21 @@ namespace PleaseIgnore.IntelMap {
         /// </summary>
         private void timer_Callback(object state) {
             lock (this.syncRoot) {
-                this.OnKeepAlive();
-                if (!IsRunning || !this.GetSession(false).IsConnected) {
+                if (this.IsRunning) {
+                    this.OnKeepAlive();
+                }
+                if (!this.IsRunning || !this.GetSession(false).IsConnected) {
                     this.timerSession.Change(Timeout.Infinite, Timeout.Infinite);
                 }
             }
+        }
+
+        /// <summary>
+        ///     Helper function to automatically construct a <see cref="PropertyChangedEventArgs"/>
+        ///     for <see cref="OnPropertyChanged(PropertyChangedEventArgs)"/>.
+        /// </summary>
+        private void OnPropertyChanged(string propertyName) {
+            this.OnPropertyChanged(new PropertyChangedEventArgs(propertyName));
         }
 
 

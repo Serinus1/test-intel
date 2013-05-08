@@ -158,7 +158,6 @@ namespace PleaseIgnore.IntelMap {
                         !value.HasValue || (value > TimeSpan.Zero),
                         "value");
                 Contract.Ensures(ChannelUpdateInterval == value);
-
                 if (this.updateInterval != value) {
                     this.updateInterval = value;
                     this.OnPropertyChanged(new PropertyChangedEventArgs("ChannelUpdatePeriod"));

@@ -51,6 +51,16 @@ namespace PleaseIgnore.IntelMap {
         ///     A fatal error has occured and the <see cref="IntelChannel"/>
         ///     can no longer operate.
         /// </summary>
-        FatalError = 8
+        FatalError = 8,
+        /// <summary>
+        ///     A network or server error is preventing communications with
+        ///     the intel server
+        /// </summary>
+        NetworkError = 9,
+        /// <summary>
+        ///     The intel server rejected our authentication request.  Will
+        ///     retry periodically.
+        /// </summary>
+        AuthenticationError = 10
     }
 }
