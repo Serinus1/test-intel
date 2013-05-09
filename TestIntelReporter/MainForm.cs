@@ -12,6 +12,7 @@ using System.Net;
 using System.Security.Authentication;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Threading;
 
 namespace TestIntelReporter {
     public partial class MainForm : Form {
@@ -85,7 +86,7 @@ namespace TestIntelReporter {
         ///     Starts up the intel reporting component.
         /// </summary>
         protected override void OnShown(EventArgs e) {
-            intelReporter.Start();
+            ThreadPool.QueueUserWorkItem((state) => this.intelReporter.Start());
             this.UpdateStatus();
             base.OnShown(e);
         }
@@ -170,6 +171,10 @@ namespace TestIntelReporter {
         ///     Performs an UI manipulations required for GUI depicted status.
         /// </summary>
         private void UpdateStatus() {
+            if (this.InvokeRequired) {
+                return;
+            }
+
             // Simple updates
             labelCounts.Text = String.Join(
                 Resources.Stats_Join,
@@ -210,23 +215,23 @@ namespace TestIntelReporter {
             labelStatusString.Text = String.Format(
                 statusString,
                 status,
-                intelReporter.LogDirectory);
+                intelReporter.Path);
 
             // Status changes
             if (this.oldStatus != status) {
                 this.oldStatus = status;
                 switch (status) {
-                case IntelStatus.Connected:
+                case IntelStatus.Active:
                     // Normal operation
                     this.ShowChannelList();
                     break;
-                case IntelStatus.Idle:
+                case IntelStatus.Waiting:
                     // Normal operation
                     this.ShowStatus(
                         Resources.IntelStatus_IdleTitle,
                         Resources.IntelStatus_Idle);
                     break;
-                case IntelStatus.AuthenticationFailure:
+                case IntelStatus.AuthenticationError:
                     // Doesn't like our password
                     if (!this.configError) {
                         this.ShowAuthError(
@@ -234,7 +239,7 @@ namespace TestIntelReporter {
                             Resources.IntelStatus_Auth);
                     }
                     break;
-                case IntelStatus.MissingDirectory:
+                case IntelStatus.InvalidPath:
                     // Couldn't find the log directory
                     this.ShowStatus(
                         Resources.IntelStatus_MissingTitle,
@@ -246,9 +251,7 @@ namespace TestIntelReporter {
                         Resources.IntelStatus_ErrorTitle,
                         Resources.IntelStatus_Error);
                     break;
-                case IntelStatus.Initializing:
-                case IntelStatus.Stopped:
-                case IntelStatus.FatalError:
+                default:
                     // This represents a pretty critical failure of the
                     // system, so it gets priority over everything, including
                     // user entry.
@@ -444,48 +447,39 @@ namespace TestIntelReporter {
             textBoxPassword.Enabled = false;
             buttonLogin.Enabled = false;
 
-            intelReporter.BeginAuthenticate(
-                textBoxUsername.Text.Trim(),
-                textBoxPassword.Text.Trim(),
-                intelReporter_onAuthenticateComplete,
-                null);
-        }
-
-        /// <summary>
-        ///     Login attempt has completed.  Display the results.
-        /// </summary>
-        private void intelReporter_onAuthenticateComplete(IAsyncResult asyncResult) {
-            // TODO: Let IntelReporter handle the invoking for us
-            if (this.InvokeRequired) {
-                this.BeginInvoke(
-                    new AsyncCallback(intelReporter_onAuthenticateComplete),
-                    asyncResult);
-                return;
-            }
-
-            // Hide the authentication dialog if it was successful; otherwise,
-            // display the appropriate error.
-            try {
-                intelReporter.EndAuthenticate(asyncResult);
-                panelAuthentication.Visible = false;
-                
-                this.configError = false;
-                settings.Username = intelReporter.Username;
-                settings.PasswordHash = intelReporter.PasswordHash;
-                settings.Save();
-            } catch (WebException) {
-                this.ShowAuthError(
-                    Resources.IntelStatus_ErrorTitle,
-                    Resources.Authenticate_Network);
-            } catch (IntelException) {
-                this.ShowAuthError(
-                    Resources.IntelStatus_ErrorTitle,
-                    Resources.Authenticate_Network);
-            } catch (AuthenticationException) {
-                this.ShowAuthError(
-                    Resources.IntelStatus_AuthTitle,
-                    Resources.Authenticate_Auth);
-            }
+            var username = textBoxUsername.Text.Trim();
+            var password = textBoxPassword.Text.Trim();
+            ThreadPool.QueueUserWorkItem((state) => {
+                try {
+                    intelReporter.Authenticate(username, password);
+                    this.BeginInvoke(new Action(() => {
+                        this.panelAuthentication.Visible = false;
+                        this.configError = false;
+                        this.settings.Username = intelReporter.Username;
+                        this.settings.PasswordHash = intelReporter.PasswordHash;
+                        this.settings.Save();
+                    }));
+                } catch (WebException) {
+                    this.BeginInvoke(new Action(() => {
+                        this.ShowAuthError(
+                            Resources.IntelStatus_ErrorTitle,
+                            Resources.Authenticate_Network);
+                    }));
+                } catch (AuthenticationException) {
+                    this.BeginInvoke(new Action(() => {
+                        this.ShowAuthError(
+                            Resources.IntelStatus_AuthTitle,
+                            Resources.Authenticate_Auth);
+                    }));
+                } catch {
+                    this.BeginInvoke(new Action(() => {
+                        panelAuthentication.Visible = false;
+                        this.ShowStatus(
+                            Resources.IntelStatus_FatalTitle,
+                            Resources.IntelStatus_Fatal);
+                    }));
+                }
+            });
         }
 
         /// <summary>

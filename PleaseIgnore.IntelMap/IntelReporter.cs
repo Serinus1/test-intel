@@ -56,7 +56,7 @@ namespace PleaseIgnore.IntelMap {
             CultureInfo.InvariantCulture);
         // Field backing the ServiceUri property
         [ContractPublicPropertyName("ServiceUri")]
-        private Uri serviceUri = IntelExtensions.ChannelsUrl;
+        private Uri serviceUri = IntelExtensions.ReportUrl;
         // The session used to contact the intel server
         private IntelSession session;
         // Field backing the Username property
@@ -88,6 +88,7 @@ namespace PleaseIgnore.IntelMap {
             Contract.Ensures(!IsRunning);
             this.channels = new IntelChannelContainer();
             this.channels.IntelReported += channels_IntelReported;
+            this.channels.PropertyChanged += channels_PropertyChanged;
             this.timerSession = new Timer(this.timer_Callback);
 
             if (container != null) {
@@ -535,7 +536,7 @@ namespace PleaseIgnore.IntelMap {
             if (handler != null) {
                 var sync = this.synchronizingObject;
                 WaitCallback callback = (state) => handler(this, e);
-                if (sync != null) {
+                if ((sync != null) && sync.InvokeRequired) {
                     sync.BeginInvoke(callback, new object[] { null });
                 } else {
                     ThreadPool.QueueUserWorkItem(callback);
@@ -577,7 +578,7 @@ namespace PleaseIgnore.IntelMap {
             if (handler != null) {
                 var sync = this.synchronizingObject;
                 WaitCallback callback = (state) => handler(this, e);
-                if (sync != null) {
+                if ((sync != null) && sync.InvokeRequired) {
                     sync.BeginInvoke(callback, new object[] { null });
                 } else {
                     ThreadPool.QueueUserWorkItem(callback);

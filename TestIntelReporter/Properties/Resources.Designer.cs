@@ -279,47 +279,29 @@ namespace TestIntelReporter.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Server rejected the username and password..
-        /// </summary>
-        internal static string StatusString_AuthenticationFailure {
-            get {
-                return ResourceManager.GetString("StatusString_AuthenticationFailure", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Connected to the Test Alliance Intel Map..
         /// </summary>
-        internal static string StatusString_Connected {
+        internal static string StatusString_Active {
             get {
-                return ResourceManager.GetString("StatusString_Connected", resourceCulture);
+                return ResourceManager.GetString("StatusString_Active", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Waiting for EVE online to start..
+        ///   Looks up a localized string similar to Server rejected the username and password..
         /// </summary>
-        internal static string StatusString_Idle {
+        internal static string StatusString_AuthenticationError {
             get {
-                return ResourceManager.GetString("StatusString_Idle", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Reporting client is still initializing..
-        /// </summary>
-        internal static string StatusString_Initializing {
-            get {
-                return ResourceManager.GetString("StatusString_Initializing", resourceCulture);
+                return ResourceManager.GetString("StatusString_AuthenticationError", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Can not locate the chat log (tried {1}).
         /// </summary>
-        internal static string StatusString_MissingDirectory {
+        internal static string StatusString_InvalidPath {
             get {
-                return ResourceManager.GetString("StatusString_MissingDirectory", resourceCulture);
+                return ResourceManager.GetString("StatusString_InvalidPath", resourceCulture);
             }
         }
         
@@ -333,11 +315,29 @@ namespace TestIntelReporter.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Reporting client is still initializing..
+        /// </summary>
+        internal static string StatusString_Starting {
+            get {
+                return ResourceManager.GetString("StatusString_Starting", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Client is in an unsupported state ({0}).
         /// </summary>
         internal static string StatusString_Unknown {
             get {
                 return ResourceManager.GetString("StatusString_Unknown", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Waiting for EVE online to start..
+        /// </summary>
+        internal static string StatusString_Waiting {
+            get {
+                return ResourceManager.GetString("StatusString_Waiting", resourceCulture);
             }
         }
         

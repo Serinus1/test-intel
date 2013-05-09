@@ -63,7 +63,6 @@
             this.tableLayoutPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxDino)).BeginInit();
             this.panelStatus.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.intelReporter)).BeginInit();
             this.panelChannels.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -255,7 +254,6 @@
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxDino)).EndInit();
             this.panelStatus.ResumeLayout(false);
             this.panelStatus.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.intelReporter)).EndInit();
             this.panelChannels.ResumeLayout(false);
             this.panelChannels.PerformLayout();
             this.ResumeLayout(false);

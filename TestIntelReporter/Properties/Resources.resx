@@ -190,26 +190,26 @@
   <data name="Stats_Join" xml:space="preserve">
     <value> // </value>
   </data>
-  <data name="StatusString_AuthenticationFailure" xml:space="preserve">
-    <value>Server rejected the username and password.</value>
-  </data>
-  <data name="StatusString_Connected" xml:space="preserve">
+  <data name="StatusString_Active" xml:space="preserve">
     <value>Connected to the Test Alliance Intel Map.</value>
   </data>
-  <data name="StatusString_Idle" xml:space="preserve">
-    <value>Waiting for EVE online to start.</value>
+  <data name="StatusString_AuthenticationError" xml:space="preserve">
+    <value>Server rejected the username and password.</value>
   </data>
-  <data name="StatusString_Initializing" xml:space="preserve">
-    <value>Reporting client is still initializing.</value>
-  </data>
-  <data name="StatusString_MissingDirectory" xml:space="preserve">
+  <data name="StatusString_InvalidPath" xml:space="preserve">
     <value>Can not locate the chat log (tried {1})</value>
   </data>
   <data name="StatusString_NetworkError" xml:space="preserve">
     <value>Error communicating with server.</value>
   </data>
+  <data name="StatusString_Starting" xml:space="preserve">
+    <value>Reporting client is still initializing.</value>
+  </data>
   <data name="StatusString_Unknown" xml:space="preserve">
     <value>Client is in an unsupported state ({0})</value>
+  </data>
+  <data name="StatusString_Waiting" xml:space="preserve">
+    <value>Waiting for EVE online to start.</value>
   </data>
   <data name="UserCount_Many" xml:space="preserve">
     <value>{0:N0} People Reporting</value>
