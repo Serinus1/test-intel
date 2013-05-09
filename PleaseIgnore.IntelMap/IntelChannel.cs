@@ -67,7 +67,7 @@ namespace PleaseIgnore.IntelMap {
     /// </remarks>
     /// <threadsafety static="true" instance="true"/>
     [DefaultEvent("IntelReported"), DefaultProperty("Name")]
-    public class IntelChannel : Component, IIntelChannel {
+    public class IntelChannel : Component {
         // Internal members should be referenced by any other class within
         // PleaseIgnore.IntelMap.  They are made internal purely for the
         // benefit of implementing unit tests.
@@ -195,9 +195,11 @@ namespace PleaseIgnore.IntelMap {
         /// </summary>
         public string Path {
             get {
+                Contract.Ensures(!String.IsNullOrEmpty(Contract.Result<string>()));
                 return this.logDirectory;
             }
             set {
+                Contract.Requires<ArgumentException>(!String.IsNullOrEmpty(value));
                 lock (this.syncRoot) {
                     if (value != this.logDirectory) {
                         this.logDirectory = value;
@@ -227,6 +229,8 @@ namespace PleaseIgnore.IntelMap {
         [DefaultValue((string)null)]
         public string Name {
             get {
+                Contract.Ensures(!String.IsNullOrEmpty(Contract.Result<string>())
+                        || !this.IsRunning);
                 var channelName = this.channelFileName;
                 var site = this.Site;
                 if (!String.IsNullOrEmpty(channelName)) {
@@ -262,7 +266,7 @@ namespace PleaseIgnore.IntelMap {
         ///     Gets the current operational status of the
         ///     <see cref="IntelChannel"/> object.
         /// </summary>
-        public IntelStatus Status {
+        public virtual IntelStatus Status {
             get {
                 return this.status;
             }
@@ -281,15 +285,7 @@ namespace PleaseIgnore.IntelMap {
         ///     Gets a value indicating whether the <see cref="IntelChannel"/>
         ///     is currently running and watching for log entries.
         /// </summary>
-        public bool IsRunning {
-            get {
-                var status = this.status;
-                return (status == IntelStatus.Active)
-                    || (status == IntelStatus.InvalidPath)
-                    || (status == IntelStatus.Starting)
-                    || (status == IntelStatus.Waiting);
-            }
-        }
+        public bool IsRunning { get { return this.Status.IsRunning(); } }
 
         /// <summary>
         ///     Gets or sets the time between log entries before declaring
@@ -319,7 +315,15 @@ namespace PleaseIgnore.IntelMap {
         ///     Initiate the acquisition of log entries from the EVE chat logs. This
         ///     method enables <see cref="IntelReported"/> events.
         /// </summary>
-        public void Start() {
+        public virtual void Start() {
+            Contract.Requires<ObjectDisposedException>(
+                Status != IntelStatus.Disposed,
+                null);
+            Contract.Requires<InvalidOperationException>(
+                !String.IsNullOrEmpty(Name));
+            Contract.Ensures(Status != IntelStatus.Stopped);
+            Contract.Ensures(IsRunning);
+
             lock (this.syncRoot) {
                 if (this.status == IntelStatus.Stopped) {
                     this.Status = IntelStatus.Starting;
@@ -332,8 +336,12 @@ namespace PleaseIgnore.IntelMap {
         /// <summary>
         ///     Stops the <see cref="IntelChannel"/> from providing location data and events.
         /// </summary>
-        public void Stop() {
-            lock(this.syncRoot) {
+        public virtual void Stop() {
+            Contract.Ensures((Status == IntelStatus.Stopped)
+                || (Status == IntelStatus.Disposed));
+            Contract.Ensures(!IsRunning);
+
+            lock (this.syncRoot) {
                 if ((this.status != IntelStatus.Stopped)
                         || (this.status == IntelStatus.Disposed)) {
                     this.Status = IntelStatus.Stopping;

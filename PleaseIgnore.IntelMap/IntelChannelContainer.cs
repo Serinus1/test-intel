@@ -29,8 +29,8 @@ namespace PleaseIgnore.IntelMap {
         // Thread Synchronization object
         private readonly object syncRoot = new object();
         // List of active IntelChannel objects
-        private readonly List<IIntelChannel> channels
-            = new List<IIntelChannel>();
+        private readonly List<IntelChannel> channels
+            = new List<IntelChannel>();
         // Timer object used to fetch updated channel lists
         private readonly Timer updateTimer;
         // The current channel processing state
@@ -341,12 +341,12 @@ namespace PleaseIgnore.IntelMap {
         ///     <see cref="IntelChannel.Site"/> must be initialzied to a proper
         ///     linking instance of <see cref="ISite"/>.
         /// </remarks>
-        protected virtual IIntelChannel CreateChannel(string channelName) {
+        protected virtual IntelChannel CreateChannel(string channelName) {
             Contract.Requires<ArgumentException>(!String.IsNullOrEmpty(channelName));
-            Contract.Ensures(Contract.Result<IIntelChannel>() != null);
-            Contract.Ensures(Contract.Result<IIntelChannel>().Site != null);
-            Contract.Ensures(Contract.Result<IIntelChannel>().Site.Container == this);
-            Contract.Ensures(Contract.Result<IIntelChannel>().Name == channelName);
+            Contract.Ensures(Contract.Result<IntelChannel>() != null);
+            Contract.Ensures(Contract.Result<IntelChannel>().Site != null);
+            Contract.Ensures(Contract.Result<IntelChannel>().Site.Container == this);
+            Contract.Ensures(Contract.Result<IntelChannel>().Name == channelName);
 
             var channel = new IntelChannel();
             channel.Site = new ChannelSite(this, channel, channelName);

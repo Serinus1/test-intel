@@ -65,6 +65,7 @@ namespace PleaseIgnore.IntelMap.Tests {
                     Assert.AreEqual(2, reporter.Channels.Count);
                     Assert.IsNotNull(reporter.Channels.Single(x => x.Name == channelList[0]));
                     Assert.IsNotNull(reporter.Channels.Single(x => x.Name == channelList[1]));
+                    Assert.IsTrue(reporter.Channels.All(x => x.IsRunning));
 
                     TestHelpers.Cleanup();
                     requestBody = TestHelpers.CreateRequestMock(serviceUri, "201 AUTH Logged Off");
@@ -74,6 +75,7 @@ namespace PleaseIgnore.IntelMap.Tests {
                     Assert.IsFalse(reporter.IsRunning);
                     Assert.IsTrue(requestBody.Length > 0);
                     Assert.AreEqual(IntelStatus.Stopped, reporter.Status);
+                    Assert.IsTrue(reporter.Channels.All(x => !x.IsRunning));
                 }
             }
         }
@@ -91,7 +93,7 @@ namespace PleaseIgnore.IntelMap.Tests {
                     reporter.PasswordHash = "password";
 
                     reporter.ChannelListUri = channelListUri.OriginalString;
-                    TestHelpers.CreateRequestMock(channelListUri, String.Join("\r\n", channelList));
+                    TestHelpers.CreateRequestError<WebException>(channelListUri);
 
                     reporter.ServiceUri = serviceUri.OriginalString;
                     var requestBody = TestHelpers.CreateRequestError<WebException>(serviceUri);
@@ -152,6 +154,34 @@ namespace PleaseIgnore.IntelMap.Tests {
 
                     Assert.IsTrue(reporter.IsRunning);
                     Assert.AreEqual(IntelStatus.AuthenticationError, reporter.Status);
+                }
+            }
+        }
+
+        /// <summary>
+        ///     Verifies that <see cref="IntelReporter"/> correctly raises the
+        ///     <see cref="IntelReporter.IntelReported"/> event.
+        /// </summary>
+        [TestMethod]
+        public void IntelReported() {
+            using (var testDir = new TempDirectory()) {
+                using (var reporter = new IntelReporter()) {
+                    reporter.Path = testDir.FullName;
+                    IntelEventArgs received = null;
+                    reporter.IntelReported += (sender, e) => received = e;
+
+                    reporter.ChannelListUri = channelListUri.OriginalString;
+                    TestHelpers.CreateRequestMock(channelListUri, String.Join("\r\n", channelList));
+
+
+                    reporter.Start();
+                    var testEvent = new IntelEventArgs(channelList[0], DateTime.UtcNow, "Test Message");
+                    reporter.Channels.First().OnIntelReported(testEvent);
+                    Thread.Sleep(1000);
+
+                    Assert.IsTrue(reporter.IsRunning);
+                    Assert.AreEqual(IntelStatus.AuthenticationError, reporter.Status);
+                    Assert.AreEqual(received, testEvent);
                 }
             }
         }

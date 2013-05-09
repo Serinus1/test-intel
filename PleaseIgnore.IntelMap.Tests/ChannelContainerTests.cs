@@ -123,28 +123,24 @@ namespace PleaseIgnore.IntelMap.Tests {
         public void Channels() {
             TestHelpers.CreateRequestMock(channelUri, String.Join("\r\n", channelList));
 
-            var chan1Mock = new Mock<IIntelChannel>(MockBehavior.Strict);
-            chan1Mock.SetupProperty(x => x.Site);
+            var chan1Mock = new Mock<IntelChannel>(MockBehavior.Loose);
+            chan1Mock.Object.Name = channelList[0];
             chan1Mock.SetupGet(x => x.Status).Returns(IntelStatus.Waiting);
-            chan1Mock.SetupGet(x => x.Name).Returns(channelList[0]);
-            chan1Mock.Setup(x => x.Start()).Verifiable();
-            var chan2Mock = new Mock<IIntelChannel>(MockBehavior.Strict);
-            chan2Mock.SetupProperty(x => x.Site);
+            var chan2Mock = new Mock<IntelChannel>(MockBehavior.Loose);
+            chan2Mock.Object.Name = channelList[1];
             chan2Mock.SetupGet(x => x.Status).Returns(IntelStatus.Active);
-            chan2Mock.SetupGet(x => x.Name).Returns(channelList[1]);
-            chan2Mock.Setup(x => x.Start()).Verifiable();
 
             var containerMock = new Mock<IntelChannelContainer>(MockBehavior.Loose) {
                 CallBase = true
             };
             containerMock.Protected()
-                .Setup<IIntelChannel>("CreateChannel", ItExpr.IsAny<string>())
+                .Setup<IntelChannel>("CreateChannel", ItExpr.IsAny<string>())
                 .Throws<AssertFailedException>();
             containerMock.Protected()
-                .Setup<IIntelChannel>("CreateChannel", channelList[0])
+                .Setup<IntelChannel>("CreateChannel", channelList[0])
                 .Returns(chan1Mock.Object);
             containerMock.Protected()
-                .Setup<IIntelChannel>("CreateChannel", channelList[1])
+                .Setup<IntelChannel>("CreateChannel", channelList[1])
                 .Returns(chan2Mock.Object);
 
             using (var container = containerMock.Object) {
@@ -184,22 +180,18 @@ namespace PleaseIgnore.IntelMap.Tests {
         public void IntelReported() {
             TestHelpers.CreateRequestMock(channelUri, String.Join("\r\n", channelList));
 
-            var chan1Mock = new Mock<IIntelChannel>(MockBehavior.Strict);
-            chan1Mock.SetupProperty(x => x.Site);
+            var chan1Mock = new Mock<IntelChannel>(MockBehavior.Loose);
+            chan1Mock.Object.Name = channelList[0];
             chan1Mock.SetupGet(x => x.Status).Returns(IntelStatus.Waiting);
-            chan1Mock.SetupGet(x => x.Name).Returns(channelList[0]);
-            chan1Mock.Setup(x => x.Start()).Verifiable();
-            var chan2Mock = new Mock<IIntelChannel>(MockBehavior.Strict);
-            chan2Mock.SetupProperty(x => x.Site);
+            var chan2Mock = new Mock<IntelChannel>(MockBehavior.Loose);
+            chan2Mock.Object.Name = channelList[0];
             chan2Mock.SetupGet(x => x.Status).Returns(IntelStatus.Active);
-            chan2Mock.SetupGet(x => x.Name).Returns(channelList[1]);
-            chan2Mock.Setup(x => x.Start()).Verifiable();
 
             var containerMock = new Mock<IntelChannelContainer>(MockBehavior.Loose) {
                 CallBase = true
             };
             containerMock.Protected()
-                .Setup<IIntelChannel>("CreateChannel", channelList[0])
+                .Setup<IntelChannel>("CreateChannel", channelList[0])
                 .Returns(delegate() {
                     var obj = chan1Mock.Object;
                     var method = typeof(IntelChannelContainer)
@@ -209,7 +201,7 @@ namespace PleaseIgnore.IntelMap.Tests {
                     return obj;
                 });
             containerMock.Protected()
-                .Setup<IIntelChannel>("CreateChannel", channelList[1])
+                .Setup<IntelChannel>("CreateChannel", channelList[1])
                 .Returns(delegate() {
                     var obj = chan2Mock.Object;
                     var method = typeof(IntelChannelContainer)
@@ -245,9 +237,9 @@ namespace PleaseIgnore.IntelMap.Tests {
                 container.Start();
                 Thread.Sleep(100);
 
-                chan1Mock.Raise(x => x.IntelReported += null, e1);
-                chan2Mock.Raise(x => x.IntelReported += null, e2);
-                chan1Mock.Raise(x => x.IntelReported += null, e3);
+                chan1Mock.Object.OnIntelReported(e1);
+                chan2Mock.Object.OnIntelReported(e2);
+                chan1Mock.Object.OnIntelReported(e3);
                 Thread.Sleep(100);
 
                 Assert.AreEqual(IntelStatus.Active, container.Status);

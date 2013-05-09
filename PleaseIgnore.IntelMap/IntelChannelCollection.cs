@@ -9,7 +9,7 @@ namespace PleaseIgnore.IntelMap {
     ///     Specialization of <see cref="System.ComponentModel.ComponentCollection"/>
     ///     providing a list of <see cref="IntelChannel"/>.
     /// </summary>
-    public class IntelChannelCollection : ReadOnlyCollection<IIntelChannel> {
+    public class IntelChannelCollection : ReadOnlyCollection<IntelChannel> {
         /// <summary>
         ///     Initializes a new instance of <see cref="IntelChannelCollection"/>.
         /// </summary>
@@ -21,7 +21,7 @@ namespace PleaseIgnore.IntelMap {
         ///     <see cref="IntelChannelCollection(IList{IntelChannel})"/>, so
         ///     a synchronized copy must be made by the container.
         /// </remarks>
-        public IntelChannelCollection(IList<IIntelChannel> list)
+        public IntelChannelCollection(IList<IntelChannel> list)
                 : base(list) {
             Contract.Requires<ArgumentNullException>(list != null, "list");
             Contract.Requires<ArgumentException>(Contract.ForAll(list, x => x != null));
@@ -40,7 +40,7 @@ namespace PleaseIgnore.IntelMap {
         ///     <paramref name="name"/> or <see langword="null"/> if
         ///     no such channel is being monitored.
         /// </returns>
-        public IIntelChannel this[string name] {
+        public IntelChannel this[string name] {
             get {
                 if (name == null) {
                     return null;

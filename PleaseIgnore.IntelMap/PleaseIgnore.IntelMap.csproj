@@ -158,7 +158,6 @@
       <Link>Properties\ProductInfo.cs</Link>
     </Compile>
     <Compile Include="GlobalSuppressions.cs" />
-    <Compile Include="IIntelChannel.cs" />
     <Compile Include="IntelChannelCollection.cs" />
     <Compile Include="IntelChannelContainer.cs">
       <SubType>Component</SubType>
