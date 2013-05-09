@@ -9,6 +9,7 @@ using System.Linq;
 using System.Net;
 using System.Security.Authentication;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace PleaseIgnore.IntelMap {
     /// <summary>
@@ -656,63 +657,6 @@ namespace PleaseIgnore.IntelMap {
             this.OnPropertyChanged(new PropertyChangedEventArgs(propertyName));
         }
 
-
-        #region Authentication
-
-        /// <summary>
-        ///     Requests that we authenticate with the server under new
-        ///     credentials, reporting the results asynchronously.
-        /// </summary>
-        /// <param name="username">
-        ///     The TEST auth username.
-        /// </param>
-        /// <param name="password">
-        ///     The plaintext TEST services password.  It will be hashed
-        ///     automatically.
-        /// </param>
-        /// <param name="callback">
-        ///     An optional delegate to call upon completion of the authentication
-        ///     request.
-        /// </param>
-        /// <param name="state">
-        ///     A user-provided object to provide to <paramref name="callback"/>
-        ///     when reporting authentication completion.
-        /// </param>
-        /// <returns>
-        ///     An instance of <see cref="IAsyncResult"/> to provide to
-        ///     <see cref="EndAuthenticate"/> to receive the results of this
-        ///     operation.
-        /// </returns>
-        public IAsyncResult BeginAuthenticate(string username, string password,
-                AsyncCallback callback, object state) {
-            Contract.Requires<ArgumentException>(!string.IsNullOrEmpty(username));
-            Contract.Requires<ArgumentException>(!string.IsNullOrEmpty(password));
-            Contract.Ensures(Contract.Result<IAsyncResult>() != null);
-            return null;
-        }
-
-        /// <summary>
-        ///     Reports the outcome of the authentication process started by
-        ///     <see cref="BeginAuthenticate"/>.
-        /// </summary>
-        /// <param name="asyncResult">
-        ///     Instance of <see cref="IAsyncResult"/> returned by a previous
-        ///     call to <see cref="BeginAuthenticate"/>.
-        /// </param>
-        /// <remarks>
-        ///     If <see cref="IAsyncResult.IsCompleted"/> is <see langword="false"/>,
-        ///     <see cref="EndAuthenticate"/> will block until the operation is
-        ///     completed.  In case of an error, the credentials are left unmodified
-        ///     and an exception is thrown.
-        /// </remarks>
-        /// <exception cref="AuthenticationException">
-        ///     The credentials provided by the user are incorrect.
-        /// </exception>
-        public bool EndAuthenticate(IAsyncResult asyncResult) {
-            Contract.Requires<ArgumentNullException>(asyncResult != null, "asyncResult");
-            return false;
-        }
-
         /// <summary>
         ///     Updates the user's credentials and forces the service to
         ///     reauthenticate with the reporting service.
@@ -727,12 +671,41 @@ namespace PleaseIgnore.IntelMap {
         /// <exception cref="AuthenticationException">
         ///     The credentials provided by the user are incorrect.
         /// </exception>
-        public bool Authenticate(string username, string password) {
+        public void Authenticate(string username, string password) {
             Contract.Requires<ArgumentException>(!string.IsNullOrEmpty(username));
             Contract.Requires<ArgumentException>(!string.IsNullOrEmpty(password));
-            return false;
+            Contract.Requires<ObjectDisposedException>(this.Status != IntelStatus.Disposed);
+            Contract.Requires<InvalidOperationException>(this.Status != IntelStatus.FatalError);
+
+            // Verify the password is correct before saving anything
+            var passwordHash = IntelSession.HashPassword(password);
+            IntelSession testSession;
+            try {
+                testSession = new IntelSession(username, passwordHash, this.serviceUri);
+            } catch (WebException) {
+                lock (this.syncRoot) {
+                    this.Status = IntelStatus.NetworkError;
+                    throw;
+                }
+            }
+
+            // Update the program state
+            lock (this.syncRoot) {
+                this.username = username;
+                this.passwordHash = passwordHash;
+                if (this.session != null) {
+                    this.session.Dispose();
+                }
+                this.session = testSession;
+                this.lastIntel = DateTime.UtcNow;
+                this.lastAuthFailure = null;
+                this.Status = IntelStatus.Active;
+                this.timerSession.Change(this.keepAlivePeriod, this.keepAlivePeriod);
+                this.OnPropertyChanged("Username");
+                this.OnPropertyChanged("PasswordHash");
+                this.OnPropertyChanged("Users");
+            }
         }
-        #endregion
 
         [ContractInvariantMethod]
         private void ObjectInvariant() {

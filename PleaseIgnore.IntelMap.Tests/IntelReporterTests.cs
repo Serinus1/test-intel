@@ -404,5 +404,112 @@ namespace PleaseIgnore.IntelMap.Tests {
                 }
             }
         }
+
+        /// <summary>
+        ///     Verifies that <see cref="IntelReporter.Authenticate"/> attempts
+        ///     to authenticate.
+        /// </summary>
+        [TestMethod]
+        public void Authenticate() {
+            var reporterMock = new Mock<IntelReporter>(MockBehavior.Loose) {
+                CallBase = true
+            };
+            reporterMock.Protected()
+                .Setup<IntelSession>("GetSession", ItExpr.IsAny<bool>())
+                .Throws<AuthenticationException>();
+
+            TestHelpers.CreateRequestMock(serviceUri, "200 AUTH 0123456789ABCDEF 5");
+            TestHelpers.CreateRequestMock(channelListUri, String.Join("\r\n", channelList));
+
+            using (var testDir = new TempDirectory()) {
+                using (var reporter = reporterMock.Object) {
+                    reporter.Path = testDir.FullName;
+                    reporter.Username = "username2";
+                    reporter.PasswordHash = "password";
+
+                    reporter.ServiceUri = serviceUri.OriginalString;
+                    reporter.ChannelListUri = channelListUri.OriginalString;
+
+                    reporter.Start();
+                    Thread.Sleep(100);
+                    Assert.AreEqual(IntelStatus.AuthenticationError, reporter.Status);
+
+                    reporter.Authenticate("username", "password");
+                    Thread.Sleep(100);
+                    Assert.AreEqual(IntelStatus.Active, reporter.Status);
+                    Assert.AreEqual("username", reporter.Username);
+                    Assert.AreEqual(IntelSession.HashPassword("password"), reporter.PasswordHash);
+
+                    // So that Dispose() works
+                    TestHelpers.CreateRequestError<WebException>(serviceUri);
+                }
+            }
+        }
+
+        /// <summary>
+        ///     Verifies that <see cref="IntelReporter.Authenticate"/> throws
+        ///     <see cref="AuthenticationError"/> if rejected.
+        /// </summary>
+        [TestMethod, ExpectedException(typeof(AuthenticationException))]
+        public void AuthenticateAuthError() {
+            var reporterMock = new Mock<IntelReporter>(MockBehavior.Loose) {
+                CallBase = true
+            };
+            reporterMock.Protected()
+                .Setup<IntelSession>("GetSession", ItExpr.IsAny<bool>())
+                .Throws<AuthenticationException>();
+
+            TestHelpers.CreateRequestMock(serviceUri, "500 ERROR AUTH");
+            TestHelpers.CreateRequestMock(channelListUri, String.Join("\r\n", channelList));
+
+            using (var testDir = new TempDirectory()) {
+                using (var reporter = reporterMock.Object) {
+                    reporter.Path = testDir.FullName;
+
+                    reporter.ServiceUri = serviceUri.OriginalString;
+                    reporter.ChannelListUri = channelListUri.OriginalString;
+
+                    reporter.Start();
+                    Thread.Sleep(100);
+                    Assert.AreEqual(IntelStatus.AuthenticationError, reporter.Status);
+
+                    reporter.Authenticate("username", "password");
+                    Thread.Sleep(100);
+                }
+            }
+        }
+
+        /// <summary>
+        ///     Verifies that <see cref="IntelReporter.Authenticate"/> throws
+        ///     <see cref="AuthenticationError"/> cannot contact the server.
+        /// </summary>
+        [TestMethod, ExpectedException(typeof(WebException))]
+        public void AuthenticateNetworkError() {
+            var reporterMock = new Mock<IntelReporter>(MockBehavior.Loose) {
+                CallBase = true
+            };
+            reporterMock.Protected()
+                .Setup<IntelSession>("GetSession", ItExpr.IsAny<bool>())
+                .Throws<AuthenticationException>();
+
+            TestHelpers.CreateRequestError<WebException>(serviceUri);
+            TestHelpers.CreateRequestMock(channelListUri, String.Join("\r\n", channelList));
+
+            using (var testDir = new TempDirectory()) {
+                using (var reporter = reporterMock.Object) {
+                    reporter.Path = testDir.FullName;
+
+                    reporter.ServiceUri = serviceUri.OriginalString;
+                    reporter.ChannelListUri = channelListUri.OriginalString;
+
+                    reporter.Start();
+                    Thread.Sleep(100);
+                    Assert.AreEqual(IntelStatus.AuthenticationError, reporter.Status);
+
+                    reporter.Authenticate("username", "password");
+                    Thread.Sleep(100);
+                }
+            }
+        }
     }
 }

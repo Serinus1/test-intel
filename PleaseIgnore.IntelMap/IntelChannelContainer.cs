@@ -310,13 +310,13 @@ namespace PleaseIgnore.IntelMap {
                             // Ignore any exceptions during disposal
                         } finally {
                             channels.Clear();
-                            this.Status = IntelStatus.Disposed;
                         }
                     }
                 }
                 this.IntelReported = null;
                 this.PropertyChanged = null;
             }
+            this.status = IntelStatus.Disposed;
             base.Dispose(disposing);
         }
 
