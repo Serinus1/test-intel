@@ -53,6 +53,9 @@ namespace PleaseIgnore.IntelMap {
         private TimeSpan authRetryTimeout = TimeSpan.Parse(
             defaultRetryAuthenticationPeriod,
             CultureInfo.InvariantCulture);
+        // Field backing the ServiceUri property
+        [ContractPublicPropertyName("ServiceUri")]
+        private Uri serviceUri = IntelExtensions.ChannelsUrl;
         // The session used to contact the intel server
         private IntelSession session;
         // Field backing the Username property
@@ -244,6 +247,17 @@ namespace PleaseIgnore.IntelMap {
         public int IntelDropped { get; private set; }
 
         /// <summary>
+        ///     Gets the number of users currently connected to the server.
+        /// </summary>
+        public int Users {
+            get {
+                Contract.Ensures(Contract.Result<int>() >= 0);
+                var session = this.session;
+                return (session != null) ? session.Users : 0;
+            }
+        }
+
+        /// <summary>
         ///     Gets or sets the time between downloads of the intel
         ///     channel list.
         /// </summary>
@@ -341,6 +355,46 @@ namespace PleaseIgnore.IntelMap {
         }
 
         /// <summary>
+        ///     Gets or sets the <see cref="Uri"/> to use when downloading
+        ///     the channel list.
+        /// </summary>
+        [AmbientValue((string)null)]
+        public string ChannelListUri {
+            get {
+                Contract.Ensures(!String.IsNullOrEmpty(Contract.Result<string>()));
+                return this.channels.ChannelListUri;
+            }
+            set {
+                Contract.Requires<InvalidOperationException>(!IsRunning);
+                this.channels.ChannelListUri = value;
+            }
+        }
+
+        /// <summary>
+        ///     Gets or sets the <see cref="Uri"/> to use when accessing the
+        ///     intel reporting service.
+        /// </summary>
+        [AmbientValue((string)null)]
+        public string ServiceUri {
+            get {
+                Contract.Ensures(!String.IsNullOrEmpty(Contract.Result<string>()));
+                return (this.serviceUri ?? IntelExtensions.ChannelsUrl).OriginalString;
+            }
+            set {
+                Contract.Requires<InvalidOperationException>(!IsRunning);
+                var uri = (value != null) ? new Uri(value) : IntelExtensions.ChannelsUrl;
+                if (!uri.IsAbsoluteUri) {
+                    // TODO: Proper exception
+                    throw new ArgumentException();
+                }
+                if (this.serviceUri != uri) {
+                    this.serviceUri = uri;
+                    this.OnPropertyChanged(new PropertyChangedEventArgs("ServiceUri"));
+                }
+            }
+        }
+
+        /// <summary>
         ///     Downloads the channel list and begins the acquisition of log
         ///     entries from the EVE chat logs. This method enables
         ///     <see cref="IntelReported"/> events.
@@ -421,7 +475,7 @@ namespace PleaseIgnore.IntelMap {
             } else {
                 // Cannot safely clean up
                 this.status = IntelStatus.Disposed;
-                this.Dispose(disposing);
+                base.Dispose(disposing);
             }
         }
 
@@ -443,12 +497,12 @@ namespace PleaseIgnore.IntelMap {
                 // Existing session is still valid
                 return session;
             } else if (create && this.lastAuthFailure.HasValue
-                    && (this.lastAuthFailure.Value + this.authRetryTimeout > DateTime.UtcNow)) {
+                    && (this.lastAuthFailure + this.authRetryTimeout > DateTime.UtcNow)) {
                 // Wait longer before trying to log in again
                 throw new AuthenticationException();
             } else if (create) {
                 // Safe to create a new instance of IntelSession
-                this.session = new IntelSession(this.username, this.passwordHash);
+                this.session = new IntelSession(this.username, this.passwordHash, this.serviceUri);
                 this.timerSession.Change(this.keepAlivePeriod, this.keepAlivePeriod);
                 this.lastIntel = DateTime.UtcNow;
                 this.Status = IntelStatus.Active;
@@ -471,6 +525,7 @@ namespace PleaseIgnore.IntelMap {
         protected virtual void OnIntelReported(IntelEventArgs e) {
             Contract.Requires<ArgumentNullException>(e != null, "e");
             // Raise the event (as appropriate)
+            this.lastIntel = DateTime.UtcNow;
             var handler = this.IntelReported;
             if (handler != null) {
                 var sync = this.synchronizingObject;
@@ -547,7 +602,6 @@ namespace PleaseIgnore.IntelMap {
                             this.OnPropertyChanged("Users");
                         }
                     } catch (WebException) {
-                        // TODO: Change status
                         this.Status = IntelStatus.NetworkError;
                     }
                 }
@@ -568,7 +622,8 @@ namespace PleaseIgnore.IntelMap {
         private void channels_PropertyChanged(object sender, PropertyChangedEventArgs e) {
             Contract.Requires(e != null);
             if ((e.PropertyName == "ChannelUpdateInterval") || (e.PropertyName == "Channels")
-                    || (e.PropertyName == "Status") || (e.PropertyName == "Path")) {
+                    || (e.PropertyName == "Status") || (e.PropertyName == "Path")
+                    || (e.PropertyName == "ChannelListUri")) {
                 // Property we forward
                 this.OnPropertyChanged(e);
             }

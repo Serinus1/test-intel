@@ -323,6 +323,7 @@ namespace PleaseIgnore.IntelMap {
             lock (this.syncRoot) {
                 if (this.status == IntelStatus.Stopped) {
                     this.Status = IntelStatus.Starting;
+                    this.channelFileName = this.Name;
                     this.OnStart();
                 }
             }
