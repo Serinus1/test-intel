@@ -496,6 +496,10 @@ namespace PleaseIgnore.IntelMap {
             if ((session != null) && session.IsConnected) {
                 // Existing session is still valid
                 return session;
+            } else if (create && (String.IsNullOrEmpty(this.username)
+                    || String.IsNullOrEmpty(this.passwordHash))) {
+                // Can't login without a username/password
+                throw new AuthenticationException();
             } else if (create && this.lastAuthFailure.HasValue
                     && (this.lastAuthFailure + this.authRetryTimeout > DateTime.UtcNow)) {
                 // Wait longer before trying to log in again

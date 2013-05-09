@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading;
 
@@ -34,15 +35,15 @@ namespace PleaseIgnore.IntelMap.Tests {
         public void Dispose() {
             var reporter = new IntelReporter();
             reporter.Dispose();
-            Assert.AreEqual(false, reporter.IsRunning);
+            Assert.IsFalse(reporter.IsRunning);
             Assert.AreEqual(IntelStatus.Disposed, reporter.Status);
         }
 
         /// <summary>
-        ///     Verifies that <see cref="IntelReporter"/> starts up correctly.
+        ///     Verifies that <see cref="IntelReporter"/> starts and stops correctly.
         /// </summary>
         [TestMethod]
-        public void Start() {
+        public void StartStop() {
             using (var testDir = new TempDirectory()) {
                 using (var reporter = new IntelReporter()) {
                     reporter.Path = testDir.FullName;
@@ -61,9 +62,96 @@ namespace PleaseIgnore.IntelMap.Tests {
                     Assert.IsTrue(reporter.IsRunning);
                     Assert.IsTrue(requestBody.Length > 0);
                     Assert.AreEqual(IntelStatus.Active, reporter.Status);
+                    Assert.AreEqual(2, reporter.Channels.Count);
+                    Assert.IsNotNull(reporter.Channels.Single(x => x.Name == channelList[0]));
+                    Assert.IsNotNull(reporter.Channels.Single(x => x.Name == channelList[1]));
 
                     TestHelpers.Cleanup();
-                    TestHelpers.CreateRequestMock(serviceUri, "201 AUTH Logged Off");
+                    requestBody = TestHelpers.CreateRequestMock(serviceUri, "201 AUTH Logged Off");
+                    reporter.Stop();
+                    Thread.Sleep(1000);
+
+                    Assert.IsFalse(reporter.IsRunning);
+                    Assert.IsTrue(requestBody.Length > 0);
+                    Assert.AreEqual(IntelStatus.Stopped, reporter.Status);
+                }
+            }
+        }
+
+        /// <summary>
+        ///     Verifies that <see cref="IntelReporter"/> correctly signals an
+        ///     error if it cannot contact the server when starting.
+        /// </summary>
+        [TestMethod]
+        public void StartWebError() {
+            using (var testDir = new TempDirectory()) {
+                using (var reporter = new IntelReporter()) {
+                    reporter.Path = testDir.FullName;
+                    reporter.Username = "username";
+                    reporter.PasswordHash = "password";
+
+                    reporter.ChannelListUri = channelListUri.OriginalString;
+                    TestHelpers.CreateRequestMock(channelListUri, String.Join("\r\n", channelList));
+
+                    reporter.ServiceUri = serviceUri.OriginalString;
+                    var requestBody = TestHelpers.CreateRequestError<WebException>(serviceUri);
+
+                    reporter.Start();
+                    Thread.Sleep(1000);
+
+                    Assert.IsTrue(reporter.IsRunning);
+                    Assert.IsTrue(requestBody.Length > 0);
+                    Assert.AreEqual(IntelStatus.NetworkError, reporter.Status);
+                }
+            }
+        }
+
+        /// <summary>
+        ///     Verifies that <see cref="IntelReporter"/> correctly signals an
+        ///     error if it cannot contact login when starting.
+        /// </summary>
+        [TestMethod]
+        public void StartAuthError() {
+            using (var testDir = new TempDirectory()) {
+                using (var reporter = new IntelReporter()) {
+                    reporter.Path = testDir.FullName;
+                    reporter.Username = "username";
+                    reporter.PasswordHash = "password";
+
+                    reporter.ChannelListUri = channelListUri.OriginalString;
+                    TestHelpers.CreateRequestMock(channelListUri, String.Join("\r\n", channelList));
+
+                    reporter.ServiceUri = serviceUri.OriginalString;
+                    var requestBody = TestHelpers.CreateRequestMock(serviceUri, "500 ERROR AUTH");
+
+                    reporter.Start();
+                    Thread.Sleep(1000);
+
+                    Assert.IsTrue(reporter.IsRunning);
+                    Assert.IsTrue(requestBody.Length > 0);
+                    Assert.AreEqual(IntelStatus.AuthenticationError, reporter.Status);
+                }
+            }
+        }
+
+        /// <summary>
+        ///     Verifies that <see cref="IntelReporter"/> correctly signals an
+        ///     error if it starts without any credentials set.
+        /// </summary>
+        [TestMethod]
+        public void StartNoAuth() {
+            using (var testDir = new TempDirectory()) {
+                using (var reporter = new IntelReporter()) {
+                    reporter.Path = testDir.FullName;
+
+                    reporter.ChannelListUri = channelListUri.OriginalString;
+                    TestHelpers.CreateRequestMock(channelListUri, String.Join("\r\n", channelList));
+
+                    reporter.Start();
+                    Thread.Sleep(1000);
+
+                    Assert.IsTrue(reporter.IsRunning);
+                    Assert.AreEqual(IntelStatus.AuthenticationError, reporter.Status);
                 }
             }
         }

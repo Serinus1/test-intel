@@ -109,15 +109,7 @@ namespace PleaseIgnore.IntelMap {
         ///     Gets a value indicating whether the <see cref="IntelChannelContainer"/>
         ///     is currently running and watching for log entries.
         /// </summary>
-        public bool IsRunning {
-            get {
-                var status = this.status;
-                return (status == IntelStatus.Active)
-                    || (status == IntelStatus.InvalidPath)
-                    || (status == IntelStatus.Starting)
-                    || (status == IntelStatus.Waiting);
-            }
-        }
+        public bool IsRunning { get { return this.status.IsRunning(); } }
 
         /// <summary>
         ///     Gets an instance of <see cref="IntelChannelCollection"/>
