@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Security.Authentication;
 using System.Text;
 using System.Threading;
 
@@ -193,7 +194,7 @@ namespace PleaseIgnore.IntelMap.Tests {
         }
 
         /// <summary>
-        ///     The <see cref="IntelStatus.NetworkError"/> properly clears.
+        ///     Verifies that <see cref="IntelStatus.NetworkError"/> properly clears.
         /// </summary>
         [TestMethod]
         public void WebErrorClear() {
@@ -242,6 +243,164 @@ namespace PleaseIgnore.IntelMap.Tests {
                     Assert.AreEqual(IntelStatus.Active, reporter.Status);
                     Assert.AreEqual(1, reporter.IntelDropped);
                     Assert.AreEqual(1, reporter.IntelSent);
+                }
+            }
+        }
+
+        /// <summary>
+        ///     Verifies that <see cref="IntelStatus.AuthenticationError"/>
+        ///     properly clears.
+        /// </summary>
+        [TestMethod]
+        public void AuthErrorClear() {
+            var reporterMock = new Mock<IntelReporter>(MockBehavior.Loose) {
+                CallBase = true
+            };
+
+            TestHelpers.CreateRequestMock(serviceUri, "200 AUTH 0123456789ABCDEF 5");
+            TestHelpers.CreateRequestMock(channelListUri, String.Join("\r\n", channelList));
+
+            var testEvent = new IntelEventArgs(channelList[0], DateTime.UtcNow, "Test Message");
+            var sessionMock = new Mock<IntelSession>(MockBehavior.Loose, "username", "password", serviceUri);
+            sessionMock.Setup(x => x.Report(testEvent.Channel, testEvent.Timestamp, testEvent.Message))
+                .Returns(true);
+
+            IntelSession session = null;
+            reporterMock.Protected()
+                .Setup<IntelSession>("GetSession", ItExpr.IsAny<bool>())
+                .Returns(new Func<IntelSession>(delegate() {
+                if (session == null) throw new AuthenticationException();
+                return session;
+            }));
+
+            using (var testDir = new TempDirectory()) {
+                using (var reporter = reporterMock.Object) {
+                    reporter.Path = testDir.FullName;
+                    reporter.Username = "username";
+                    reporter.PasswordHash = "password";
+                    reporter.AuthenticationRetryTimeout = new TimeSpan(0, 0, 0, 0, 10);
+
+                    reporter.ServiceUri = serviceUri.OriginalString;
+                    reporter.ChannelListUri = channelListUri.OriginalString;
+
+                    reporter.Start();
+                    Thread.Sleep(100);
+                    Assert.AreEqual(IntelStatus.AuthenticationError, reporter.Status);
+
+                    reporter.OnIntelReported(testEvent);
+                    Thread.Sleep(100);
+                    Assert.AreEqual(IntelStatus.AuthenticationError, reporter.Status);
+                    Assert.AreEqual(1, reporter.IntelDropped);
+                    Assert.AreEqual(0, reporter.IntelSent);
+
+                    session = sessionMock.Object;
+                    reporter.OnIntelReported(testEvent);
+                    Thread.Sleep(100);
+                    Assert.AreEqual(IntelStatus.Active, reporter.Status);
+                    Assert.AreEqual(1, reporter.IntelDropped);
+                    Assert.AreEqual(1, reporter.IntelSent);
+                }
+            }
+        }
+
+        /// <summary>
+        ///     Verifies that <see cref="IntelStatus.AuthenticationError"/>
+        ///     transitions into <see cref="IntelStatus.NetworkError"/>.
+        /// </summary>
+        [TestMethod]
+        public void AuthErrorToNetworkError() {
+            var reporterMock = new Mock<IntelReporter>(MockBehavior.Loose) {
+                CallBase = true
+            };
+
+            TestHelpers.CreateRequestMock(channelListUri, String.Join("\r\n", channelList));
+            var testEvent = new IntelEventArgs(channelList[0], DateTime.UtcNow, "Test Message");
+            var sessionMock = new Mock<IntelSession>(MockBehavior.Loose, "username", "password", serviceUri);
+            sessionMock.Setup(x => x.Report(testEvent.Channel, testEvent.Timestamp, testEvent.Message))
+                .Returns(true);
+
+            Exception exception = new AuthenticationException();
+            reporterMock.Protected()
+                .Setup<IntelSession>("GetSession", ItExpr.IsAny<bool>())
+                .Returns(() => { throw exception; });
+
+            using (var testDir = new TempDirectory()) {
+                using (var reporter = reporterMock.Object) {
+                    reporter.Path = testDir.FullName;
+                    reporter.Username = "username";
+                    reporter.PasswordHash = "password";
+                    reporter.AuthenticationRetryTimeout = new TimeSpan(0, 0, 0, 0, 10);
+
+                    reporter.ServiceUri = serviceUri.OriginalString;
+                    reporter.ChannelListUri = channelListUri.OriginalString;
+
+                    reporter.Start();
+                    Thread.Sleep(100);
+                    Assert.AreEqual(IntelStatus.AuthenticationError, reporter.Status);
+
+                    reporter.OnIntelReported(testEvent);
+                    Thread.Sleep(100);
+                    Assert.AreEqual(IntelStatus.AuthenticationError, reporter.Status);
+                    Assert.AreEqual(1, reporter.IntelDropped);
+                    Assert.AreEqual(0, reporter.IntelSent);
+
+                    exception = new WebException();
+                    reporter.OnIntelReported(testEvent);
+                    Thread.Sleep(100);
+                    Assert.AreEqual(IntelStatus.NetworkError, reporter.Status);
+                    Assert.AreEqual(2, reporter.IntelDropped);
+                    Assert.AreEqual(0, reporter.IntelSent);
+                }
+            }
+        }
+
+        /// <summary>
+        ///     Verifies that <see cref="IntelStatus.NetworkError"/>
+        ///     transitions into <see cref="IntelStatus.AuthenticationException"/>.
+        /// </summary>
+        [TestMethod]
+        public void NetworkErrorToAuthError() {
+            var reporterMock = new Mock<IntelReporter>(MockBehavior.Loose) {
+                CallBase = true
+            };
+
+            TestHelpers.CreateRequestMock(channelListUri, String.Join("\r\n", channelList));
+            var testEvent = new IntelEventArgs(channelList[0], DateTime.UtcNow, "Test Message");
+            var sessionMock = new Mock<IntelSession>(MockBehavior.Loose, "username", "password", serviceUri);
+            sessionMock.Setup(x => x.Report(testEvent.Channel, testEvent.Timestamp, testEvent.Message))
+                .Returns(true);
+
+            Exception exception = new WebException();
+            reporterMock.Protected()
+                .Setup<IntelSession>("GetSession", ItExpr.IsAny<bool>())
+                .Returns(() => { throw exception; });
+
+            using (var testDir = new TempDirectory()) {
+                using (var reporter = reporterMock.Object) {
+                    reporter.Path = testDir.FullName;
+                    reporter.Username = "username";
+                    reporter.PasswordHash = "password";
+                    reporter.AuthenticationRetryTimeout = new TimeSpan(0, 0, 0, 0, 10);
+
+                    reporter.ServiceUri = serviceUri.OriginalString;
+                    reporter.ChannelListUri = channelListUri.OriginalString;
+
+                    reporter.Start();
+                    Thread.Sleep(100);
+                    Assert.AreEqual(IntelStatus.NetworkError, reporter.Status);
+
+                    reporter.OnIntelReported(testEvent);
+                    Thread.Sleep(100);
+                    Assert.AreEqual(IntelStatus.NetworkError, reporter.Status);
+                    Assert.AreEqual(1, reporter.IntelDropped);
+                    Assert.AreEqual(0, reporter.IntelSent);
+
+                    exception = new AuthenticationException();
+                    reporter.OnIntelReported(testEvent);
+                    Thread.Sleep(100);
+                    Assert.AreEqual(IntelStatus.AuthenticationError, reporter.Status);
+                    Assert.AreEqual(2, reporter.IntelDropped);
+                    Assert.AreEqual(0, reporter.IntelSent);
                 }
             }
         }
