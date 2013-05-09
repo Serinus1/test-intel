@@ -526,7 +526,7 @@ namespace PleaseIgnore.IntelMap {
         /// <summary>
         ///     Raises the <see cref="IntelReported"/> event.
         /// </summary>
-        protected virtual void OnIntelReported(IntelEventArgs e) {
+        internal protected virtual void OnIntelReported(IntelEventArgs e) {
             Contract.Requires<ArgumentNullException>(e != null, "e");
             // Raise the event (as appropriate)
             this.lastIntel = DateTime.UtcNow;
@@ -545,6 +545,7 @@ namespace PleaseIgnore.IntelMap {
                 lock (this.syncRoot) {
                     var session = this.GetSession(true);
                     if (session.Report(e)) {
+                        this.Status = IntelStatus.Active;
                         ++this.IntelSent;
                         this.OnPropertyChanged("IntelSent");
                     } else {
@@ -566,7 +567,7 @@ namespace PleaseIgnore.IntelMap {
         /// <summary>
         ///     Raises the <see cref="PropertyChanged"/> event.
         /// </summary>
-        protected virtual void OnPropertyChanged(PropertyChangedEventArgs e) {
+        internal protected virtual void OnPropertyChanged(PropertyChangedEventArgs e) {
             Contract.Requires<ArgumentNullException>(e != null, "e");
             Debug.Assert(String.IsNullOrEmpty(e.PropertyName)
                     || (this.GetType().GetProperty(e.PropertyName) != null));

@@ -1,4 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Moq;
+using Moq.Protected;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -57,7 +59,7 @@ namespace PleaseIgnore.IntelMap.Tests {
                     var requestBody = TestHelpers.CreateRequestMock(serviceUri, "200 AUTH 0123456789ABCDEF 5");
 
                     reporter.Start();
-                    Thread.Sleep(1000);
+                    Thread.Sleep(100);
 
                     Assert.IsTrue(reporter.IsRunning);
                     Assert.IsTrue(requestBody.Length > 0);
@@ -70,7 +72,7 @@ namespace PleaseIgnore.IntelMap.Tests {
                     TestHelpers.Cleanup();
                     requestBody = TestHelpers.CreateRequestMock(serviceUri, "201 AUTH Logged Off");
                     reporter.Stop();
-                    Thread.Sleep(1000);
+                    Thread.Sleep(100);
 
                     Assert.IsFalse(reporter.IsRunning);
                     Assert.IsTrue(requestBody.Length > 0);
@@ -99,7 +101,7 @@ namespace PleaseIgnore.IntelMap.Tests {
                     var requestBody = TestHelpers.CreateRequestError<WebException>(serviceUri);
 
                     reporter.Start();
-                    Thread.Sleep(1000);
+                    Thread.Sleep(100);
 
                     Assert.IsTrue(reporter.IsRunning);
                     Assert.IsTrue(requestBody.Length > 0);
@@ -127,7 +129,7 @@ namespace PleaseIgnore.IntelMap.Tests {
                     var requestBody = TestHelpers.CreateRequestMock(serviceUri, "500 ERROR AUTH");
 
                     reporter.Start();
-                    Thread.Sleep(1000);
+                    Thread.Sleep(100);
 
                     Assert.IsTrue(reporter.IsRunning);
                     Assert.IsTrue(requestBody.Length > 0);
@@ -150,7 +152,7 @@ namespace PleaseIgnore.IntelMap.Tests {
                     TestHelpers.CreateRequestMock(channelListUri, String.Join("\r\n", channelList));
 
                     reporter.Start();
-                    Thread.Sleep(1000);
+                    Thread.Sleep(100);
 
                     Assert.IsTrue(reporter.IsRunning);
                     Assert.AreEqual(IntelStatus.AuthenticationError, reporter.Status);
@@ -173,15 +175,73 @@ namespace PleaseIgnore.IntelMap.Tests {
                     reporter.ChannelListUri = channelListUri.OriginalString;
                     TestHelpers.CreateRequestMock(channelListUri, String.Join("\r\n", channelList));
 
-
                     reporter.Start();
                     var testEvent = new IntelEventArgs(channelList[0], DateTime.UtcNow, "Test Message");
-                    reporter.Channels.First().OnIntelReported(testEvent);
-                    Thread.Sleep(1000);
+                    Thread.Sleep(100);
+                    Assert.AreEqual(0, reporter.IntelDropped);
+                    Assert.AreEqual(0, reporter.IntelSent);
 
+                    reporter.Channels.First().OnIntelReported(testEvent);
+                    Thread.Sleep(100);
                     Assert.IsTrue(reporter.IsRunning);
                     Assert.AreEqual(IntelStatus.AuthenticationError, reporter.Status);
                     Assert.AreEqual(received, testEvent);
+                    Assert.AreEqual(1, reporter.IntelDropped);
+                    Assert.AreEqual(0, reporter.IntelSent);
+                }
+            }
+        }
+
+        /// <summary>
+        ///     The <see cref="IntelStatus.NetworkError"/> properly clears.
+        /// </summary>
+        [TestMethod]
+        public void WebErrorClear() {
+            var reporterMock = new Mock<IntelReporter>(MockBehavior.Loose) {
+                CallBase = true
+            };
+
+            TestHelpers.CreateRequestMock(serviceUri, "200 AUTH 0123456789ABCDEF 5");
+            TestHelpers.CreateRequestMock(channelListUri, String.Join("\r\n", channelList));
+
+            var testEvent = new IntelEventArgs(channelList[0], DateTime.UtcNow, "Test Message");
+            var sessionMock = new Mock<IntelSession>(MockBehavior.Loose, "username", "password", serviceUri);
+            sessionMock.Setup(x => x.Report(testEvent.Channel, testEvent.Timestamp, testEvent.Message))
+                .Returns(true);
+
+            IntelSession session = null;
+            reporterMock.Protected()
+                .Setup<IntelSession>("GetSession", ItExpr.IsAny<bool>())
+                .Returns(new Func<IntelSession>(delegate() {
+                    if (session == null) throw new WebException();
+                    return session; 
+                }));
+
+            using (var testDir = new TempDirectory()) {
+                using (var reporter = reporterMock.Object) {
+                    reporter.Path = testDir.FullName;
+                    reporter.Username = "username";
+                    reporter.PasswordHash = "password";
+
+                    reporter.ServiceUri = serviceUri.OriginalString;
+                    reporter.ChannelListUri = channelListUri.OriginalString;
+
+                    reporter.Start();
+                    Thread.Sleep(100);
+                    Assert.AreEqual(IntelStatus.NetworkError, reporter.Status);
+
+                    reporter.OnIntelReported(testEvent);
+                    Thread.Sleep(100);
+                    Assert.AreEqual(IntelStatus.NetworkError, reporter.Status);
+                    Assert.AreEqual(1, reporter.IntelDropped);
+                    Assert.AreEqual(0, reporter.IntelSent);
+
+                    session = sessionMock.Object;
+                    reporter.OnIntelReported(testEvent);
+                    Thread.Sleep(100);
+                    Assert.AreEqual(IntelStatus.Active, reporter.Status);
+                    Assert.AreEqual(1, reporter.IntelDropped);
+                    Assert.AreEqual(1, reporter.IntelSent);
                 }
             }
         }

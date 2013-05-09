@@ -15,7 +15,7 @@ namespace PleaseIgnore.IntelMap {
     ///     Alliance Intel Map.
     /// </summary>
     /// <threadsafety static="true" instance="false"/>
-    public sealed class IntelSession : IDisposable {
+    public class IntelSession : IDisposable {
         // The Unix time epoc
         private static readonly DateTime Epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
@@ -130,6 +130,10 @@ namespace PleaseIgnore.IntelMap {
             }
         }
 
+        ~IntelSession() {
+            this.Dispose(false);
+        }
+
         /// <summary>
         ///     Gets a flag indicating whether our session with the intel
         ///     reporting server is still valid.
@@ -166,7 +170,7 @@ namespace PleaseIgnore.IntelMap {
         /// <exception cref="WebException">
         ///     Failed to contact the web server.
         /// </exception>
-        public bool KeepAlive() {
+        public virtual bool KeepAlive() {
             Contract.Ensures(Contract.Result<bool>() == this.IsConnected);
             if (!this.IsConnected)
                 return false;
@@ -218,7 +222,7 @@ namespace PleaseIgnore.IntelMap {
         /// <exception cref="WebException">
         ///     Failed to contact the web server.
         /// </exception>
-        public bool Report(string channel, DateTime timestamp, string message) {
+        public virtual bool Report(string channel, DateTime timestamp, string message) {
             Contract.Requires<ArgumentException>(!String.IsNullOrEmpty(channel));
             Contract.Requires<ArgumentException>(!String.IsNullOrEmpty(message));
             Contract.Ensures(Contract.Result<bool>() == this.IsConnected);
@@ -286,22 +290,34 @@ namespace PleaseIgnore.IntelMap {
         /// </summary>
         public void Dispose() {
             Contract.Ensures(this.IsConnected == false);
-            if (!this.IsConnected)
-                return;
+            this.Dispose(true);
+            GC.SuppressFinalize(this);
+        }
 
-            try {
-                var request = WebRequest.Create(this.serviceUri);
-                var response = request.Post(new Dictionary<string, string>() {
+        /// <summary>
+        ///     Closes this session with the intel reporting server.
+        /// </summary>
+        protected virtual void Dispose(bool disposing) {
+            Contract.Ensures(this.IsConnected == false);
+            if (disposing) {
+                if (!this.IsConnected)
+                    return;
+                try {
+                    var request = WebRequest.Create(this.serviceUri);
+                    var response = request.Post(new Dictionary<string, string>() {
                     { "username", this.username },
                     { "session", this.session },
                     { "action", "LOGOFF" },
                 });
-                // ReadContent() handles tracing the response
-                var responseBody = response.ReadContent();
-            } catch (WebException) {
-                // We don't actually care...
-            } finally {
-                this.OnClosed();
+                    // ReadContent() handles tracing the response
+                    var responseBody = response.ReadContent();
+                } catch (WebException) {
+                    // We don't actually care...
+                } finally {
+                    this.OnClosed();
+                }
+            } else {
+                this.IsConnected = false;
             }
         }
 
