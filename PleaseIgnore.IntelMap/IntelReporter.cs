@@ -644,7 +644,7 @@ namespace PleaseIgnore.IntelMap {
                 if (this.IsRunning) {
                     this.OnKeepAlive();
                 }
-                if (!this.IsRunning || !this.GetSession(false).IsConnected) {
+                if (!this.IsRunning || (this.GetSession(false) == null)) {
                     this.timerSession.Change(Timeout.Infinite, Timeout.Infinite);
                 }
             }
