@@ -12,11 +12,11 @@ internal static class ProductInfo {
     internal const string CopyrightText = "Copyright © 2013";
 
     // Prefix for AssemblyVersion*Attribute
-    internal const string ProductVersionPrefix = "0.3.";
+    internal const string ProductVersionPrefix = "0.4.";
 
     // Content for AssemblyVersion*Attribute
     // TODO: We want this to autoincrement or...something.
-    internal const string ProductVersion = ProductVersionPrefix + "0.14";
+    internal const string ProductVersion = ProductVersionPrefix + "0.15";
 
     // Content for AssemblyConfigurationAttribute
 #if DEBUG

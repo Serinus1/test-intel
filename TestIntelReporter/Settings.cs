@@ -12,15 +12,15 @@ namespace TestIntelReporter {
         ///     There is very little specific to us, so keep the services
         ///     information on a shared TEST registry key.
         /// </summary>
-        private string KeyName = "SOFTWARE\\Test Alliance Please Ignore";
+        private const string KeyName = "SOFTWARE\\Test Alliance Please Ignore";
         /// <summary>
         ///     The user's TEST authentication name.
         /// </summary>
-        private string UsernameKey = "Username";
+        private const string UsernameKey = "Username";
         /// <summary>
         ///     The user's TEST services password pre-hashed.
         /// </summary>
-        private string PasswordKey = "ServicesPasswordHash";
+        private const string PasswordKey = "ServicesPasswordHash";
 
         /// <summary>
         ///     Initializes a new instance of the <see cref="Settings"/>
