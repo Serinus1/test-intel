@@ -55,7 +55,7 @@ namespace TestIntelReporter {
                 Application.ProductVersion);
 
             // Finish initialization
-            this.settings = Settings.Default;
+            this.settings = new Settings();
             if (!String.IsNullOrEmpty(settings.Username)) {
                 intelReporter.Username = settings.Username;
             } else {
@@ -171,10 +171,6 @@ namespace TestIntelReporter {
         ///     Performs an UI manipulations required for GUI depicted status.
         /// </summary>
         private void UpdateStatus() {
-            if (this.InvokeRequired) {
-                return;
-            }
-
             // Simple updates
             labelCounts.Text = String.Join(
                 Resources.Stats_Join,
@@ -281,6 +277,12 @@ namespace TestIntelReporter {
         ///     sort of status change.
         /// </summary>
         private void intelReporter_PropertyChanged(object sender, PropertyChangedEventArgs e) {
+            // Make sure we aren't disposed/in the process of disposing
+            if (this.Disposing || this.InvokeRequired) {
+                return;
+            }
+            
+            // Pass up the chain
             this.UpdateStatus();
 
             // Update the channel list
