@@ -14,13 +14,8 @@ namespace PleaseIgnore.IntelMap {
         /// Initializes a new instance of <see cref="IntelChannelCollection" />.
         /// </summary>
         /// <param name="list">The list to expose to the user.</param>
-        /// <remarks>
-        /// <paramref name="list" /> is not copied by
-        /// <see cref="IntelChannelCollection(IList{IntelChannel})" />, so
-        /// a synchronized copy must be made by the container.
-        /// </remarks>
-        public IntelChannelCollection(IList<IntelChannel> list)
-                : base(list) {
+        public IntelChannelCollection(IEnumerable<IntelChannel> list)
+                : base(list.ToArray()) {
             Contract.Requires<ArgumentNullException>(list != null, "list");
             Contract.Requires<ArgumentException>(Contract.ForAll(list, x => x != null));
         }

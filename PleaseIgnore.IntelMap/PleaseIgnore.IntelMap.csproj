@@ -159,9 +159,7 @@
       <Link>Properties\ProductInfo.cs</Link>
     </Compile>
     <Compile Include="IntelChannelCollection.cs" />
-    <Compile Include="IntelChannelContainer.cs">
-      <SubType>Component</SubType>
-    </Compile>
+    <Compile Include="IntelChannelContainer.cs" />
     <Compile Include="IntelChannel.cs">
       <SubType>Component</SubType>
     </Compile>

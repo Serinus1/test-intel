@@ -73,7 +73,6 @@ namespace PleaseIgnore.IntelMap {
         /// server.</exception>
         /// <exception cref="NotSupportedException"><paramref name="serviceUri" />
         /// uses a URI scheme not registered with <see cref="WebRequest" />.</exception>
-        /// <remarks>
         public IntelSession(string username, string passwordHash, Uri serviceUri) {
             Contract.Requires<ArgumentException>(!String.IsNullOrEmpty(username));
             Contract.Requires<ArgumentException>(!String.IsNullOrEmpty(passwordHash));
@@ -125,9 +124,10 @@ namespace PleaseIgnore.IntelMap {
         /// <seealso cref="Closed"/>
         /// <remarks>
         /// An instance of <see cref="IntelSession" /> becomes disconnected
-        /// through an explicit call to <see cref="Dispose" />, two many
+        /// through an explicit call to <see cref="Dispose()" />, two many
         /// consecutive errors, or the server reported an invalid session in
-        /// a call to <see cref="KeepAlive" /> or <see cref="Report" />.
+        /// a call to <see cref="KeepAlive" /> or
+        /// <see cref="Report(string,DateTime,string)" />.
         /// </remarks>
         public bool IsConnected { get; private set; }
 
@@ -142,7 +142,8 @@ namespace PleaseIgnore.IntelMap {
 
         /// <summary>Gets the number of intel reports sent to the
         /// server.</summary>
-        /// <value>The number of successful calls to <see cref="Report"/>.</value>
+        /// <value>The number of successful calls to
+        /// <see cref="Report(string,DateTime,string)"/>.</value>
         public int ReportsSent { get; private set; }
 
         /// <summary>
