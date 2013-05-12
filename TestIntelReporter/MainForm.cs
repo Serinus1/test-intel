@@ -272,6 +272,7 @@ namespace TestIntelReporter {
                     Resources.IntelStatus_Fatal);
                 break;
             }
+            this.oldStatus = status;
         }
 
         /// <summary>
@@ -411,6 +412,7 @@ namespace TestIntelReporter {
             panelStatus.Visible = false;
             panelAuthError.Visible = false;
             panelChannels.Visible = false;
+            panelUpdate.Visible = false;
             labelAuthErrorTitle.Text = title;
             labelAuthError.Text = message;
             this.ShowPanel(this.panelAuthError, this.buttonChangeAuth);
@@ -423,6 +425,8 @@ namespace TestIntelReporter {
         private void ShowAuthWindow() {
             panelStatus.Visible = false;
             panelAuthError.Visible = false;
+            panelChannels.Visible = false;
+            panelUpdate.Visible = false;
             textBoxUsername.Text = intelReporter.Username;
             textBoxPassword.Text = String.Empty;
             this.textBoxAuth_TextChanged(null, EventArgs.Empty);
