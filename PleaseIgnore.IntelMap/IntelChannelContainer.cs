@@ -54,7 +54,7 @@ namespace PleaseIgnore.IntelMap {
         private Uri channelListUri = IntelExtensions.ChannelsUrl;
         // Directory to use when overriding the IntelChannel's Path
         [ContractPublicPropertyName("Path")]
-        public string logDirectory;
+        private string logDirectory;
         // The contents of the channel list the last time we fetched it
         private string[] channelList;
 
@@ -272,7 +272,7 @@ namespace PleaseIgnore.IntelMap {
         }
 
         /// <summary>
-        ///     Stops the <see cref="IntelChannelChannel"/> from providing
+        ///     Stops the <see cref="IntelChannelContainer"/> from providing
         ///     location data and events.  <see cref="IntelReported"/>
         ///     events will no longer be raised.
         /// </summary>
@@ -338,7 +338,7 @@ namespace PleaseIgnore.IntelMap {
         ///     In this case, the derivative class must register handlers to
         ///     call <see cref="OnUpdateStatus"/> and <see cref="OnIntelReported"/>
         ///     under the appropriate circumstances.  The
-        ///     <see cref="IntelChannel.Site"/> must be initialzied to a proper
+        ///     <see cref="IComponent.Site"/> must be initialzied to a proper
         ///     linking instance of <see cref="ISite"/>.
         /// </remarks>
         protected virtual IntelChannel CreateChannel(string channelName) {
@@ -412,7 +412,7 @@ namespace PleaseIgnore.IntelMap {
         ///     Called after <see cref="Start()"/> has been called.
         /// </summary>
         /// <remarks>
-        ///     <see cref="OnFileCreated"/> will be called with synchronized
+        ///     <see cref="OnStart"/> will be called with synchronized
         ///     access to the object state.
         /// </remarks>
         protected virtual void OnStart() {
@@ -538,7 +538,7 @@ namespace PleaseIgnore.IntelMap {
         }
 
         /// <summary>
-        ///     Calls <see cref="OnTimer"/>, trapping any exceptions.
+        ///     Calls <see cref="OnUpdateList"/>, trapping any exceptions.
         /// </summary>
         private void timer_Callback(object state) {
             try {

@@ -6,11 +6,9 @@ the [Test Alliance Intel Map](http://map.pleaseignore.com/).  The client looks f
 changes in the chat log directory and manages itself automatically.  It minimizes
 out of the way to the notification area.
 
-Development To-Do List
-----------------------
-* The monitoring component is a (mostly) opaque, monolithic block of
-  `internal`-based spaghetti.  It needs to be broken up into something more
-  compatible with unit testing.
-* Need to more thoroughly refine the file selection and switching logic.
-  Performance optimizations on the part of Windows make this difficult.
-* The user interface needs a lot of love.
+Development Tools Required
+--------------------------
+* [Visual Studio Professional 2012](http://msdn.microsoft.com/en-us/vstudio/aa718325.aspx)
+* [Code Contracts Tools](http://visualstudiogallery.msdn.microsoft.com/1ec7db13-3363-46c9-851f-1ce455f66970)
+  [Visual Studio Extension]
+* [Nullsoft Scriptable Install System](http://nsis.sourceforge.net/)

@@ -194,9 +194,9 @@ namespace PleaseIgnore.IntelMap {
         ///     Changes to the <see cref="Username"/>
         ///     or <see cref="PasswordHash"/> will not be used until the next
         ///     time the client tries to reauthenticate.  To verify that the
-        ///     authentication information is correct, use the
-        ///     <see cref="Authenticate"/> or <see cref="BeginAuthenticate"/>
-        ///     methods.
+        ///     authentication information is correct, call
+        ///     <see cref="Authenticate"/> instead of setting <see cref="Username"/>
+        ///     or <see cref="PasswordHash"/> directly.
         /// </remarks>
         [DefaultValue((String)null), Category("Behavior")]
         public string Username {
@@ -219,9 +219,9 @@ namespace PleaseIgnore.IntelMap {
         ///     Changes to the <see cref="Username"/>
         ///     or <see cref="PasswordHash"/> will not be used until the next
         ///     time the client tries to reauthenticate.  To verify that the
-        ///     authentication information is correct, use the
-        ///     <see cref="Authenticate"/> or <see cref="BeginAuthenticate"/>
-        ///     methods.
+        ///     authentication information is correct, call
+        ///     <see cref="Authenticate"/> instead of setting <see cref="Username"/>
+        ///     or <see cref="PasswordHash"/> directly.
         /// </remarks>
         [DefaultValue((String)null), Category("Behavior")]
         public string PasswordHash {
@@ -430,7 +430,7 @@ namespace PleaseIgnore.IntelMap {
         }
 
         /// <summary>
-        ///     Stops the <see cref="IntelChannelChannel"/> from providing
+        ///     Stops the <see cref="IntelReporter"/> from providing
         ///     location data and events.  <see cref="IntelReported"/>
         ///     events will no longer be raised.
         /// </summary>

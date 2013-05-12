@@ -52,9 +52,6 @@ namespace PleaseIgnore.IntelMap {
         /// <exception cref="AuthenticationException">
         ///     The authentication failed.
         /// </exception>
-        /// <exception cref="IntelException">
-        ///     Unexpected response returned from the server.
-        /// </exception>
         /// <exception cref="WebException">
         ///     Failed to contact the web server.
         /// </exception>
@@ -85,9 +82,6 @@ namespace PleaseIgnore.IntelMap {
         /// </remarks>
         /// <exception cref="AuthenticationException">
         ///     The authentication failed.
-        /// </exception>
-        /// <exception cref="IntelException">
-        ///     Unexpected response returned from the server.
         /// </exception>
         /// <exception cref="WebException">
         ///     Failed to contact the web server.
@@ -130,6 +124,7 @@ namespace PleaseIgnore.IntelMap {
             }
         }
 
+        /// <inheritdoc/>
         ~IntelSession() {
             this.Dispose(false);
         }
@@ -152,7 +147,7 @@ namespace PleaseIgnore.IntelMap {
 
         /// <summary>
         ///     Occurs when this session with the server is closed, either
-        ///     through a call to <see cref="Close"/> or timing out.
+        ///     through a call to <see cref="Dispose()"/> or timing out.
         /// </summary>
         public event EventHandler Closed;
 
@@ -164,9 +159,6 @@ namespace PleaseIgnore.IntelMap {
         ///     <see langword="true"/> if our session is still valid;
         ///     otherwise, <see langword="false"/>.
         /// </returns>
-        /// <exception cref="IntelException">
-        ///     Unexpected response returned from the server.
-        /// </exception>
         /// <exception cref="WebException">
         ///     Failed to contact the web server.
         /// </exception>
@@ -216,9 +208,6 @@ namespace PleaseIgnore.IntelMap {
         ///     <see langword="true"/> if our session is still valid;
         ///     otherwise, <see langword="false"/>.
         /// </returns>
-        /// <exception cref="IntelException">
-        ///     Unexpected response returned from the server.
-        /// </exception>
         /// <exception cref="WebException">
         ///     Failed to contact the web server.
         /// </exception>

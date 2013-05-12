@@ -25,7 +25,9 @@ Section "Install"
 	StrCpy $UninstallKey "Software\Microsoft\Windows\CurrentVersion\Uninstall\TestIntelReporter"
 
 	SetOutPath $INSTDIR
-	File "TestIntelReporter\bin\Release\PleaseIgnore.IntelMap.dll"
+	File "PlaseIgnore.IntelMap\bin\Release\PleaseIgnore.IntelMap.dll"
+	File "PlaseIgnore.IntelMap\bin\Release\PleaseIgnore.IntelMap.xml"
+	File "PlaseIgnore.IntelMap\bin\Release\CodeContracts\PleaseIgnore.IntelMap.Contracts.dll"
 	File "TestIntelReporter\bin\Release\TestIntelReporter.exe"
 	File "TestIntelReporter\bin\Release\TestIntelReporter.exe.config"
 	CreateShortCut "$SMPROGRAMS\Test Intel Reporting Tool.lnk" \

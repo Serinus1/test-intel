@@ -101,7 +101,7 @@ namespace PleaseIgnore.IntelMap {
         ///     The <see cref="DateTime"/> object to convert
         /// </param>
         /// <returns>
-        ///     The representation of <paramref name="DateTime"/> as a Unix
+        ///     The representation of <paramref name="timestamp"/> as a Unix
         ///     timestamp, specifically the number of seconds elapsed since
         ///     midnight, 1 Jan 1970 GMT.
         /// </returns>
@@ -315,9 +315,8 @@ namespace PleaseIgnore.IntelMap {
         ///     Reads the entirety of the response body of a
         ///     <see cref="WebResponse"/> and then disposes the instances.
         /// </summary>
-        /// <param name="webRequest">
-        ///     The instance of <see cref="WebResponse"/> to use when reading
-        ///     the response payload.
+        /// <param name="webResponse">
+        ///     The instance of <see cref="WebResponse"/> to read out.
         /// </param>
         /// <returns>
         ///     The response payload parsed as a string.
