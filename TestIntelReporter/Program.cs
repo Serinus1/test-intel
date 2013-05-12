@@ -17,6 +17,10 @@ namespace TestIntelReporter {
         static void Main() {
             bool createdMutex;
 
+            var updateCheck = new UpdateCheck();
+            updateCheck.CheckUri = "http://minecraft.etherealwake.com/updates.xml";
+            updateCheck.Start();
+
             using (var mutex = new Mutex(true, mutexName, out createdMutex)) {
                 if (createdMutex) {
                     // Created the mutex, so we are the first instance

@@ -10,16 +10,21 @@ namespace TestIntelReporter {
     /// </summary>
     [Serializable]
     public class UpdateEventArgs : EventArgs {
-        private readonly string uri;
-        private readonly string version;
+        private readonly Version oldVersion;
+        private readonly Version newVersion;
+        private readonly string updateUri;
 
-        public UpdateEventArgs(string version, string uri) {
-            this.uri = uri;
-            this.version = version;
+        public UpdateEventArgs(Version oldVersion, Version newVersion,
+                string updateUri) {
+            this.oldVersion = oldVersion;
+            this.newVersion = newVersion;
+            this.updateUri = updateUri;
         }
 
-        public string NewVersion { get { return this.version; } }
+        public Version OldVersion { get { return this.oldVersion; } }
 
-        public string UpdateUri { get { return this.uri; } }
+        public Version NewVersion { get { return this.newVersion; } }
+
+        public string UpdateUri { get { return this.updateUri; } }
     }
 }

@@ -128,7 +128,7 @@
     <value>The server seems to be convinced that you are a Goon spy.  Of course, there are more mundane explainations like you changed your password or AUTH is simply having a bad day.  Check your username and password then try again.</value>
   </data>
   <data name="Authenticate_Network" xml:space="preserve">
-    <value>My trusty crane couldn't complete the contract in time due to traffic control.  Try again and if you keep having this problem, spam Awol Aurix until this message disappears.</value>
+    <value>I wasn't able to make it to the fight in time due to traffic control.  Try again and if you keep having this problem, spam Awol Aurix until this message disappears.</value>
   </data>
   <data name="DropCount_Many" xml:space="preserve">
     <value>{0:N0} Lost</value>
@@ -177,6 +177,16 @@
   </data>
   <data name="IntelStatus_MissingTitle" xml:space="preserve">
     <value>Suspected Corp Theft</value>
+  </data>
+  <data name="IntelStatus_Version" xml:space="preserve">
+    <value>Due to either some profound change in the game mechanics or bugs in the intel reporting software, a new version of the reporting tool has been released.  It's probably CCP's fault.
+
+Version Running: {0}
+New Version: {1}
+Download URL: {2}</value>
+  </data>
+  <data name="IntelStatus_VersionTitle" xml:space="preserve">
+    <value>:CCP:</value>
   </data>
   <data name="NoveltyCount_Many" xml:space="preserve">
     <value>{0:N0} Sightings of DBRB</value>

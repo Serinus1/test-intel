@@ -33,6 +33,8 @@ namespace TestIntelReporter {
         private IntelStatus oldStatus;
         // The configuration is incomplete
         private bool configError;
+        // The most recent update notification
+        private UpdateEventArgs updateEvent;
 
         /// <summary>
         ///     Initializes a new instance of the <see cref="MainForm"/> class.
@@ -87,6 +89,7 @@ namespace TestIntelReporter {
         /// </summary>
         protected override void OnShown(EventArgs e) {
             ThreadPool.QueueUserWorkItem((state) => this.intelReporter.Start());
+            this.updateCheck.Start();
             this.UpdateStatus();
             base.OnShown(e);
         }
@@ -498,6 +501,16 @@ namespace TestIntelReporter {
                 // Open a new login window
                 this.ShowAuthWindow();
             }
+        }
+        #endregion
+
+        #region Update Checking
+        /// <summary>
+        ///     Raised by <see cref="updateCheck"/> when a new version has been
+        ///     made available.
+        /// </summary>
+        private void updateCheck_UpdateAvailable(object sender, UpdateEventArgs e) {
+            this.updateEvent = e;
         }
         #endregion
     }

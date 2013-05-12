@@ -25,8 +25,13 @@ namespace TestIntelReporter {
     /// </remarks>
     [DefaultEvent("UpdateAvailable"), DefaultProperty("CheckUri")]
     public class UpdateCheck : Component {
+        private const double intervalSecond = 1000.0;
+        private const double intervalMinute = intervalSecond * 60;
+        private const double intervalHour = intervalMinute * 60;
+        private const double intervalDay = intervalHour * 24;
         // Default value for CheckInterval: One day
-        private const double defaultUpdateInterval = 1000.0 * 60.0 * 60.0 * 24.0;
+        private const double defaultUpdateInterval = intervalDay;
+
         // Timer object to periodically ping the server
         private readonly System.Timers.Timer timer;
 
@@ -44,15 +49,56 @@ namespace TestIntelReporter {
         /// </summary>
         public UpdateCheck(IContainer container) {
             this.timer = new System.Timers.Timer(defaultUpdateInterval);
-            this.timer.Elapsed += timer_Elapsed;
+            this.timer.Elapsed += this.timer_Elapsed;
             this.timer.AutoReset = true;
 
+            // Add to the parent container
             if (container != null) {
                 container.Add(this);
             }
         }
 
+        /// <summary>
+        ///     Raised after pinging the server an a new version is available.
+        /// </summary>
         public event EventHandler<UpdateEventArgs> UpdateAvailable;
+
+        /// <summary>
+        ///     Gets the name of the currently executing assembly.
+        /// </summary>
+        /// <remarks>
+        ///     <see cref="UpdateCheck"/> uses <see cref="AssemblyName"/> as the
+        ///     assembly to perform a version check on.
+        /// </remarks>
+        public string AssemblyName {
+            get {
+                var assembly = Assembly.GetEntryAssembly();
+                return (assembly != null) ? assembly.GetName().Name : String.Empty;
+            }
+        }
+
+        /// <summary>
+        ///     Gets the <em>file version</em> of the currently executing
+        ///     assembly.
+        /// </summary>
+        /// <remarks>
+        ///     <see cref="UpdateCheck"/> uses <see cref="AssemblyVersion"/> as
+        ///     the "current version" when looking for updates.
+        /// </remarks>
+        public Version AssemblyVersion {
+            get {
+                var assembly = Assembly.GetEntryAssembly();
+                if (assembly != null) {
+                    var attribute = assembly
+                        .GetCustomAttributes(typeof(AssemblyFileVersionAttribute), true)
+                        .Cast<AssemblyFileVersionAttribute>()
+                        .SingleOrDefault();
+                    return (attribute != null) ? Version.Parse(attribute.Version) : null;
+                } else {
+                    return null;
+                }
+            }
+        }
 
         /// <summary>
         ///     The URI to use when downloading the list of assembly versions.
@@ -69,9 +115,17 @@ namespace TestIntelReporter {
             set { this.timer.Interval = value; }
         }
 
+        /// <summary>
+        ///     Gets or sets the instance of <see cref="ISynchronizeInvoke"/>
+        ///     to use when raising events.
+        /// </summary>
         [DefaultValue(null)]
         public ISynchronizeInvoke SynchronizationObject { get; set; }
 
+        /// <summary>
+        ///     Starts checking for updates.  Begins a background check
+        ///     immediately.
+        /// </summary>
         public void Start() {
             if (!this.timer.Enabled) {
                 ThreadPool.QueueUserWorkItem((state) => this.timer_Elapsed(null, null));
@@ -79,6 +133,9 @@ namespace TestIntelReporter {
             }
         }
 
+        /// <summary>
+        ///     Terminates checking for updates.
+        /// </summary>
         public void Stop() {
             this.timer.Stop();
         }
@@ -91,35 +148,52 @@ namespace TestIntelReporter {
             base.Dispose(disposing);
         }
 
+        /// <summary>
+        ///     Called periodically by <see cref="timer"/> to download
+        ///     the version list and check for updates.
+        /// </summary>
         private void timer_Elapsed(object sender, ElapsedEventArgs e) {
             var requestUri = this.CheckUri;
             if (String.IsNullOrEmpty(requestUri)) {
                 return;
             }
 
+            // Grab the assembly information
+            var assemblyName = this.AssemblyName;
+            var assemblyVersion = this.AssemblyVersion;
+            if (assemblyName == null || assemblyVersion == null) {
+                return;
+            }
+
             try {
-                // Figure out our identity
-                var oldAssembly = Assembly.GetEntryAssembly();
-                var assemblyName = oldAssembly.GetName().Name;
-                var oldVersion = new Version(oldAssembly
-                    .GetCustomAttributes(typeof(AssemblyFileVersionAttribute), true)
-                    .Cast<AssemblyFileVersionAttribute>()
-                    .Single()
-                    .Version);
                 // Figure out what the server has available
                 var doc = XDocument.Load(requestUri);
                 var newAssembly = doc.Root
                     .Elements("assembly")
-                    .Single(x => x.Attribute("id").Value == assemblyName);
-                var newVersion = new Version(newAssembly.Attribute("version").Value);
+                    .Select(x => new {
+                        Name = x.Attribute("name"),
+                        Version = x.Attribute("version"),
+                        UpdateUri = x.Attribute("update-uri")
+                    })
+                    .Where(x => (x.Name != null)
+                        && (x.Name.Value == assemblyName)
+                        && (x.Version != null))
+                    .Select(x => new {
+                        Version = new Version(x.Version.Value),
+                        UpdateUri = (x.UpdateUri != null) ? x.UpdateUri.Value : null
+                    })
+                    .OrderBy(x => x.Version)
+                    .Last();
+
                 // Check if we have an update
-                if (newVersion > oldVersion) {
+                if (newAssembly.Version > assemblyVersion) {
                     var handler = this.UpdateAvailable;
                     if (handler != null) {
                         var sync = this.SynchronizationObject;
                         var args = new UpdateEventArgs(
-                            newVersion.ToString(),
-                            newAssembly.Attribute("update-uri").Value);
+                            assemblyVersion,
+                            newAssembly.Version,
+                            newAssembly.UpdateUri);
                         if ((sync != null) && sync.InvokeRequired) {
                             sync.BeginInvoke(new Action(() => handler(this, args)), null);
                         } else {
@@ -134,9 +208,7 @@ namespace TestIntelReporter {
             } catch (XmlException) {
                 // Error parsing the XML
             } catch (InvalidOperationException) {
-                // Our assembly isn't listed/is listed twice
-            } catch (NullReferenceException) {
-                // If an attribute doesn't exist
+                // Our assembly isn't listed
             }
         }
     }

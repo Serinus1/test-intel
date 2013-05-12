@@ -48,12 +48,13 @@
             this.labelAppName = new System.Windows.Forms.Label();
             this.labelCounts = new System.Windows.Forms.Label();
             this.messageView = new TestIntelReporter.MessageView();
+            this.labelStatusString = new System.Windows.Forms.Label();
             this.panelStatus = new System.Windows.Forms.TableLayoutPanel();
             this.labelStatusTitle = new System.Windows.Forms.Label();
-            this.intelReporter = new PleaseIgnore.IntelMap.IntelReporter(this.components);
             this.panelChannels = new System.Windows.Forms.TableLayoutPanel();
             this.imageList = new System.Windows.Forms.ImageList(this.components);
-            this.labelStatusString = new System.Windows.Forms.Label();
+            this.intelReporter = new PleaseIgnore.IntelMap.IntelReporter(this.components);
+            this.updateCheck = new TestIntelReporter.UpdateCheck(this.components);
             labelUsername = new System.Windows.Forms.Label();
             labelPassword = new System.Windows.Forms.Label();
             labelAuthenticationTitle = new System.Windows.Forms.Label();
@@ -191,6 +192,11 @@
             this.tableLayoutPanel.SetColumnSpan(this.messageView, 2);
             this.messageView.Name = "messageView";
             // 
+            // labelStatusString
+            // 
+            resources.ApplyResources(this.labelStatusString, "labelStatusString");
+            this.labelStatusString.Name = "labelStatusString";
+            // 
             // panelStatus
             // 
             resources.ApplyResources(this.panelStatus, "panelStatus");
@@ -204,12 +210,6 @@
             // 
             resources.ApplyResources(this.labelStatusTitle, "labelStatusTitle");
             this.labelStatusTitle.Name = "labelStatusTitle";
-            // 
-            // intelReporter
-            // 
-            this.intelReporter.SynchronizingObject = this;
-            this.intelReporter.IntelReported += new System.EventHandler<PleaseIgnore.IntelMap.IntelEventArgs>(this.intelReporter_IntelReported);
-            this.intelReporter.PropertyChanged += new System.ComponentModel.PropertyChangedEventHandler(this.intelReporter_PropertyChanged);
             // 
             // panelChannels
             // 
@@ -226,10 +226,20 @@
             this.imageList.Images.SetKeyName(0, "tick.png");
             this.imageList.Images.SetKeyName(1, "cross.png");
             // 
-            // labelStatusString
+            // intelReporter
             // 
-            resources.ApplyResources(this.labelStatusString, "labelStatusString");
-            this.labelStatusString.Name = "labelStatusString";
+            this.intelReporter.ChannelListUri = "http://map.pleaseignore.com/intelchannels.pl";
+            this.intelReporter.Path = null;
+            this.intelReporter.ServiceUri = "http://map.pleaseignore.com/report.pl";
+            this.intelReporter.SynchronizingObject = this;
+            this.intelReporter.PropertyChanged += new System.ComponentModel.PropertyChangedEventHandler(this.intelReporter_PropertyChanged);
+            this.intelReporter.IntelReported += new System.EventHandler<PleaseIgnore.IntelMap.IntelEventArgs>(this.intelReporter_IntelReported);
+            // 
+            // updateCheck
+            // 
+            this.updateCheck.CheckUri = "http://minecraft.etherealwake.com/updates.xml";
+            this.updateCheck.SynchronizationObject = this;
+            this.updateCheck.UpdateAvailable += new System.EventHandler<TestIntelReporter.UpdateEventArgs>(this.updateCheck_UpdateAvailable);
             // 
             // MainForm
             // 
@@ -283,6 +293,7 @@
         private System.Windows.Forms.TableLayoutPanel panelChannels;
         private System.Windows.Forms.ImageList imageList;
         private System.Windows.Forms.Label labelStatusString;
+        private UpdateCheck updateCheck;
 
     }
 }

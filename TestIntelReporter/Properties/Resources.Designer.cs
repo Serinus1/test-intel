@@ -90,7 +90,7 @@ namespace TestIntelReporter.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to My trusty crane couldn&apos;t complete the contract in time due to traffic control.  Try again and if you keep having this problem, spam Awol Aurix until this message disappears..
+        ///   Looks up a localized string similar to I wasn&apos;t able to make it to the fight in time due to traffic control.  Try again and if you keep having this problem, spam Awol Aurix until this message disappears..
         /// </summary>
         internal static string Authenticate_Network {
             get {
@@ -239,6 +239,28 @@ namespace TestIntelReporter.Properties {
         internal static string IntelStatus_MissingTitle {
             get {
                 return ResourceManager.GetString("IntelStatus_MissingTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Due to either some profound change in the game mechanics or bugs in the intel reporting software, a new version of the reporting tool has been released.  It&apos;s probably CCP&apos;s fault.
+        ///
+        ///Version Running: {0}
+        ///New Version: {1}
+        ///Download URL: {2}.
+        /// </summary>
+        internal static string IntelStatus_Version {
+            get {
+                return ResourceManager.GetString("IntelStatus_Version", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to :CCP:.
+        /// </summary>
+        internal static string IntelStatus_VersionTitle {
+            get {
+                return ResourceManager.GetString("IntelStatus_VersionTitle", resourceCulture);
             }
         }
         

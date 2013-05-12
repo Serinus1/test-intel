@@ -288,6 +288,9 @@
   <data name="labelChannelsTitle.Font" type="System.Drawing.Font, System.Drawing">
     <value>Segoe UI, 18pt</value>
   </data>
+  <data name="labelChannelsTitle.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
   <data name="labelChannelsTitle.Location" type="System.Drawing.Point, System.Drawing">
     <value>13, 10</value>
   </data>
@@ -298,7 +301,7 @@
     <value>0</value>
   </data>
   <data name="labelChannelsTitle.Text" xml:space="preserve">
-    <value>Hardeners Online</value>
+    <value>Channel List</value>
   </data>
   <data name="&gt;&gt;labelChannelsTitle.Name" xml:space="preserve">
     <value>labelChannelsTitle</value>
@@ -751,7 +754,7 @@
     <value>messageView</value>
   </data>
   <data name="&gt;&gt;messageView.Type" xml:space="preserve">
-    <value>TestIntelReporter.MessageView, TestIntelReporter, Version=0.3.0.0, Culture=neutral, PublicKeyToken=e646930e7fe9a812</value>
+    <value>TestIntelReporter.MessageView, TestIntelReporter, Version=0.4.0.0, Culture=neutral, PublicKeyToken=e646930e7fe9a812</value>
   </data>
   <data name="&gt;&gt;messageView.Parent" xml:space="preserve">
     <value>tableLayoutPanel</value>
@@ -903,45 +906,6 @@
   <data name="panelStatus.LayoutSettings" type="System.Windows.Forms.TableLayoutSettings, System.Windows.Forms">
     <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="labelStatus" Row="1" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="labelStatusTitle" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="Absolute,450" /&gt;&lt;Rows Styles="AutoSize,0,AutoSize,0" /&gt;&lt;/TableLayoutSettings&gt;</value>
   </data>
-  <metadata name="intelReporter.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
-    <value>9, 21</value>
-  </data>
-  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>624, 442</value>
-  </data>
-  <data name="$this.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Segoe UI, 12pt</value>
-  </data>
-  <data name="$this.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
-  </data>
-  <data name="$this.Text" xml:space="preserve">
-    <value>Test Intel Reporting Tool</value>
-  </data>
-  <data name="&gt;&gt;intelReporter.Name" xml:space="preserve">
-    <value>intelReporter</value>
-  </data>
-  <data name="&gt;&gt;intelReporter.Type" xml:space="preserve">
-    <value>PleaseIgnore.IntelMap.IntelReporter, PleaseIgnore.IntelMap, Version=0.3.0.0, Culture=neutral, PublicKeyToken=e646930e7fe9a812</value>
-  </data>
-  <data name="&gt;&gt;imageList.Name" xml:space="preserve">
-    <value>imageList</value>
-  </data>
-  <data name="&gt;&gt;imageList.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ImageList, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;$this.Name" xml:space="preserve">
-    <value>MainForm</value>
-  </data>
-  <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Form, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <metadata name="imageList.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>140, 17</value>
   </metadata>
@@ -950,7 +914,7 @@
         AAEAAAD/////AQAAAAAAAAAMAgAAAFdTeXN0ZW0uV2luZG93cy5Gb3JtcywgVmVyc2lvbj00LjAuMC4w
         LCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODkFAQAAACZTeXN0
         ZW0uV2luZG93cy5Gb3Jtcy5JbWFnZUxpc3RTdHJlYW1lcgEAAAAERGF0YQcCAgAAAAkDAAAADwMAAABA
-        BgAAAk1TRnQBSQFMAgEBAgEAATABAAEwAQABEAEAARABAAT/ARkBAAj/AUIBTQE2BwABNgMAASgDAAFA
+        BgAAAk1TRnQBSQFMAgEBAgEAAVABAAFQAQABEAEAARABAAT/ARkBAAj/AUIBTQE2BwABNgMAASgDAAFA
         AwABEAMAAQEBAAEYBgABDOEAA/0D/iQAAuoB9QL9Af4SAAL9Af4C6AH1dQAD/QE3AYMBPQE2AX4BPAP+
         HgAC6wH2AU8BTAHyAkIB7QL9Af4MAAL9Af4BKQEnAeMBMQEvAeoC6AH1bwAD/QFAAY4BRwFUAaMBXAFP
         AZ8BVwE0AX4BOgH9Af4B/RgAAusB9gFYAVYB9QFjAWEB+gFYAVUB9gFEAUIB7AL9Af4GAAL9Af4BLwEu
@@ -979,4 +943,52 @@
         Af8BwAGAAQEEAAH/AeEBgQGABAAB/wHzAcMBwQQAAv8B5wHjBAAD/wH3BAAL
 </value>
   </data>
+  <metadata name="intelReporter.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
+    <value>9, 21</value>
+  </data>
+  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
+    <value>624, 442</value>
+  </data>
+  <data name="$this.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Segoe UI, 12pt</value>
+  </data>
+  <data name="$this.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 5, 4, 5</value>
+  </data>
+  <data name="$this.Text" xml:space="preserve">
+    <value>Test Intel Reporting Tool</value>
+  </data>
+  <data name="&gt;&gt;imageList.Name" xml:space="preserve">
+    <value>imageList</value>
+  </data>
+  <data name="&gt;&gt;imageList.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ImageList, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;intelReporter.Name" xml:space="preserve">
+    <value>intelReporter</value>
+  </data>
+  <data name="&gt;&gt;intelReporter.Type" xml:space="preserve">
+    <value>PleaseIgnore.IntelMap.IntelReporter, PleaseIgnore.IntelMap, Version=0.4.0.0, Culture=neutral, PublicKeyToken=e646930e7fe9a812</value>
+  </data>
+  <data name="&gt;&gt;updateCheck.Name" xml:space="preserve">
+    <value>updateCheck</value>
+  </data>
+  <data name="&gt;&gt;updateCheck.Type" xml:space="preserve">
+    <value>TestIntelReporter.UpdateCheck, TestIntelReporter, Version=0.4.0.0, Culture=neutral, PublicKeyToken=e646930e7fe9a812</value>
+  </data>
+  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+    <value>MainForm</value>
+  </data>
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Form, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <metadata name="updateCheck.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>243, 17</value>
+  </metadata>
 </root>
