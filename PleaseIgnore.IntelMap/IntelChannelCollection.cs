@@ -6,20 +6,18 @@ using System.Linq;
 
 namespace PleaseIgnore.IntelMap {
     /// <summary>
-    ///     Specialization of <see cref="System.ComponentModel.ComponentCollection"/>
-    ///     providing a list of <see cref="IntelChannel"/>.
+    /// Specialization of <see cref="System.ComponentModel.ComponentCollection" />
+    /// providing a list of <see cref="IntelChannel" />.
     /// </summary>
     public class IntelChannelCollection : ReadOnlyCollection<IntelChannel> {
         /// <summary>
-        ///     Initializes a new instance of <see cref="IntelChannelCollection"/>.
+        /// Initializes a new instance of <see cref="IntelChannelCollection" />.
         /// </summary>
-        /// <param name="list">
-        ///     The list to expose to the user.
-        /// </param>
+        /// <param name="list">The list to expose to the user.</param>
         /// <remarks>
-        ///     <paramref name="list"/> is not copied by
-        ///     <see cref="IntelChannelCollection(IList{IntelChannel})"/>, so
-        ///     a synchronized copy must be made by the container.
+        ///   <paramref name="list" /> is not copied by
+        /// <see cref="IntelChannelCollection(IList{IntelChannel})" />, so
+        /// a synchronized copy must be made by the container.
         /// </remarks>
         public IntelChannelCollection(IList<IntelChannel> list)
                 : base(list) {
@@ -28,17 +26,15 @@ namespace PleaseIgnore.IntelMap {
         }
 
         /// <summary>
-        ///     Gets any <see cref="IntelChannel"/> monitoring the specified
-        ///     channel.
+        /// Gets any <see cref="IntelChannel" /> monitoring the specified
+        /// channel.
         /// </summary>
-        /// <param name="name">
-        ///     The <see cref="IntelChannel.Name"/> to fetch.
-        /// </param>
+        /// <param name="name">The <see cref="IntelChannel.Name" /> to fetch.</param>
         /// <returns>
-        ///     An instance of <see cref="IntelChannel"/> with the
-        ///     <see cref="IntelChannel.Name"/> specified by
-        ///     <paramref name="name"/> or <see langword="null"/> if
-        ///     no such channel is being monitored.
+        /// An instance of <see cref="IntelChannel" /> with the
+        /// <see cref="IntelChannel.Name" /> specified by
+        /// <paramref name="name" /> or <see langword="null" /> if
+        /// no such channel is being monitored.
         /// </returns>
         public IntelChannel this[string name] {
             get {
