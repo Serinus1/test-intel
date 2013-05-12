@@ -1,6 +1,7 @@
 ﻿using PleaseIgnore.IntelMap.Properties;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using System.Globalization;
 using System.Net;
@@ -16,8 +17,6 @@ namespace PleaseIgnore.IntelMap {
     /// </summary>
     /// <threadsafety static="true" instance="false" />
     public class IntelSession : IDisposable {
-        /// <summary>Field separators for the channel list</summary>
-        private static readonly char[] ChannelSeparators = new char[] { ',' };
         /// <summary><see cref="Regex"/> to parse an error response</summary>
         private static readonly Regex ErrorResponse  = new Regex(@"^(50\d) ERROR (.*)");
         /// <summary><see cref="Regex"/> to parse an auth response</summary>
@@ -385,6 +384,8 @@ namespace PleaseIgnore.IntelMap {
 
         /// <summary>Invariant method for Code Contracts.</summary>
         [ContractInvariantMethod]
+        [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
+        [SuppressMessage("Microsoft.Performance", "CA1822:MarkMembersAsStatic")]
         private void ObjectInvariant() {
             Contract.Invariant(this.Users >= 0);
             Contract.Invariant(this.ReportsSent >= 0);

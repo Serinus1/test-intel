@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using System.Globalization;
 using System.IO;
@@ -268,12 +269,12 @@ namespace PleaseIgnore.IntelMap {
         public TimeSpan? ChannelUpdateInterval {
             get {
                 Contract.Ensures(!Contract.Result<TimeSpan?>().HasValue 
-                    || (Contract.Result<TimeSpan?>().Value > TimeSpan.Zero));
+                    || (Contract.Result<TimeSpan?>() > TimeSpan.Zero));
                 return this.channels.ChannelUpdateInterval;
             }
             set {
                 Contract.Requires<ArgumentOutOfRangeException>(
-                        !value.HasValue || (value.Value > TimeSpan.Zero),
+                        !value.HasValue || (value > TimeSpan.Zero),
                         "value");
                 Contract.Requires<InvalidOperationException>(!IsRunning);
                 this.channels.ChannelUpdateInterval = value;
@@ -456,27 +457,26 @@ namespace PleaseIgnore.IntelMap {
 
         /// <inheritdoc/>
         protected override void Dispose(bool disposing) {
-            if (disposing) {
-                // Clean up
-                lock (this.syncRoot) {
-                    try {
+            try {
+                if (disposing) {
+                    // Clean up
+                    lock (this.syncRoot) {
                         if (this.Status != IntelStatus.Disposed) {
                             this.Status = IntelStatus.Disposing;
                             if (this.session != null) {
                                 this.session.Dispose();
                                 this.session = null;
                             }
+                            this.timerSession.Dispose();
                             this.channels.Dispose();
                         }
-                    } finally {
-                        this.Status = IntelStatus.Disposed;
-                        base.Dispose(disposing);
                     }
+                } else {
+                    // Cannot safely clean up
                 }
-            } else {
-                // Cannot safely clean up
-                this.status = IntelStatus.Disposed;
                 base.Dispose(disposing);
+            } finally {
+                this.status = IntelStatus.Disposed;
             }
         }
 
@@ -507,12 +507,13 @@ namespace PleaseIgnore.IntelMap {
                 throw new AuthenticationException();
             } else if (create) {
                 // Safe to create a new instance of IntelSession
-                this.session = new IntelSession(this.username, this.passwordHash, this.serviceUri);
+                session = new IntelSession(this.username, this.passwordHash, this.serviceUri);
+                this.session = session;
                 this.timerSession.Change(this.keepAlivePeriod, this.keepAlivePeriod);
                 this.lastIntel = DateTime.UtcNow;
                 this.Status = IntelStatus.Active;
                 this.OnPropertyChanged("Users");
-                return this.session;
+                return session;
             } else if (session != null) {
                 // Session has expired
                 this.session = null;
@@ -713,6 +714,8 @@ namespace PleaseIgnore.IntelMap {
         }
 
         [ContractInvariantMethod]
+        [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
+        [SuppressMessage("Microsoft.Performance", "CA1822:MarkMembersAsStatic")]
         private void ObjectInvariant() {
             Contract.Invariant(this.sessionTimeout > TimeSpan.Zero);
             Contract.Invariant(this.keepAlivePeriod > TimeSpan.Zero);

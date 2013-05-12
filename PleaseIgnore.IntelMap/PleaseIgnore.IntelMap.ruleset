@@ -4,4 +4,8 @@
   <Include Path="basicdesignguidelinerules.ruleset" Action="Default" />
   <Include Path="globalizationrules.ruleset" Action="Default" />
   <Include Path="minimumrecommendedrules.ruleset" Action="Default" />
+  <Rules AnalyzerId="Microsoft.Analyzers.ManagedCodeAnalysis" RuleNamespace="Microsoft.Rules.Managed">
+    <Rule Id="CA1500" Action="None" />
+    <Rule Id="CA1716" Action="None" />
+  </Rules>
 </RuleSet>

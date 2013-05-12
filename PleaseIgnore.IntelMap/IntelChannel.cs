@@ -2,6 +2,7 @@
 using System;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using System.Globalization;
 using System.IO;
@@ -188,13 +189,6 @@ namespace PleaseIgnore.IntelMap {
         }
 
         /// <summary>
-        /// Finalizes an instance of the <see cref="IntelChannel"/> class.
-        /// </summary>
-        ~IntelChannel() {
-            this.Dispose(false);
-        }
-
-        /// <summary>
         /// Occurs when a new log entry has been read from the chat logs.
         /// </summary>
         public event EventHandler<IntelEventArgs> IntelReported;
@@ -359,7 +353,7 @@ namespace PleaseIgnore.IntelMap {
                     value > TimeSpan.Zero,
                     "value");
                 Contract.Ensures(LogExpiration == value);
-                lock (this) {
+                lock (this.syncRoot) {
                     if (this.expireLog != value) {
                         this.expireLog = value;
                         this.OnPropertyChanged(new PropertyChangedEventArgs("LogExpiration"));
@@ -585,7 +579,9 @@ namespace PleaseIgnore.IntelMap {
             Contract.Requires<ArgumentNullException>(e != null, "e");
 
             // Assume it's going to be a better file....for now
-            OpenFile(new FileInfo(e.FullPath));
+            if (e.FullPath != null) {
+                OpenFile(new FileInfo(e.FullPath));
+            }
         }
 
         /// <summary>
@@ -697,6 +693,10 @@ namespace PleaseIgnore.IntelMap {
         /// otherwise, <see langword="false" />.
         /// </returns>
         protected bool ScanFiles() {
+            Contract.Requires<InvalidOperationException>(this.IsRunning);
+            Contract.Ensures((this.Status == IntelStatus.Waiting)
+                || (this.Status == IntelStatus.Active)
+                || (this.Status == IntelStatus.InvalidPath));
             try {
                 var downtime = IntelExtensions.LastDowntime;
                 var file = new DirectoryInfo(this.Path)
@@ -899,6 +899,8 @@ namespace PleaseIgnore.IntelMap {
 
         /// <summary>Invariant method for Code Contracts.</summary>
         [ContractInvariantMethod]
+        [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
+        [SuppressMessage("Microsoft.Performance", "CA1822:MarkMembersAsStatic")]
         private void ObjectInvariant() {
             Contract.Invariant(!String.IsNullOrEmpty(this.channelFileName)
                     || !this.IsRunning);

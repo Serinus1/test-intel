@@ -310,12 +310,11 @@ namespace PleaseIgnore.IntelMap {
             Contract.Requires<ArgumentNullException>(webResponse != null, "webResponse");
             Contract.Ensures(Contract.Result<string>() != null);
             try {
-                using (var stream = webResponse.GetResponseStream()) {
-                    using (var reader = new StreamReader(stream)) {
-                        var responseData = reader.ReadToEnd();
-                        Trace.WriteLine(">> " + responseData, WebTraceCategory);
-                        return responseData;
-                    }
+                var stream = webResponse.GetResponseStream();
+                using (var reader = new StreamReader(stream)) {
+                    var responseData = reader.ReadToEnd();
+                    Trace.WriteLine(">> " + responseData, WebTraceCategory);
+                    return responseData;
                 }
             } catch (Exception e) {
                 Trace.WriteLine("!! " + e.Message, WebTraceCategory);

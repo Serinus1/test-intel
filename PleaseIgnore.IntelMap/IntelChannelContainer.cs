@@ -5,6 +5,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using System.Globalization;
 using System.IO;
@@ -332,24 +333,21 @@ namespace PleaseIgnore.IntelMap {
             Contract.Ensures(Status == IntelStatus.Disposed);
             Contract.Ensures(!IsRunning);
 
-            if (disposing) {
-                lock (this.syncRoot) {
-                    if (this.status != IntelStatus.Disposed) {
-                        try {
+            try {
+                if (disposing) {
+                    lock (this.syncRoot) {
+                        if (this.status != IntelStatus.Disposed) {
                             this.Status = IntelStatus.Disposing;
                             this.updateTimer.Dispose();
                             channels.ForEach(x => x.Dispose());
-                        } catch {
-                            // Ignore any exceptions during disposal
-                        } finally {
-                            channels.Clear();
                         }
                     }
+                    this.IntelReported = null;
+                    this.PropertyChanged = null;
                 }
-                this.IntelReported = null;
-                this.PropertyChanged = null;
+            } finally {
+                this.status = IntelStatus.Disposed;
             }
-            this.status = IntelStatus.Disposed;
         }
 
         /// <summary>
@@ -583,6 +581,8 @@ namespace PleaseIgnore.IntelMap {
 
         /// <summary>Invariant method for Code Contracts.</summary>
         [ContractInvariantMethod]
+        [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
+        [SuppressMessage("Microsoft.Performance", "CA1822:MarkMembersAsStatic")]
         private void ObjectInvariant() {
             Contract.Invariant(!this.updateInterval.HasValue
                 || (this.updateInterval > TimeSpan.Zero));

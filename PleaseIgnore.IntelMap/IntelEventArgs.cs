@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using System.Globalization;
 
@@ -62,10 +63,10 @@ namespace PleaseIgnore.IntelMap {
                 this.Message);
         }
 
-        /// <summary>
-        /// Invariant method for Code Contracts.
-        /// </summary>
+        /// <summary>Invariant method for Code Contracts.</summary>
         [ContractInvariantMethod]
+        [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
+        [SuppressMessage("Microsoft.Performance", "CA1822:MarkMembersAsStatic")]
         private void ObjectInvariant() {
             Contract.Invariant(!String.IsNullOrEmpty(this.Channel));
             Contract.Invariant(Timestamp.Kind == DateTimeKind.Utc);
