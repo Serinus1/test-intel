@@ -188,6 +188,21 @@ Download URL: {2}</value>
   <data name="IntelStatus_VersionTitle" xml:space="preserve">
     <value>:CCP:</value>
   </data>
+  <data name="NotifyIcon_Active" xml:space="preserve">
+    <value>Test Intel Reporting Tool (Active)</value>
+  </data>
+  <data name="NotifyIcon_AuthError" xml:space="preserve">
+    <value>Test Intel Reporting Tool (Login Rejected)</value>
+  </data>
+  <data name="NotifyIcon_Error" xml:space="preserve">
+    <value>Test Intel Reporting Tool (Error)</value>
+  </data>
+  <data name="NotifyIcon_Inactive" xml:space="preserve">
+    <value>Test Intel Reporting Tool (Idle)</value>
+  </data>
+  <data name="NotifyIcon_Upgrade" xml:space="preserve">
+    <value>Test Intel Reporting Tool (Update Available)</value>
+  </data>
   <data name="NoveltyCount_Many" xml:space="preserve">
     <value>{0:N0} Sightings of DBRB</value>
   </data>

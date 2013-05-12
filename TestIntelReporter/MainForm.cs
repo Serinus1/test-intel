@@ -39,6 +39,8 @@ namespace TestIntelReporter {
         private UpdateEventArgs updateEvent;
         // Date and time the channel list was shown
         private DateTime channelTime;
+        // Set true once we are shutting down
+        private bool shuttingDown;
 
         /// <summary>
         ///     Initializes a new instance of the <see cref="MainForm"/> class.
@@ -54,7 +56,8 @@ namespace TestIntelReporter {
             }
 
             // Update some fields
-            this.Icon = Properties.Resources.AppIcon;
+            this.Icon = Resources.AppIcon;
+            this.notifyIcon.Icon = Resources.AppIcon;
             labelAppName.Text = string.Format(
                 Application.CurrentCulture,
                 labelAppName.Text,
@@ -78,7 +81,8 @@ namespace TestIntelReporter {
         ///     Looking for the wake-up message.
         /// </summary>
         protected override void WndProc(ref Message m) {
-            if ((this.wakeupMessage != 0) && (this.wakeupMessage == m.Msg)) {
+            if ((this.wakeupMessage != 0) && (this.wakeupMessage == m.Msg)
+                    && !this.shuttingDown) {
                 this.Visible = true;
                 this.WindowState = FormWindowState.Normal;
                 this.TopMost = true;
@@ -107,6 +111,8 @@ namespace TestIntelReporter {
                 this.CenterPanel(this.panelAuthError);
                 this.CenterPanel(this.panelChannels);
                 this.CenterPanel(this.panelStatus);
+            } else {
+                this.Visible = false;
             }
             base.OnResize(e);
         }
@@ -118,7 +124,9 @@ namespace TestIntelReporter {
             base.OnClosing(e);
 
             if (!e.Cancel) {
+                this.shuttingDown = true;
                 this.Visible = false;
+                this.notifyIcon.Visible = false;
             }
         }
 
@@ -240,7 +248,8 @@ namespace TestIntelReporter {
                         CultureInfo.InvariantCulture,
                         "StatusString_{0}", status))
                 ?? Resources.StatusString_Unknown;
-            labelStatusString.Text = String.Format(
+            this.labelStatusString.Text = String.Format(
+                CultureInfo.CurrentCulture,
                 statusString,
                 status,
                 intelReporter.Path);
@@ -250,15 +259,22 @@ namespace TestIntelReporter {
             case IntelStatus.Active:
                 // Normal operation
                 this.ShowChannelList();
+                if (this.updateEvent != null) {
+                    this.notifyIcon.Text = Resources.NotifyIcon_Upgrade;
+                } else {
+                    this.notifyIcon.Text = Resources.NotifyIcon_Active;
+                }
                 break;
             case IntelStatus.Waiting:
                 // Normal operation
                 if (this.updateEvent != null) {
                     this.ShowChannelList();
+                    this.notifyIcon.Text = Resources.NotifyIcon_Upgrade;
                 } else {
                     this.ShowStatus(
                         Resources.IntelStatus_IdleTitle,
                         Resources.IntelStatus_Idle);
+                    this.notifyIcon.Text = Resources.NotifyIcon_Inactive;
                 }
                 break;
             case IntelStatus.AuthenticationError:
@@ -268,18 +284,21 @@ namespace TestIntelReporter {
                         Resources.IntelStatus_AuthTitle,
                         Resources.IntelStatus_Auth);
                 }
+                this.notifyIcon.Text = Resources.NotifyIcon_AuthError;
                 break;
             case IntelStatus.InvalidPath:
                 // Couldn't find the log directory
                 this.ShowStatus(
                     Resources.IntelStatus_MissingTitle,
                     Resources.IntelStatus_Missing);
+                this.notifyIcon.Text = Resources.NotifyIcon_Error;
                 break;
             case IntelStatus.NetworkError:
                 // Unable to contact the network server
                 this.ShowStatus(
                     Resources.IntelStatus_ErrorTitle,
                     Resources.IntelStatus_Error);
+                this.notifyIcon.Text = Resources.NotifyIcon_Error;
                 break;
             default:
                 // This represents a pretty critical failure of the
@@ -289,6 +308,7 @@ namespace TestIntelReporter {
                 this.ShowStatus(
                     Resources.IntelStatus_FatalTitle,
                     Resources.IntelStatus_Fatal);
+                this.notifyIcon.Text = Resources.NotifyIcon_Error;
                 break;
             }
             this.oldStatus = status;
@@ -589,6 +609,22 @@ namespace TestIntelReporter {
         /// </summary>
         private void buttonUpdate_Click(object sender, EventArgs e) {
             Process.Start(this.updateEvent.UpdateUri);
+        }
+        #endregion
+
+        #region Notify Icon
+        private void notifyIcon_BalloonTipClicked(object sender, EventArgs e) {
+            this.Visible = true;
+            this.WindowState = FormWindowState.Normal;
+            this.TopMost = true;
+            this.TopMost = false;
+        }
+
+        private void notifyIcon_DoubleClick(object sender, EventArgs e) {
+            this.Visible = true;
+            this.WindowState = FormWindowState.Normal;
+            this.TopMost = true;
+            this.TopMost = false;
         }
         #endregion
     }

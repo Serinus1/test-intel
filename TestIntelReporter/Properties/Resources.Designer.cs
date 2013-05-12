@@ -265,6 +265,51 @@ namespace TestIntelReporter.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Test Intel Reporting Tool (Active).
+        /// </summary>
+        internal static string NotifyIcon_Active {
+            get {
+                return ResourceManager.GetString("NotifyIcon_Active", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Test Intel Reporting Tool (Login Rejected).
+        /// </summary>
+        internal static string NotifyIcon_AuthError {
+            get {
+                return ResourceManager.GetString("NotifyIcon_AuthError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Test Intel Reporting Tool (Error).
+        /// </summary>
+        internal static string NotifyIcon_Error {
+            get {
+                return ResourceManager.GetString("NotifyIcon_Error", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Test Intel Reporting Tool (Idle).
+        /// </summary>
+        internal static string NotifyIcon_Inactive {
+            get {
+                return ResourceManager.GetString("NotifyIcon_Inactive", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Test Intel Reporting Tool (Update Available).
+        /// </summary>
+        internal static string NotifyIcon_Upgrade {
+            get {
+                return ResourceManager.GetString("NotifyIcon_Upgrade", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0:N0} Sightings of DBRB.
         /// </summary>
         internal static string NoveltyCount_Many {

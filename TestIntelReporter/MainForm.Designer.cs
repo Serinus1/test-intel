@@ -60,6 +60,7 @@
             this.labelUpdate = new System.Windows.Forms.Label();
             this.labelUpdateTitle = new System.Windows.Forms.Label();
             this.timerChannels = new System.Windows.Forms.Timer(this.components);
+            this.notifyIcon = new System.Windows.Forms.NotifyIcon(this.components);
             labelUsername = new System.Windows.Forms.Label();
             labelPassword = new System.Windows.Forms.Label();
             labelAuthenticationTitle = new System.Windows.Forms.Label();
@@ -279,6 +280,12 @@
             this.timerChannels.Interval = 1000;
             this.timerChannels.Tick += new System.EventHandler(this.timerChannels_Tick);
             // 
+            // notifyIcon
+            // 
+            resources.ApplyResources(this.notifyIcon, "notifyIcon");
+            this.notifyIcon.BalloonTipClicked += new System.EventHandler(this.notifyIcon_BalloonTipClicked);
+            this.notifyIcon.DoubleClick += new System.EventHandler(this.notifyIcon_DoubleClick);
+            // 
             // MainForm
             // 
             resources.ApplyResources(this, "$this");
@@ -340,6 +347,7 @@
         private System.Windows.Forms.Label labelUpdate;
         private System.Windows.Forms.Label labelUpdateTitle;
         private System.Windows.Forms.Timer timerChannels;
+        private System.Windows.Forms.NotifyIcon notifyIcon;
 
     }
 }
