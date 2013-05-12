@@ -11,23 +11,24 @@ using System.Text.RegularExpressions;
 
 namespace PleaseIgnore.IntelMap {
     /// <summary>
-    ///     Series of helper methods to assist with the construction of
-    ///     classes within PleaseIgnore.IntelMap.
+    /// Series of helper methods to assist with the construction of
+    /// classes within PleaseIgnore.IntelMap.
     /// </summary>
-    /// <threadsafety static="true" instance="false"/>
+    /// <threadsafety static="true" instance="false" />
     internal static class IntelExtensions {
-        // The Unix time epoc
+        /// <summary>The Unix time epoch</summary>
         private static readonly DateTime Epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-        // The 'unreserved' characters from RFC 3986
+        /// <summary>The 'unreserved' characters from RFC 3986</summary>
         private const string Unreserved = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~";
-        // Convert a number 0...15 to hex
+        /// <summary>Convert a number 0...15 to a upper-case hex digit</summary>
         private const string HexUpperString = "0123456789ABCDEF";
+        /// <summary>Convert a number 0...15 to a lower-case hex digit</summary>
         private const string HexLowerString = "0123456789abcdef";
-        // Category for Network Tracing
+        /// <summary><see cref="Trace.Write(Object,String)" /> category</summary>
         public const string WebTraceCategory = "PleaseIgnore.IntelMap";
-        // Downtime in ticks from beginning of day
+        /// <summary>Downtime in ticks from beginning of day</summary>
         private const Int64 DowntimeTicks = 11L * TimeSpan.TicksPerHour;
-        // Priority list of IntelChannelStatus
+        /// <summary>Priority list of <see cref="IntelStatus" /></summary>
         private static readonly IntelStatus[] StatusPriority = new IntelStatus[] {
             IntelStatus.FatalError,
             IntelStatus.AuthenticationError,
@@ -37,17 +38,21 @@ namespace PleaseIgnore.IntelMap {
             IntelStatus.Waiting
         };
 
-        // The base URL for requests on the intel map server
+        /// <summary>The base URL for requests on the intel map server</summary>
         public readonly static Uri BaseUrl = new Uri("http://map.pleaseignore.com/");
-        // The URL for quering the channel list
+        /// <summary>The URL for quering the channel list</summary>
         public readonly static Uri ChannelsUrl = new Uri(BaseUrl, "intelchannels.pl");
-        // The URL for reporting intel
+        /// <summary>The URL for reporting intel</summary>
         public readonly static Uri ReportUrl = new Uri(BaseUrl, "report.pl");
 
         /// <summary>
-        ///     Gets the time and date of the most recent scheduled Tranquility
-        ///     downtime.
+        /// Gets the time and date of the most recent scheduled Tranquility
+        /// downtime.
         /// </summary>
+        /// <value>
+        /// Instance of <see cref="DateTime"/> providing an estimate of when
+        /// the most recent Tranquility daily downtime begain.
+        /// </value>
         public static DateTime LastDowntime {
             get {
                 var nowTicks = DateTime.UtcNow.Ticks;
@@ -59,31 +64,26 @@ namespace PleaseIgnore.IntelMap {
         }
 
         /// <summary>
-        ///     Gets the time and date of the next scheduled Tranquility
-        ///     downtime.
+        /// Gets the time and date of the next scheduled Tranquility
+        /// downtime.
         /// </summary>
+        /// <value>
+        /// Instance of <see cref="DateTime"/> providing an estimate of when
+        /// the next Tranquility daily downtime should begain.
+        /// </value>
         public static DateTime NextDowntime {
             get {
                 return LastDowntime + new TimeSpan(TimeSpan.TicksPerDay);
             }
         }
 
-        /// <summary>
-        ///     Runs an action against each member of a collection.
-        /// </summary>
-        /// <typeparam name="T">
-        ///     The type of the elements of <paramref name="source"/>.
-        /// </typeparam>
-        /// <param name="source">
-        ///     An <see cref="IEnumerable{T}"/> to process.
-        /// </param>
-        /// <param name="action">
-        ///     A function to execute on each member of <paramref name="source"/>.
-        /// </param>
-        /// <returns>
-        ///     The collection <paramref name="source"/> after <paramref name="action"/>
-        ///     has been executed on each member.
-        /// </returns>
+        /// <summary>Runs an action against each member of a collection.</summary>
+        /// <typeparam name="T">The type of the elements of
+        /// <paramref name="source" />.</typeparam>
+        /// <param name="source">An <see cref="IEnumerable{T}" /> to process.</param>
+        /// <param name="action">A function to execute on each member of
+        /// <paramref name="source" />.</param>
+        /// <returns>The parameter <paramref name="source" />.</returns>
         public static IEnumerable<T> ForEach<T>(this IEnumerable<T> source, Action<T> action) {
             Contract.Requires<ArgumentNullException>(source != null, "source");
             Contract.Requires<ArgumentNullException>(action != null, "action");
@@ -94,16 +94,15 @@ namespace PleaseIgnore.IntelMap {
         }
 
         /// <summary>
-        ///     Converts the value of the current <see cref="DateTime"/>
-        ///     object to a standard Unix timestamp.
+        /// Converts the value of the current <see cref="DateTime" />
+        /// object to a standard Unix timestamp.
         /// </summary>
-        /// <param name="timestamp">
-        ///     The <see cref="DateTime"/> object to convert
-        /// </param>
+        /// <param name="timestamp">The <see cref="DateTime" /> object to
+        /// convert.</param>
         /// <returns>
-        ///     The representation of <paramref name="timestamp"/> as a Unix
-        ///     timestamp, specifically the number of seconds elapsed since
-        ///     midnight, 1 Jan 1970 GMT.
+        /// The representation of <paramref name="timestamp" /> as a Unix
+        /// timestamp, specifically the number of seconds elapsed (ignoring
+        /// leap seconds) since midnight, 1 Jan 1970 GMT.
         /// </returns>
         [Pure]
         public static double ToUnixTime(this DateTime timestamp) {
@@ -113,15 +112,13 @@ namespace PleaseIgnore.IntelMap {
         }
 
         /// <summary>
-        ///     Picks the highest priority status out of an array of
-        ///     <see cref="IntelStatus"/>.
+        /// Picks the highest priority status out of an array of
+        /// <see cref="IntelStatus" />.
         /// </summary>
-        /// <param name="array">
-        ///     An array of <see cref="IntelStatus"/> values.
-        /// </param>
-        /// <returns>
-        ///     The highest priority status from <paramref name="array"/>.
-        /// </returns>
+        /// <param name="array">An array of <see cref="IntelStatus" />
+        /// values.</param>
+        /// <returns>The highest priority status from
+        /// <paramref name="array" />.</returns>
         [Pure]
         public static IntelStatus Combine(params IntelStatus[] array) {
             Contract.Requires(array != null);
@@ -135,17 +132,21 @@ namespace PleaseIgnore.IntelMap {
         }
 
         /// <summary>
-        ///     Tests if a value of the <see cref="IntelStatus"/>
-        ///     enumeration refers to a "running" state.
+        /// Tests if a value of the <see cref="IntelStatus" />
+        /// enumeration refers to a "running" state.
         /// </summary>
-        /// <param name="status">
-        ///     Value of <see cref="IntelStatus"/> to test.
-        /// </param>
+        /// <param name="status">Value of <see cref="IntelStatus" /> to
+        /// test.</param>
         /// <returns>
-        ///     <see langword="true"/> if the value of <paramref name="status"/>
-        ///     refers to a normal operating state; otherwise, 
-        ///     <see langword="false"/> if it's in a stopped state.
+        /// <see langword="true" /> if the value of <paramref name="status" />
+        /// refers to a normal operating state; otherwise,
+        /// <see langword="false" /> if it's in a stopped state.
         /// </returns>
+        /// <remarks>
+        /// A "running" state is any state that is either reporting intel
+        /// or can automatically transition to a reporting state without direct
+        /// programmatic manipulation.
+        /// </remarks>
         [Pure]
         public static bool IsRunning(this IntelStatus status) {
             switch (status) {
@@ -162,17 +163,20 @@ namespace PleaseIgnore.IntelMap {
         }
 
         /// <summary>
-        ///     Tests if a value of the <see cref="IntelStatus"/>
-        ///     enumeration refers to an "error" state.
+        /// Tests if a value of the <see cref="IntelStatus" />
+        /// enumeration refers to an "error" state.
         /// </summary>
-        /// <param name="status">
-        ///     Value of <see cref="IntelStatus"/> to test.
-        /// </param>
+        /// <param name="status">Value of <see cref="IntelStatus" />
+        /// to test.</param>
         /// <returns>
-        ///     <see langword="true"/> if the value of <paramref name="status"/>
-        ///     refers to an error state; otherwise, 
-        ///     <see langword="false"/> if it's in a stopped state.
+        /// <see langword="true" /> if the value of <paramref name="status" />
+        /// refers to an error state; otherwise, <see langword="false" />.
         /// </returns>
+        /// <remarks>
+        /// Error states include automatically recoverable errors (e.g.
+        /// <see cref="IntelStatus.NetworkError"/>) in additional to
+        /// unrecoverable states (e.g. <see cref="IntelStatus.FatalError"/>).
+        /// </remarks>
         [Pure]
         public static bool IsError(this IntelStatus status) {
             switch (status) {
@@ -186,20 +190,15 @@ namespace PleaseIgnore.IntelMap {
             }
         }
 
-        /// <summary>
-        ///     Submits a standard POST to an HTTP(S) server.
-        /// </summary>
-        /// <param name="webRequest">
-        ///     The instance of <see cref="WebRequest"/> to use when submitting
-        ///     the HTTP POST.
-        /// </param>
-        /// <param name="payload">
-        ///     The "application/x-www-form-urlencoded" encoded payload to
-        ///     send as the POST content.
-        /// </param>
+        /// <summary>Submits a standard POST to an HTTP(S)
+        /// server.</summary>
+        /// <param name="webRequest">The instance of <see cref="WebRequest" />
+        /// to use when submitting the HTTP POST.</param>
+        /// <param name="payload">The "application/x-www-form-urlencoded"
+        /// encoded payload to send as the POST content.</param>
         /// <returns>
-        ///     The instance of <see cref="WebResponse"/> providing the server's
-        ///     response to the POST.
+        /// The instance of <see cref="WebResponse" /> providing the server's
+        /// response to the POST.
         /// </returns>
         public static WebResponse Post(this WebRequest webRequest, byte[] payload) {
             Contract.Requires<ArgumentNullException>(webRequest != null, "webRequest");
@@ -208,27 +207,19 @@ namespace PleaseIgnore.IntelMap {
             return Post(webRequest, payload, 0, payload.Length);
         }
 
-        /// <summary>
-        ///     Submits a standard POST to an HTTP(S) server.
-        /// </summary>
-        /// <param name="webRequest">
-        ///     The instance of <see cref="WebRequest"/> to use when submitting
-        ///     the HTTP POST.
-        /// </param>
-        /// <param name="payload">
-        ///     The "application/x-www-form-urlencoded" encoded payload to
-        ///     send as the POST content.
-        /// </param>
-        /// <param name="offset">
-        ///     The zero-based byte offset in <paramref name="payload"/> at
-        ///     which to begin copying bytes to the server. 
-        /// </param>
-        /// <param name="count">
-        ///     The number of bytes to be sent to the server.
-        /// </param>
+        /// <summary>Submits a standard POST to an HTTP(S) server.</summary>
+        /// <param name="webRequest">The instance of <see cref="WebRequest" />
+        /// to use when submitting the HTTP POST.</param>
+        /// <param name="payload">The "application/x-www-form-urlencoded"
+        /// encoded payload to send as the POST content.</param>
+        /// <param name="offset">The zero-based byte offset in
+        /// <paramref name="payload" /> at which to begin copying bytes to the
+        /// server.</param>
+        /// <param name="count">The number of bytes to be sent to the
+        /// server.</param>
         /// <returns>
-        ///     The instance of <see cref="WebResponse"/> providing the server's
-        ///     response to the POST.
+        /// The instance of <see cref="WebResponse" /> providing the server's
+        /// response to the POST.
         /// </returns>
         public static WebResponse Post(this WebRequest webRequest, byte[] payload, int offset, int count) {
             Contract.Requires<ArgumentNullException>(webRequest != null, "webRequest");
@@ -258,25 +249,22 @@ namespace PleaseIgnore.IntelMap {
         }
 
         /// <summary>
-        ///     Submits a standard POST to an HTTP(S) server after encoding
-        ///     the name-value pairs.
+        /// Submits a standard POST to an HTTP(S) server after encoding
+        /// a set of name-value pairs.
         /// </summary>
-        /// <param name="webRequest">
-        ///     The instance of <see cref="WebRequest"/> to use when submitting
-        ///     the HTTP POST.
-        /// </param>
-        /// <param name="variables">
-        ///     A list of name-value pairs to send to the server.
-        /// </param>
+        /// <param name="webRequest">The instance of <see cref="WebRequest" />
+        /// to use when submitting the HTTP POST.</param>
+        /// <param name="variables">A list of name-value pairs to send to the
+        /// server.</param>
         /// <returns>
-        ///     The instance of <see cref="WebResponse"/> providing the server's
-        ///     response to the POST.
+        /// The instance of <see cref="WebResponse" /> providing the server's
+        /// response to the POST.
         /// </returns>
         /// <remarks>
-        ///     The name-value pairs provided by <paramref name="variables"/>
-        ///     will be encoded as per the method described in the HTML
-        ///     specification (part 17.13.4) after being converted to
-        ///     strings by calling <see cref="Object.ToString()"/>.
+        /// The name-value pairs provided by <paramref name="variables" />
+        /// will be encoded as per the method described in the HTML
+        /// specification (part 17.13.4) after being converted to
+        /// strings by calling <see cref="Object.ToString()" />.
         /// </remarks>
         public static WebResponse Post(this WebRequest webRequest,
                 IEnumerable<KeyValuePair<string, string>> variables) {
@@ -312,15 +300,12 @@ namespace PleaseIgnore.IntelMap {
         }
 
         /// <summary>
-        ///     Reads the entirety of the response body of a
-        ///     <see cref="WebResponse"/> and then disposes the instances.
+        /// Reads the entirety of the response body of a
+        /// <see cref="WebResponse" /> and then disposes the instances.
         /// </summary>
-        /// <param name="webResponse">
-        ///     The instance of <see cref="WebResponse"/> to read out.
-        /// </param>
-        /// <returns>
-        ///     The response payload parsed as a string.
-        /// </returns>
+        /// <param name="webResponse">The instance of <see cref="WebResponse" />
+        /// to read out.</param>
+        /// <returns>The response payload parsed as a string.</returns>
         public static string ReadContent(this WebResponse webResponse) {
             Contract.Requires<ArgumentNullException>(webResponse != null, "webResponse");
             Contract.Ensures(Contract.Result<string>() != null);
@@ -341,16 +326,13 @@ namespace PleaseIgnore.IntelMap {
         }
 
         /// <summary>
-        ///     Writes the HTML form url encoded form a string to a
-        ///     <see cref="Stream"/>.
+        /// Writes the HTML form url encoded form a string to a
+        /// <see cref="Stream" />.
         /// </summary>
-        /// <param name="stream">
-        ///     The instance of <see cref="Stream"/> to write the data
-        ///     string to.
-        /// </param>
-        /// <param name="dataString">
-        ///     The <see cref="String"/> to be encoded.
-        /// </param>
+        /// <param name="stream">The instance of <see cref="Stream" /> to write
+        /// the data string to.</param>
+        /// <param name="dataString">The <see cref="String" /> to be
+        /// encoded.</param>
         public static void WriteUriEncoded(this Stream stream, string dataString) {
             Contract.Requires<ArgumentNullException>(stream != null, "stream");
             if (!String.IsNullOrEmpty(dataString)) {
@@ -373,15 +355,12 @@ namespace PleaseIgnore.IntelMap {
         }
 
         /// <summary>
-        ///     Converts a byte array into a hex string using lower-case
-        ///     characters for A-F.
+        /// Converts a byte array into a hex string using lower-case
+        /// characters for A-F.
         /// </summary>
-        /// <param name="array">
-        ///     Byte array to convert to a hex string.
-        /// </param>
-        /// <returns>
-        ///     The hex string representation of <paramref name="array"/>.
-        /// </returns>
+        /// <param name="array">Byte array to convert to a hex string.</param>
+        /// <returns>The hex string representation of
+        /// <paramref name="array" />.</returns>
         [Pure]
         public static string ToLowerHexString(this byte[] array) {
             Contract.Requires<ArgumentNullException>(array != null, "array");
@@ -400,19 +379,17 @@ namespace PleaseIgnore.IntelMap {
             }
         }
 
-        /// <summary>
-        ///     Parse an integer found in a Regular Expression match.
-        /// </summary>
-        /// <param name="capture">
-        ///     Regular expression <see cref="Capture"/> to parse.
-        /// </param>
+        /// <summary>Parse an integer found in a Regular Expression
+        /// match.</summary>
+        /// <param name="capture">Regular expression <see cref="Capture" />
+        /// to parse.</param>
         /// <returns>
-        ///     The integer represented by the string matched by
-        ///     <paramref name="capture"/>.
+        /// The integer represented by the string matched by
+        /// <paramref name="capture" />.
         /// </returns>
         /// <remarks>
-        ///     <see cref="ToInt32"/> decodes <paramref name="capture"/>
-        ///     according to the invariant culture.
+        /// <see cref="ToInt32" /> decodes <paramref name="capture" />
+        /// according to the invariant culture.
         /// </remarks>
         [Pure]
         public static int ToInt32(this Capture capture) {

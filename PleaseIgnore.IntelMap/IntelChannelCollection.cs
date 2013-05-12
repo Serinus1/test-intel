@@ -15,7 +15,7 @@ namespace PleaseIgnore.IntelMap {
         /// </summary>
         /// <param name="list">The list to expose to the user.</param>
         /// <remarks>
-        ///   <paramref name="list" /> is not copied by
+        /// <paramref name="list" /> is not copied by
         /// <see cref="IntelChannelCollection(IList{IntelChannel})" />, so
         /// a synchronized copy must be made by the container.
         /// </remarks>
