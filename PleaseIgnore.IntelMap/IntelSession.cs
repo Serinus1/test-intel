@@ -53,7 +53,34 @@ namespace PleaseIgnore.IntelMap {
         /// <exception cref="WebException">Error in contacting the web
         /// server.</exception>
         public IntelSession(string username, string passwordHash)
-            : this(username, passwordHash, null) {
+            : this(username, passwordHash, IntelExtensions.ReportUrl) {
+            Contract.Requires<ArgumentException>(!String.IsNullOrEmpty(username));
+            Contract.Requires<ArgumentException>(!String.IsNullOrEmpty(passwordHash));
+        }
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="IntelSession" /> class
+        /// and authenticates with the map server using a specified service
+        /// <see cref="Uri" />.
+        /// </summary>
+        /// <param name="username">The TEST user name.</param>
+        /// <param name="passwordHash">An SHA1 hash of the user's
+        /// TEST services password.</param>
+        /// <param name="serviceUri"><see cref="Uri" /> to use when contacting
+        /// the Intel Map reporting service.</param>
+        /// <seealso cref="HashPassword" />
+        /// <exception cref="AuthenticationException">The username/password
+        /// combination were rejected.</exception>
+        /// <exception cref="WebException">Error in contacting the web
+        /// server.</exception>
+        /// <exception cref="NotSupportedException"><paramref name="serviceUri" />
+        /// uses a URI scheme not registered with <see cref="WebRequest" />.</exception>
+        public IntelSession(string username, string passwordHash, string serviceUri)
+                : this (username, passwordHash, new Uri(serviceUri)) {
+            Contract.Requires<ArgumentException>(!String.IsNullOrEmpty(username));
+            Contract.Requires<ArgumentException>(!String.IsNullOrEmpty(passwordHash));
+            Contract.Requires<ArgumentNullException>(serviceUri != null, "serviceUri");
+            Contract.Requires<ArgumentException>(Uri.IsWellFormedUriString(serviceUri, UriKind.Absolute));
         }
 
         /// <summary>
@@ -76,10 +103,11 @@ namespace PleaseIgnore.IntelMap {
         public IntelSession(string username, string passwordHash, Uri serviceUri) {
             Contract.Requires<ArgumentException>(!String.IsNullOrEmpty(username));
             Contract.Requires<ArgumentException>(!String.IsNullOrEmpty(passwordHash));
-            Contract.Requires<ArgumentException>((serviceUri == null) || serviceUri.IsAbsoluteUri);
+            Contract.Requires<ArgumentNullException>(serviceUri != null, "serviceUri");
+            Contract.Requires<ArgumentException>(serviceUri.IsAbsoluteUri);
 
             this.username = username;
-            this.serviceUri = serviceUri ?? IntelExtensions.ReportUrl;
+            this.serviceUri = serviceUri;
 
             var request = WebRequest.Create(this.serviceUri);
             var response = request.Post(new Dictionary<string, string>() {

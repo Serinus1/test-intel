@@ -235,9 +235,7 @@
             // 
             // intelReporter
             // 
-            this.intelReporter.ChannelListUri = "http://map.pleaseignore.com/intelchannels.pl";
             this.intelReporter.Path = null;
-            this.intelReporter.ServiceUri = "http://map.pleaseignore.com/report.pl";
             this.intelReporter.SynchronizingObject = this;
             this.intelReporter.PropertyChanged += new System.ComponentModel.PropertyChangedEventHandler(this.intelReporter_PropertyChanged);
             this.intelReporter.IntelReported += new System.EventHandler<PleaseIgnore.IntelMap.IntelEventArgs>(this.intelReporter_IntelReported);

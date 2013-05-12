@@ -54,7 +54,7 @@ namespace PleaseIgnore.IntelMap {
         private int uploadCount;
         /// <summary>URI to use when fetching the channel list</summary>
         [ContractPublicPropertyName("ChannelListUri")]
-        private Uri channelListUri = IntelExtensions.ChannelsUrl;
+        private string channelListUri = IntelExtensions.ChannelsUrl;
         /// <summary>Directory to use when overriding the IntelChannel's
         /// <see cref="IntelChannel.Path"/></summary>
         [ContractPublicPropertyName("Path")]
@@ -193,21 +193,18 @@ namespace PleaseIgnore.IntelMap {
         /// </summary>
         /// <value>The channel list URI.</value>
         /// <exception cref="System.ArgumentException"></exception>
-        [AmbientValue((string)null)]
+        [DefaultValue(IntelExtensions.ChannelsUrl)]
         public string ChannelListUri {
             get {
                 Contract.Ensures(!String.IsNullOrEmpty(Contract.Result<string>()));
-                return (this.channelListUri ?? IntelExtensions.ChannelsUrl).OriginalString;
+                return this.channelListUri;
             }
             set {
+                Contract.Requires<ArgumentNullException>(value != null, "value");
+                Contract.Requires<ArgumentException>(Uri.IsWellFormedUriString(value, UriKind.Absolute));
                 Contract.Requires<InvalidOperationException>(!this.IsRunning);
-                var uri = (value != null) ? new Uri(value) : IntelExtensions.ChannelsUrl;
-                if (!uri.IsAbsoluteUri) {
-                    // TODO: Proper exception
-                    throw new ArgumentException();
-                }
-                if (this.channelListUri != uri) {
-                    this.channelListUri = uri;
+                if (this.channelListUri != value) {
+                    this.channelListUri = value;
                     this.OnPropertyChanged(new PropertyChangedEventArgs("ChannelListUri"));
                 }
             }
@@ -701,6 +698,24 @@ namespace PleaseIgnore.IntelMap {
             } else {
                 return channels;
             }
+        }
+
+        /// <summary>
+        /// Downloads the list of channels to monitor from a specific
+        /// reporting server.
+        /// </summary>
+        /// <param name="serviceUri">The server <see cref="Uri"/> to download
+        /// the channel list from.</param>
+        /// <returns>A <see cref="String" /> <see cref="Array" /> of channel
+        /// filenames.</returns>
+        /// <exception cref="WebException">There was a problem contacting
+        /// the server or the server response was invalid.</exception>
+        public static string[] GetChannelList(string serviceUri) {
+            Contract.Requires<ArgumentNullException>(serviceUri != null, "serviceUri");
+            Contract.Requires<ArgumentException>(Uri.IsWellFormedUriString(serviceUri, UriKind.Absolute));
+            Contract.Ensures(Contract.Result<string[]>() != null);
+            Contract.Ensures(Contract.Result<string[]>().Length > 0);
+            return GetChannelList(new Uri(serviceUri));
         }
 
         /// <summary>

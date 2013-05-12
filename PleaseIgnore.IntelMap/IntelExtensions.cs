@@ -39,11 +39,11 @@ namespace PleaseIgnore.IntelMap {
         };
 
         /// <summary>The base URL for requests on the intel map server</summary>
-        public readonly static Uri BaseUrl = new Uri("http://map.pleaseignore.com/");
+        public const string BaseUrl = "http://map.pleaseignore.com/";
         /// <summary>The URL for quering the channel list</summary>
-        public readonly static Uri ChannelsUrl = new Uri(BaseUrl, "intelchannels.pl");
+        public const string ChannelsUrl = BaseUrl + "intelchannels.pl";
         /// <summary>The URL for reporting intel</summary>
-        public readonly static Uri ReportUrl = new Uri(BaseUrl, "report.pl");
+        public const string ReportUrl = BaseUrl + "report.pl";
 
         /// <summary>
         /// Gets the time and date of the most recent scheduled Tranquility

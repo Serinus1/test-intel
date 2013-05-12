@@ -56,7 +56,7 @@ namespace PleaseIgnore.IntelMap {
             CultureInfo.InvariantCulture);
         // Field backing the ServiceUri property
         [ContractPublicPropertyName("ServiceUri")]
-        private Uri serviceUri = IntelExtensions.ReportUrl;
+        private string serviceUri = IntelExtensions.ReportUrl;
         // The session used to contact the intel server
         private IntelSession session;
         // Field backing the Username property
@@ -360,13 +360,15 @@ namespace PleaseIgnore.IntelMap {
         ///     Gets or sets the <see cref="Uri"/> to use when downloading
         ///     the channel list.
         /// </summary>
-        [AmbientValue((string)null)]
+        [DefaultValue(IntelExtensions.ChannelsUrl)]
         public string ChannelListUri {
             get {
                 Contract.Ensures(!String.IsNullOrEmpty(Contract.Result<string>()));
                 return this.channels.ChannelListUri;
             }
             set {
+                Contract.Requires<ArgumentNullException>(value != null, "value");
+                Contract.Requires<ArgumentException>(Uri.IsWellFormedUriString(value, UriKind.Absolute));
                 Contract.Requires<InvalidOperationException>(!IsRunning);
                 this.channels.ChannelListUri = value;
             }
@@ -376,21 +378,18 @@ namespace PleaseIgnore.IntelMap {
         ///     Gets or sets the <see cref="Uri"/> to use when accessing the
         ///     intel reporting service.
         /// </summary>
-        [AmbientValue((string)null)]
+        [DefaultValue(IntelExtensions.ReportUrl)]
         public string ServiceUri {
             get {
                 Contract.Ensures(!String.IsNullOrEmpty(Contract.Result<string>()));
-                return (this.serviceUri ?? IntelExtensions.ChannelsUrl).OriginalString;
+                return this.serviceUri;
             }
             set {
+                Contract.Requires<ArgumentNullException>(value != null, "value");
+                Contract.Requires<ArgumentException>(Uri.IsWellFormedUriString(value, UriKind.Absolute));
                 Contract.Requires<InvalidOperationException>(!IsRunning);
-                var uri = (value != null) ? new Uri(value) : IntelExtensions.ChannelsUrl;
-                if (!uri.IsAbsoluteUri) {
-                    // TODO: Proper exception
-                    throw new ArgumentException();
-                }
-                if (this.serviceUri != uri) {
-                    this.serviceUri = uri;
+                if (this.serviceUri != value) {
+                    this.serviceUri = value;
                     this.OnPropertyChanged(new PropertyChangedEventArgs("ServiceUri"));
                 }
             }
