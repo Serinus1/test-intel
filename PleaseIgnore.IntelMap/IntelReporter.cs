@@ -545,6 +545,11 @@ namespace PleaseIgnore.IntelMap {
             // Report the intel
             try {
                 lock (this.syncRoot) {
+                    // Race condition avoidance
+                    if (!this.IsRunning) {
+                        return;
+                    }
+                    // Report as necessary
                     var session = this.GetSession(true);
                     if (session.Report(e)) {
                         this.Status = IntelStatus.Active;

@@ -276,7 +276,7 @@
             // 
             // timerChannels
             // 
-            this.timerChannels.Interval = 5000;
+            this.timerChannels.Interval = 1000;
             this.timerChannels.Tick += new System.EventHandler(this.timerChannels_Tick);
             // 
             // MainForm

@@ -17,7 +17,9 @@ using System.Threading;
 namespace TestIntelReporter {
     public partial class MainForm : Form {
         // Pen used for drawing the panel borders
-        private readonly Pen borderPen = new Pen(Color.Gray, 4.0f);
+        private static readonly Pen borderPen = new Pen(Color.Gray, 4.0f);
+        // Time to show the channel list for if all green
+        private static readonly TimeSpan minimumChannelTime = new TimeSpan(0, 0, 30);
         // The settings object
         private readonly Settings settings;
         // List of channel status flags
@@ -35,6 +37,8 @@ namespace TestIntelReporter {
         private bool configError;
         // The most recent update notification
         private UpdateEventArgs updateEvent;
+        // Date and time the channel list was shown
+        private DateTime channelTime;
 
         /// <summary>
         ///     Initializes a new instance of the <see cref="MainForm"/> class.
@@ -160,13 +164,12 @@ namespace TestIntelReporter {
         /// </summary>
         private void ShowStatus(string title, string message) {
             if (!panelAuthentication.Visible) {
-                panelStatus.Visible = false;
+                this.AcceptButton = null;
                 panelAuthError.Visible = false;
                 panelChannels.Visible = false;
                 panelUpdate.Visible = false;
                 labelStatusTitle.Text = title;
                 labelStatus.Text = message;
-                this.AcceptButton = null;
                 this.ShowPanel(this.panelStatus, null);
             }
         }
@@ -178,15 +181,15 @@ namespace TestIntelReporter {
             if (!panelAuthentication.Visible) {
                 panelStatus.Visible = false;
                 panelAuthError.Visible = false;
-                panelChannels.Visible = false;
                 if (this.updateEvent != null) {
+                    // Prioritize the update panel over the channel list
                     this.panelChannels.Visible = false;
                     this.ShowPanel(this.panelUpdate, this.buttonUpdate);
                     this.AcceptButton = this.buttonUpdate;
                 } else if (this.oldStatus != IntelStatus.Active) {
                     // Channel list being shown for the first time
+                    this.channelTime = DateTime.UtcNow;
                     this.timerChannels.Enabled = true;
-                    this.panelUpdate.Visible = false;
                     this.AcceptButton = null;
                     this.ShowPanel(this.panelChannels, null);
                 } else {
@@ -425,11 +428,15 @@ namespace TestIntelReporter {
         private void timerChannels_Tick(object sender, EventArgs e) {
             switch (this.oldStatus) {
             case IntelStatus.Active:
-                if(this.updateEvent == null) {
+                if (this.updateEvent == null) {
                     // Hide the channel list if everything's green
-                    this.panelChannels.Visible = this.intelReporter
-                        .Channels
-                        .Any();//x => x.Status != IntelStatus.Active);
+                    if (this.intelReporter.Channels
+                            .Any(x => x.Status != IntelStatus.Active)) {
+                        this.channelTime = DateTime.UtcNow;
+                        this.ShowPanel(this.panelChannels, null);
+                    } else if ((this.channelTime + minimumChannelTime) < DateTime.UtcNow) {
+                        this.panelChannels.Visible = false;
+                    }
                 } else {
                     // Always going to show the update dialog
                     this.timerChannels.Enabled = false;
