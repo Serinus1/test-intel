@@ -108,6 +108,17 @@ namespace TestIntelReporter {
         }
 
         /// <summary>
+        ///     Hide the window while we are disposing of the session.
+        /// </summary>
+        protected override void OnClosing(CancelEventArgs e) {
+            base.OnClosing(e);
+
+            if (!e.Cancel) {
+                this.Visible = false;
+            }
+        }
+
+        /// <summary>
         ///     Actives the specified pseudo-dialog within the parent window.
         ///     The operation includes centering, z-order manipulation, and
         ///     focus changes.
@@ -172,10 +183,15 @@ namespace TestIntelReporter {
                     this.panelChannels.Visible = false;
                     this.ShowPanel(this.panelUpdate, this.buttonUpdate);
                     this.AcceptButton = this.buttonUpdate;
-                } else {
+                } else if (this.oldStatus != IntelStatus.Active) {
+                    // Channel list being shown for the first time
+                    this.timerChannels.Enabled = true;
                     this.panelUpdate.Visible = false;
                     this.AcceptButton = null;
                     this.ShowPanel(this.panelChannels, null);
+                } else {
+                    // Make sure channel list is always centered
+                    this.CenterPanel(this.panelChannels);
                 }
             }
         }
@@ -400,6 +416,29 @@ namespace TestIntelReporter {
                     Application.CurrentCulture,
                     formatMany,
                     count);
+            }
+        }
+
+        /// <summary>
+        ///     Hides the channel list if all the channels are active.
+        /// </summary>
+        private void timerChannels_Tick(object sender, EventArgs e) {
+            switch (this.oldStatus) {
+            case IntelStatus.Active:
+                if(this.updateEvent == null) {
+                    // Hide the channel list if everything's green
+                    this.panelChannels.Visible = this.intelReporter
+                        .Channels
+                        .Any();//x => x.Status != IntelStatus.Active);
+                } else {
+                    // Always going to show the update dialog
+                    this.timerChannels.Enabled = false;
+                }
+                break;
+            default:
+                // No need to continue watching the channel list
+                this.timerChannels.Enabled = false;
+                break;
             }
         }
         #endregion

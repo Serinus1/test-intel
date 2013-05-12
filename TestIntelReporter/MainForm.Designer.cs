@@ -59,6 +59,7 @@
             this.buttonUpdate = new System.Windows.Forms.Button();
             this.labelUpdate = new System.Windows.Forms.Label();
             this.labelUpdateTitle = new System.Windows.Forms.Label();
+            this.timerChannels = new System.Windows.Forms.Timer(this.components);
             labelUsername = new System.Windows.Forms.Label();
             labelPassword = new System.Windows.Forms.Label();
             labelAuthenticationTitle = new System.Windows.Forms.Label();
@@ -90,6 +91,7 @@
             // labelChannelsTitle
             // 
             resources.ApplyResources(labelChannelsTitle, "labelChannelsTitle");
+            this.panelChannels.SetColumnSpan(labelChannelsTitle, 3);
             labelChannelsTitle.Name = "labelChannelsTitle";
             // 
             // labelStatus
@@ -272,14 +274,19 @@
             resources.ApplyResources(this.labelUpdateTitle, "labelUpdateTitle");
             this.labelUpdateTitle.Name = "labelUpdateTitle";
             // 
+            // timerChannels
+            // 
+            this.timerChannels.Interval = 5000;
+            this.timerChannels.Tick += new System.EventHandler(this.timerChannels_Tick);
+            // 
             // MainForm
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(40)))), ((int)(((byte)(40)))), ((int)(((byte)(45)))));
+            this.Controls.Add(this.panelChannels);
             this.Controls.Add(this.panelUpdate);
             this.Controls.Add(this.panelAuthentication);
-            this.Controls.Add(this.panelChannels);
             this.Controls.Add(this.panelAuthError);
             this.Controls.Add(this.panelStatus);
             this.Controls.Add(this.tableLayoutPanel);
@@ -297,6 +304,7 @@
             this.panelStatus.ResumeLayout(false);
             this.panelStatus.PerformLayout();
             this.panelChannels.ResumeLayout(false);
+            this.panelChannels.PerformLayout();
             this.panelUpdate.ResumeLayout(false);
             this.panelUpdate.PerformLayout();
             this.ResumeLayout(false);
@@ -331,6 +339,7 @@
         private System.Windows.Forms.Button buttonUpdate;
         private System.Windows.Forms.Label labelUpdate;
         private System.Windows.Forms.Label labelUpdateTitle;
+        private System.Windows.Forms.Timer timerChannels;
 
     }
 }
