@@ -897,9 +897,7 @@ namespace PleaseIgnore.IntelMap {
             }
         }
 
-        /// <summary>
-        /// Invariant method for Code Contracts.
-        /// </summary>
+        /// <summary>Invariant method for Code Contracts.</summary>
         [ContractInvariantMethod]
         private void ObjectInvariant() {
             Contract.Invariant(!String.IsNullOrEmpty(this.channelFileName)

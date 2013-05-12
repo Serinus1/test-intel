@@ -11,86 +11,69 @@ using System.Text.RegularExpressions;
 
 namespace PleaseIgnore.IntelMap {
     /// <summary>
-    ///     Provides low-level access to the reporting features of the Test
-    ///     Alliance Intel Map.
+    /// Provides low-level access to the reporting features of the Test
+    /// Alliance Intel Map.
     /// </summary>
-    /// <threadsafety static="true" instance="false"/>
+    /// <threadsafety static="true" instance="false" />
     public class IntelSession : IDisposable {
-        // The Unix time epoc
-        private static readonly DateTime Epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-
-        // Field separators for the channel list
+        /// <summary>Field separators for the channel list</summary>
         private static readonly char[] ChannelSeparators = new char[] { ',' };
-
-        // API response parsers
+        /// <summary><see cref="Regex"/> to parse an error response</summary>
         private static readonly Regex ErrorResponse  = new Regex(@"^(50\d) ERROR (.*)");
-        private static readonly Regex AuthResponse   = new Regex(@"^200 AUTH ([^\s]+) (\d+)");
-        private static readonly Regex IntelResponse  = new Regex(@"^202 INTEL .*");
-        private static readonly Regex AliveResponse  = new Regex(@"^203 ALIVE OK (\d+)");
-        // Number of server errors before dropping the connection
+        /// <summary><see cref="Regex"/> to parse an auth response</summary>
+        private static readonly Regex AuthResponse = new Regex(@"^200 AUTH ([^\s]+) (\d+)");
+        /// <summary><see cref="Regex"/> to parse a report response</summary>
+        private static readonly Regex IntelResponse = new Regex(@"^202 INTEL .*");
+        /// <summary><see cref="Regex"/> to parse a keep alive
+        /// response</summary>
+        private static readonly Regex AliveResponse = new Regex(@"^203 ALIVE OK (\d+)");
+        /// <summary>Number of server errors before dropping the
+        /// connection</summary>
         private const int maxServerErrors = 3;
 
-        // The username for this login (required when logging out)
+        /// <summary>The username for this login (required when logging out)</summary>
         private readonly string username;
-        // The session id
+        /// <summary>The server-provided session id</summary>
         private readonly string session;
-        // The service access Uri
+        /// <summary>The service access Uri</summary>
         private readonly Uri serviceUri;
-        // Number of consecutive server errors
+        /// <summary>Count of consecutive server errors</summary>
         private int serverErrors;
 
         /// <summary>
-        ///     Creates a new instance of the <see cref="IntelSession"/> class
-        ///     and authenticates with the map server.
+        /// Creates a new instance of the <see cref="IntelSession" /> class
+        /// and authenticates with the map server.
         /// </summary>
-        /// <param name="username">
-        ///     The user's AUTH name.
-        /// </param>
-        /// <param name="passwordHash">
-        ///     An SHA1 hash of the user's password.
-        /// </param>
-        /// <exception cref="AuthenticationException">
-        ///     The authentication failed.
-        /// </exception>
-        /// <exception cref="WebException">
-        ///     Failed to contact the web server.
-        /// </exception>
-        /// <seealso cref="HashPassword"/>
+        /// <param name="username">The TEST user name.</param>
+        /// <param name="passwordHash">An SHA1 hash of the user's
+        /// TEST services password.</param>
+        /// <seealso cref="HashPassword" />
+        /// <exception cref="AuthenticationException">The username/password
+        /// combination were rejected.</exception>
+        /// <exception cref="WebException">Error in contacting the web
+        /// server.</exception>
         public IntelSession(string username, string passwordHash)
             : this(username, passwordHash, null) {
         }
 
         /// <summary>
-        ///     Creates a new instance of the <see cref="IntelSession"/> class
-        ///     and authenticates with the map server using a specified service
-        ///     <see cref="Uri"/>.
+        /// Creates a new instance of the <see cref="IntelSession" /> class
+        /// and authenticates with the map server using a specified service
+        /// <see cref="Uri" />.
         /// </summary>
-        /// <param name="username">
-        ///     The user's AUTH name.
-        /// </param>
-        /// <param name="passwordHash">
-        ///     An SHA1 hash of the user's password.
-        /// </param>
-        /// <param name="serviceUri">
-        ///     <see cref="Uri"/> to use when contacting the Intel Map reporting
-        ///     service.
-        /// </param>
+        /// <param name="username">The TEST user name.</param>
+        /// <param name="passwordHash">An SHA1 hash of the user's
+        /// TEST services password.</param>
+        /// <param name="serviceUri"><see cref="Uri" /> to use when contacting
+        /// the Intel Map reporting service.</param>
+        /// <seealso cref="HashPassword" />
+        /// <exception cref="AuthenticationException">The username/password
+        /// combination were rejected.</exception>
+        /// <exception cref="WebException">Error in contacting the web
+        /// server.</exception>
+        /// <exception cref="NotSupportedException"><paramref name="serviceUri" />
+        /// uses a URI scheme not registered with <see cref="WebRequest" />.</exception>
         /// <remarks>
-        ///     <see cref="IntelSession(string,string,Uri)"/> is primarily intended
-        ///     for use with unit testing.  Normal users will make use of the
-        ///     <see cref="IntelSession(string,string)"/> implementation.
-        /// </remarks>
-        /// <exception cref="AuthenticationException">
-        ///     The authentication failed.
-        /// </exception>
-        /// <exception cref="WebException">
-        ///     Failed to contact the web server.
-        /// </exception>
-        /// <exception cref="NotSupportedException">
-        ///     <paramref name="serviceUri"/> uses a URI scheme not supported
-        ///     by <see cref="WebRequest"/>.
-        /// </exception>
-        /// <seealso cref="HashPassword"/>
         public IntelSession(string username, string passwordHash, Uri serviceUri) {
             Contract.Requires<ArgumentException>(!String.IsNullOrEmpty(username));
             Contract.Requires<ArgumentException>(!String.IsNullOrEmpty(passwordHash));
@@ -124,44 +107,62 @@ namespace PleaseIgnore.IntelMap {
             }
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Finalizes an instance of the <see cref="IntelSession"/> class.
+        /// </summary>
         ~IntelSession() {
             this.Dispose(false);
         }
 
         /// <summary>
-        ///     Gets a flag indicating whether our session with the intel
-        ///     reporting server is still valid.
+        /// Gets a flag indicating whether our session with the intel
+        /// reporting server is still valid.
         /// </summary>
+        /// <value>
+        /// <see langword="true" /> if this instance is connected; otherwise,
+        /// <see langword="false" />.
+        /// </value>
+        /// <seealso cref="Closed"/>
+        /// <remarks>
+        /// An instance of <see cref="IntelSession" /> becomes disconnected
+        /// through an explicit call to <see cref="Dispose" />, two many
+        /// consecutive errors, or the server reported an invalid session in
+        /// a call to <see cref="KeepAlive" /> or <see cref="Report" />.
+        /// </remarks>
         public bool IsConnected { get; private set; }
 
-        /// <summary>
-        ///     Gets the number of users currently connected to the server.
-        /// </summary>
+        /// <summary>Gets the number of users currently connected to the
+        /// server.</summary>
+        /// <value>
+        /// The number of users reported by the intel server during
+        /// our most recent <see cref="KeepAlive"/>.  This value is undefined
+        /// once <see cref="IsConnected"/> is <see langword="false"/>.
+        /// </value>
         public int Users { get; private set; }
 
-        /// <summary>
-        ///     Gets the number of intel reports sent to the server.
-        /// </summary>
+        /// <summary>Gets the number of intel reports sent to the
+        /// server.</summary>
+        /// <value>The number of successful calls to <see cref="Report"/>.</value>
         public int ReportsSent { get; private set; }
 
         /// <summary>
-        ///     Occurs when this session with the server is closed, either
-        ///     through a call to <see cref="Dispose()"/> or timing out.
+        /// Occurs when this session with the server is closed, either
+        /// through a call to <see cref="Dispose()" />, too many consecutive
+        /// errors, or timing out.
         /// </summary>
+        /// <seealso cref="IsConnected"/>
         public event EventHandler Closed;
 
         /// <summary>
-        ///     Sends a keep-alive to the intel reporting server, preserving
-        ///     our session.
+        /// Sends a keep-alive to the intel reporting server, preserving
+        /// our session.
         /// </summary>
         /// <returns>
-        ///     <see langword="true"/> if our session is still valid;
-        ///     otherwise, <see langword="false"/>.
+        /// <see langword="true" /> if our session is still valid;
+        /// otherwise, <see langword="false" />.
         /// </returns>
-        /// <exception cref="WebException">
-        ///     Failed to contact the web server.
-        /// </exception>
+        /// <exception cref="WebException">Failed to contact the web
+        /// server.</exception>
         public virtual bool KeepAlive() {
             Contract.Ensures(Contract.Result<bool>() == this.IsConnected);
             if (!this.IsConnected)
@@ -201,16 +202,19 @@ namespace PleaseIgnore.IntelMap {
             }
         }
 
-        /// <summary>
-        ///     Sends a log entry to the intel reporting server.
-        /// </summary>
+        /// <summary>Sends a log entry to the intel reporting server.</summary>
+        /// <param name="channel">The channel were the intel was
+        /// reported.</param>
+        /// <param name="timestamp">The time and date the intel was
+        /// reported.</param>
+        /// <param name="message">The entire message entered into the
+        /// log file (including the <var>username &gt; </var>).</param>
         /// <returns>
-        ///     <see langword="true"/> if our session is still valid;
-        ///     otherwise, <see langword="false"/>.
+        /// <see langword="true" /> if our session is still valid;
+        /// otherwise, <see langword="false" />.
         /// </returns>
-        /// <exception cref="WebException">
-        ///     Failed to contact the web server.
-        /// </exception>
+        /// <exception cref="WebException">Failed to contact the web
+        /// server.</exception>
         public virtual bool Report(string channel, DateTime timestamp, string message) {
             Contract.Requires<ArgumentException>(!String.IsNullOrEmpty(channel));
             Contract.Requires<ArgumentException>(!String.IsNullOrEmpty(message));
@@ -258,36 +262,33 @@ namespace PleaseIgnore.IntelMap {
             }
         }
 
-        /// <summary>
-        ///     Sends a log entry to the intel reporting server.
-        /// </summary>
-        /// <param name="e">
-        ///     An instance of <see cref="IntelEventArgs"/> containing the
-        ///     information to report.
-        /// </param>
+        /// <summary>Sends a log entry to the intel reporting server.</summary>
+        /// <param name="e">An instance of <see cref="IntelEventArgs" />
+        /// containing the information to report.</param>
         /// <returns>
-        ///     <see langword="true"/> if our session is still valid;
-        ///     otherwise, <see langword="false"/>.
+        /// <see langword="true" /> if our session is still valid;
+        /// otherwise, <see langword="false" />.
         /// </returns>
         public bool Report(IntelEventArgs e) {
             Contract.Requires<ArgumentNullException>(e != null, "e");
             return this.Report(e.Channel, e.Timestamp, e.Message);
         }
 
-        /// <summary>
-        ///     Closes this session with the intel reporting server.
-        /// </summary>
+        /// <summary>Closes this session with the intel reporting
+        /// server.</summary>
         public void Dispose() {
             Contract.Ensures(this.IsConnected == false);
             this.Dispose(true);
             GC.SuppressFinalize(this);
         }
 
-        /// <summary>
-        ///     Closes this session with the intel reporting server.
-        /// </summary>
+        /// <summary>Closes this session with the intel reporting
+        /// server.</summary>
+        /// <param name="disposing"><see langword="true" /> to release both
+        /// managed and unmanaged resources; <see langword="false" /> to
+        /// release only unmanaged resources.</param>
         protected virtual void Dispose(bool disposing) {
-            Contract.Ensures(this.IsConnected == false);
+            Contract.Ensures(!this.IsConnected);
             if (disposing) {
                 if (!this.IsConnected)
                     return;
@@ -310,7 +311,14 @@ namespace PleaseIgnore.IntelMap {
             }
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Returns a <see cref="System.String" /> that represents this
+        /// instance of <see cref="IntelSession" />.
+        /// </summary>
+        /// <returns>
+        /// A <see cref="System.String" /> that represents this instance
+        /// of <see cref="IntelSession" />.
+        /// </returns>
         public override string ToString() {
             return String.Format(
                 CultureInfo.CurrentCulture,
@@ -322,12 +330,8 @@ namespace PleaseIgnore.IntelMap {
                 this.ReportsSent);
         }
 
-        /// <summary>
-        ///     Signals that an error has occured contacting the server.
-        /// </summary>
-        /// <remarks>
-        ///     
-        /// </remarks>
+        /// <summary>Signals that an error has occured contacting the
+        /// server.</summary>
         private void OnError() {
             if (++this.serverErrors == maxServerErrors) {
                 this.OnClosed();
@@ -335,8 +339,8 @@ namespace PleaseIgnore.IntelMap {
         }
 
         /// <summary>
-        ///     Raises the <see cref="Closed"/> event when the session is
-        ///     closed.
+        /// Raises the <see cref="Closed" /> event when the session is
+        /// closed.
         /// </summary>
         private void OnClosed() {
             Contract.Ensures(!this.IsConnected);
@@ -350,6 +354,7 @@ namespace PleaseIgnore.IntelMap {
             }
         }
 
+        /// <summary>Invariant method for Code Contracts.</summary>
         [ContractInvariantMethod]
         private void ObjectInvariant() {
             Contract.Invariant(this.Users >= 0);
@@ -358,15 +363,11 @@ namespace PleaseIgnore.IntelMap {
         }
 
         /// <summary>
-        ///     Hashes a user's AUTH password in the manner required by
-        ///     authentication with the intel map reporting server.
+        /// Hashes a user's AUTH password in the manner required by
+        /// authentication with the intel map reporting server.
         /// </summary>
-        /// <param name="password">
-        ///     The plain text password to be hashed.
-        /// </param>
-        /// <returns>
-        ///     The hashed representation of <paramref name="password"/>.
-        /// </returns>
+        /// <param name="password">The plain text password to be hashed.</param>
+        /// <returns>The hashed representation of <paramref name="password" />.</returns>
         [Pure]
         public static string HashPassword(string password) {
             Contract.Requires<ArgumentException>(!String.IsNullOrEmpty(password));
