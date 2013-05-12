@@ -28,3 +28,4 @@ _ReSharper*/
 *.vssscc
 $tf*/
 TestIntelInstaller/TestIntelInstaller
+updates.xml

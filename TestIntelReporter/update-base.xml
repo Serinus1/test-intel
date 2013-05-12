@@ -1,5 +1,0 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
-<assembly-list>
-  <assembly name="TestIntelReporter" version="##VERSION##"
-            update-uri="http://obsidian/test-intel.msi" />
-</assembly-list>

@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+using System.Reflection;
 
 // Stores common constants used in individual AssemblyInfo.cs
 internal static class ProductInfo {
@@ -15,8 +15,7 @@ internal static class ProductInfo {
     internal const string ProductVersionPrefix = "0.4.";
 
     // Content for AssemblyVersion*Attribute
-    // TODO: We want this to autoincrement or...something.
-    internal const string ProductVersion = ProductVersionPrefix + "0.15";
+    internal const string ProductVersion = ProductVersionPrefix + "0.17";
 
     // Content for AssemblyConfigurationAttribute
 #if DEBUG

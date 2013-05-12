@@ -73,8 +73,10 @@ namespace TestIntelReporter {
         public ISynchronizeInvoke SynchronizationObject { get; set; }
 
         public void Start() {
-            this.timer_Elapsed(null, null);
-            this.timer.Start();
+            if (!this.timer.Enabled) {
+                ThreadPool.QueueUserWorkItem((state) => this.timer_Elapsed(null, null));
+                this.timer.Start();
+            }
         }
 
         public void Stop() {
