@@ -10,10 +10,10 @@ internal static class ProductInfo {
     internal const string CopyrightText = "Copyright © 2013";
 
     // Prefix for AssemblyVersion*Attribute
-    internal const string ProductVersionPrefix = "0.4.";
+    internal const string ProductVersionPrefix = "0.5.";
 
     // Content for AssemblyVersion*Attribute
-    internal const string ProductVersion = ProductVersionPrefix + "0.66";
+    internal const string ProductVersion = ProductVersionPrefix + "0.69";
 
     // Content for AssemblyConfigurationAttribute
 #if DEBUG

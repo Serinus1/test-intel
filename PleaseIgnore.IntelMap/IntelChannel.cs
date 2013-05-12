@@ -128,11 +128,16 @@ namespace PleaseIgnore.IntelMap {
         /// The current component status
         /// </summary>
         [ContractPublicPropertyName("Status")]
-        private volatile IntelStatus status;
+        private IntelStatus status;
         /// <summary>
-        /// The currently processed log file
+        /// The <see cref="TextReader"/> being used to parse the log file.
         /// </summary>
         private StreamReader reader;
+        /// <summary>
+        /// The log file currently being monitored.
+        /// </summary>
+        [ContractPublicPropertyName("LogFile")]
+        private FileInfo logFile;
         /// <summary>
         /// The last time we parsed a log entry from the current log
         /// </summary>
@@ -144,10 +149,6 @@ namespace PleaseIgnore.IntelMap {
         private TimeSpan expireLog = TimeSpan.Parse(
             defaultExpireLog,
             CultureInfo.InvariantCulture);
-        /// <summary>
-        /// <see langword="true"/> if the timer is currently running
-        /// </summary>
-        private bool timerEnabled;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="IntelChannel" /> class.
@@ -241,7 +242,7 @@ namespace PleaseIgnore.IntelMap {
                                 this.Status = IntelStatus.InvalidPath;
                             }
                         }
-                        this.OnPropertyChanged(new PropertyChangedEventArgs("Path"));
+                        this.OnPropertyChanged("Path");
                     }
                 }
             }
@@ -300,7 +301,16 @@ namespace PleaseIgnore.IntelMap {
         /// An instance of <see cref="FileInfo"/> describing the log file
         /// being monitoring.
         /// </value>
-        public FileInfo LogFile { get; private set; }
+        public FileInfo LogFile {
+            get { return this.logFile; }
+            private set {
+                Contract.Ensures(this.LogFile == value);
+                if (this.logFile != value) {
+                    this.logFile = value;
+                    this.OnPropertyChanged("LogFile");
+                }
+            }
+        }
 
         /// <summary>
         /// Gets the current operational status of the <see cref="IntelChannel"/>
@@ -318,8 +328,11 @@ namespace PleaseIgnore.IntelMap {
                 Contract.Ensures(Status == value);
                 if (this.status != value) {
                     this.status = value;
-                    this.UpdateTimer();
-                    this.OnPropertyChanged(new PropertyChangedEventArgs("Status"));
+                    var period = ((value == IntelStatus.Active)
+                            || (value == IntelStatus.InvalidPath))
+                        ? timerPeriod : Timeout.Infinite;
+                    this.logTimer.Change(period, period);
+                    this.OnPropertyChanged("Status");
                 }
             }
         }
@@ -356,7 +369,7 @@ namespace PleaseIgnore.IntelMap {
                 lock (this.syncRoot) {
                     if (this.expireLog != value) {
                         this.expireLog = value;
-                        this.OnPropertyChanged(new PropertyChangedEventArgs("LogExpiration"));
+                        this.OnPropertyChanged("LogExpiration");
                     }
                 }
             }
@@ -377,10 +390,18 @@ namespace PleaseIgnore.IntelMap {
             Contract.Ensures(IsRunning);
 
             lock (this.syncRoot) {
-                if (this.status == IntelStatus.Stopped) {
-                    this.Status = IntelStatus.Starting;
-                    this.channelFileName = this.Name;
-                    this.OnStart();
+                try {
+                    if (this.status == IntelStatus.Stopped) {
+                        this.Status = IntelStatus.Starting;
+                        this.channelFileName = this.Name;
+                        this.OnStart();
+                        if (this.status == IntelStatus.Starting) {
+                            this.Status = IntelStatus.Waiting;
+                        }
+                    }
+                } catch {
+                    this.Status = IntelStatus.FatalError;
+                    throw;
                 }
             }
         }
@@ -397,10 +418,15 @@ namespace PleaseIgnore.IntelMap {
 
             lock (this.syncRoot) {
                 if ((this.status != IntelStatus.Stopped)
-                        || (this.status == IntelStatus.Disposed)) {
-                    this.Status = IntelStatus.Stopping;
-                    this.OnStop();
-                    this.UpdateTimer();
+                        && (this.status != IntelStatus.Disposed)) {
+                    try {
+                        this.Status = IntelStatus.Stopping;
+                        this.OnStop();
+                        this.Status = IntelStatus.Stopped;
+                    } catch {
+                        this.status = IntelStatus.FatalError;
+                        throw;
+                    }
                 }
             }
         }
@@ -416,23 +442,27 @@ namespace PleaseIgnore.IntelMap {
         /// </param>
         protected override void Dispose(bool disposing) {
             Contract.Ensures(Status == IntelStatus.Disposed);
-            if (disposing) {
-                lock (this.syncRoot) {
-                    if (this.status != IntelStatus.Disposed) {
-                        // Normal shutdown
-                        this.Stop();
-                        this.Status = IntelStatus.Disposed;
+            try {
+                if (disposing) {
+                    lock (this.syncRoot) {
+                        if (this.status != IntelStatus.Disposed) {
+                            // Normal shutdown
+                            var isRunning = this.IsRunning;
+                            this.Status = IntelStatus.Disposing;
+                            if (isRunning) {
+                                this.OnStop();
+                            }
 
-                        // Dispose child objects
-                        this.logTimer.Dispose();
+                            // Dispose child objects
+                            this.logTimer.Dispose();
 
-                        // Clear any lingering object references
-                        this.IntelReported = null;
-                        this.PropertyChanged = null;
+                            // Clear any lingering object references
+                            this.IntelReported = null;
+                            this.PropertyChanged = null;
+                        }
                     }
                 }
-            } else {
-                // We really can't touch anything safely
+            } finally {
                 this.status = IntelStatus.Disposed;
             }
             base.Dispose(disposing);
@@ -510,7 +540,7 @@ namespace PleaseIgnore.IntelMap {
 
             this.lastEntry = DateTime.UtcNow;
             ++this.IntelCount;
-            this.OnPropertyChanged(new PropertyChangedEventArgs("IntelCount"));
+            this.OnPropertyChanged("IntelCount");
         }
 
         /// <summary>
@@ -534,6 +564,16 @@ namespace PleaseIgnore.IntelMap {
                     handler(this, (PropertyChangedEventArgs)state);
                 }
             }, e);
+        }
+
+        /// <summary>
+        /// Raises the <see cref="PropertyChanged" /> event.
+        /// </summary>
+        /// <param name="propertyName">Name of the property that has
+        /// changed</param>
+        private void OnPropertyChanged(string propertyName) {
+            Contract.Requires(propertyName != null);
+            this.OnPropertyChanged(new PropertyChangedEventArgs(propertyName));
         }
 
         /// <summary>
@@ -668,21 +708,15 @@ namespace PleaseIgnore.IntelMap {
         /// additional synchronization themselves.
         /// </remarks>
         protected virtual void OnStop() {
-            Contract.Requires<InvalidOperationException>(
-                Status == IntelStatus.Stopping);
-            Contract.Ensures(Status == IntelStatus.Stopped);
+            Contract.Requires((Status == IntelStatus.Stopping)
+                || (Status == IntelStatus.Disposing));
 
             if (this.reader != null) {
                 this.reader.Close();
                 this.reader = null;
             }
 
-            if (this.LogFile != null) {
-                this.LogFile = null;
-                this.OnPropertyChanged(new PropertyChangedEventArgs("LogFile"));
-            }
-
-            this.Status = IntelStatus.Stopped;
+            this.LogFile = null;
         }
 
         /// <summary>
@@ -698,9 +732,12 @@ namespace PleaseIgnore.IntelMap {
                 || (this.Status == IntelStatus.Active)
                 || (this.Status == IntelStatus.InvalidPath));
             try {
+                var files = new DirectoryInfo(this.Path)
+                    .GetFiles(this.Name + "_*.txt", SearchOption.TopDirectoryOnly);
+                Contract.Assert(files != null);
+
                 var downtime = IntelExtensions.LastDowntime;
-                var file = new DirectoryInfo(this.Path)
-                    .GetFiles(this.Name + "_*.txt", SearchOption.TopDirectoryOnly)
+                var file = files
                     .Select(x => new {
                         File = x,
                         Match = FilenameParser.Match(x.Name)
@@ -741,59 +778,59 @@ namespace PleaseIgnore.IntelMap {
         /// </returns>
         internal protected bool OpenFile(FileInfo fileInfo) {
             Contract.Requires<ArgumentNullException>(fileInfo != null, "fileInfo");
-            //Contract.Ensures(Status == IntelChannelStatus.Active);
-            var oldStatus = this.status;
-            var oldFile = this.LogFile;
 
-            // Close the existing file (if any)
-            if (this.reader != null) {
-                try {
-                    this.reader.Close();
-                } catch (IOException) {
-                } finally {
-                    this.reader = null;
-                }
-            }
-
-            // Clear the status (defer raising PropertyChanged)
-            this.LogFile = null;
-            this.status = (this.watcher != null)
-                ? IntelStatus.Waiting
-                : IntelStatus.InvalidPath;
-            
-            // Try to open the file stream
-            FileStream stream = null;
+            // Defer raising PropertyChanged until final decision is made
+            var status = this.status;
+            FileInfo logFile = null;
             try {
-                stream = fileInfo.Open(FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-                stream.Seek(0, SeekOrigin.End);
-                // XXX: We rely upon StreamReader's BOM detection.  EVE seems
-                // to generate Little Endian UTF-16 log files.  We could hard
-                // code that, but we don't know if that would cause other
-                // problems.
-                this.reader = new StreamReader(stream, true);
-                this.status = IntelStatus.Active;
-                this.LogFile = fileInfo;
-                this.lastEntry = DateTime.UtcNow;
-            } catch (IOException) {
-                // Don't leak FileStream references
-                if (stream != null) {
+                // Close the existing file (if any)
+                if (this.reader != null) {
                     try {
-                        stream.Close();
+                        this.reader.Close();
                     } catch (IOException) {
+                    } finally {
+                        this.reader = null;
                     }
                 }
-            }
 
-            // Raise any deferred PropertyChanged events
-            if (this.status != oldStatus) {
-                this.OnPropertyChanged(new PropertyChangedEventArgs("Status"));
-            }
-            if (this.LogFile != oldFile) {
-                this.OnPropertyChanged(new PropertyChangedEventArgs("LogFile"));
+                // Clear the status
+                status = (this.watcher != null)
+                    ? IntelStatus.Waiting
+                    : IntelStatus.InvalidPath;
+
+                // Try to open the file stream
+                FileStream stream = null;
+                try {
+                    stream = fileInfo.Open(FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                    stream.Seek(0, SeekOrigin.End);
+                    // XXX: We rely upon StreamReader's BOM detection.  EVE seems
+                    // to generate Little Endian UTF-16 log files.  We could hard
+                    // code that, but we don't know if that would cause other
+                    // problems.
+                    this.reader = new StreamReader(stream, true);
+                    status = IntelStatus.Active;
+                    logFile = fileInfo;
+                    this.lastEntry = DateTime.UtcNow;
+                } catch (IOException) {
+                    // Don't leak FileStream references
+                    if (stream != null) {
+                        try {
+                            stream.Close();
+                        } catch (IOException) {
+                        }
+                    }
+                }
+            } catch {
+                // Unexpected failure
+                status = IntelStatus.FatalError;
+                throw;
+            } finally {
+                // Raise any deferred PropertyChanged events
+                this.Status = status;
+                this.LogFile = logFile;
             }
 
             // Success if we opened a reader
-            this.UpdateTimer();
             return (this.reader != null);
         }
 
@@ -812,41 +849,11 @@ namespace PleaseIgnore.IntelMap {
                     this.reader = null;
                 }
             }
-            if (this.LogFile != null) {
-                this.LogFile = null;
-                this.OnPropertyChanged(new PropertyChangedEventArgs("LogFile"));
-            }
+
+            this.LogFile = null;
             this.Status = (this.watcher != null)
                 ? IntelStatus.Waiting
                 : IntelStatus.InvalidPath;
-        }
-
-        /// <summary>
-        /// Updates the timer for <see cref="OnTick" />
-        /// </summary>
-        private void UpdateTimer() {
-            switch (this.status) {
-            case IntelStatus.Active:
-            case IntelStatus.InvalidPath:
-                // Operations that require us to ping the filesystem regularly
-                if (!this.timerEnabled) {
-                    this.logTimer.Change(timerPeriod, timerPeriod);
-                    this.timerEnabled = true;
-                }
-                break;
-
-            case IntelStatus.Disposed:
-                // The timer object is no longer valid
-                break;
-
-            default:
-                // Operations when we are not actively monitoring the filesystem
-                if (this.timerEnabled) {
-                    this.logTimer.Change(Timeout.Infinite, Timeout.Infinite);
-                    this.timerEnabled = false;
-                }
-                break;
-            }
         }
 
         /// <summary>

@@ -42,7 +42,7 @@ namespace PleaseIgnore.IntelMap {
         private readonly IComponent owner;
         /// <summary>The update period for the channel list</summary>
         [ContractPublicPropertyName("ChannelUpdateInterval")]
-        private TimeSpan? updateInterval = TimeSpan.Parse(
+        private TimeSpan updateInterval = TimeSpan.Parse(
                 defaultUpdateInterval,
                 CultureInfo.InvariantCulture);
         /// <summary>The network retry period for the channel list</summary>
@@ -142,17 +142,14 @@ namespace PleaseIgnore.IntelMap {
         /// <see langword="null" /> to disable periodic downloads of the
         /// channel list.
         /// </value>
-        public TimeSpan? ChannelUpdateInterval {
+        public TimeSpan ChannelUpdateInterval {
             get {
-                Contract.Ensures(!Contract.Result<TimeSpan?>().HasValue
-                        || (Contract.Result<TimeSpan?>() > TimeSpan.Zero));
+                Contract.Ensures(Contract.Result<TimeSpan>() > TimeSpan.Zero);
                 return this.updateInterval;
             }
             set {
                 Contract.Requires<InvalidOperationException>(!this.IsRunning);
-                Contract.Requires<ArgumentOutOfRangeException>(
-                        !value.HasValue || (value > TimeSpan.Zero),
-                        "value");
+                Contract.Requires<ArgumentOutOfRangeException>(value > TimeSpan.Zero, "value");
                 Contract.Ensures(ChannelUpdateInterval == value);
                 if (this.updateInterval != value) {
                     this.updateInterval = value;
@@ -293,7 +290,7 @@ namespace PleaseIgnore.IntelMap {
         /// no longer be raised nor will the channel list be updated.
         /// </summary>
         public void Stop() {
-            Contract.Ensures(!IsRunning);
+            Contract.Ensures(!this.IsRunning);
             lock (this.syncRoot) {
                 if (this.IsRunning) {
                     try {
@@ -501,9 +498,7 @@ namespace PleaseIgnore.IntelMap {
                 }
                 // Schedule the next update
                 this.OnUpdateStatus();
-                if (this.updateInterval.HasValue) {
-                    this.updateTimer.Change(this.updateInterval.Value, TimeSpan.Zero);
-                }
+                this.updateTimer.Change(this.updateInterval, TimeSpan.Zero);
             }
         }
 
@@ -584,8 +579,7 @@ namespace PleaseIgnore.IntelMap {
         [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
         [SuppressMessage("Microsoft.Performance", "CA1822:MarkMembersAsStatic")]
         private void ObjectInvariant() {
-            Contract.Invariant(!this.updateInterval.HasValue
-                || (this.updateInterval > TimeSpan.Zero));
+            Contract.Invariant(this.updateInterval > TimeSpan.Zero);
             Contract.Invariant(this.retryInterval > TimeSpan.Zero);
             Contract.Invariant(this.channelListUri != null);
             Contract.Invariant(this.uploadCount >= 0);
@@ -682,9 +676,12 @@ namespace PleaseIgnore.IntelMap {
             Contract.Ensures(Contract.Result<string[]>().Length > 0);
 
             // TODO: More thorough sanity check of the server response
-            var channels = WebRequest
-                .Create(serviceUri)
-                .GetResponse()
+            var request = WebRequest.Create(serviceUri);
+            Contract.Assert(request != null);
+            var response = request.GetResponse();
+            Contract.Assert(response != null);
+
+            var channels = response
                 .ReadContent()
                 .Split('\n', '\r')
                 .Select(x => x.Trim())

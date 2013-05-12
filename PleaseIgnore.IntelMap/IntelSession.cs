@@ -109,6 +109,7 @@ namespace PleaseIgnore.IntelMap {
             this.serviceUri = serviceUri;
 
             var request = WebRequest.Create(this.serviceUri);
+            Contract.Assert(request != null);
             var response = request.Post(new Dictionary<string, string>() {
                 { "username", username },
                 { "password", passwordHash },
@@ -198,6 +199,7 @@ namespace PleaseIgnore.IntelMap {
 
             try {
                 var request = WebRequest.Create(this.serviceUri);
+                Contract.Assert(request != null);
                 var response = request.Post(new Dictionary<string, string>() {
                     { "session", this.session },
                     { "action", "ALIVE" },
@@ -252,6 +254,7 @@ namespace PleaseIgnore.IntelMap {
 
             try {
                 var request = WebRequest.Create(this.serviceUri);
+                Contract.Assert(request != null);
                 var response = request.Post(new Dictionary<string, string>() {
                     { "session", session },
                     { "inteltime", timestamp.ToUnixTime()
@@ -322,6 +325,7 @@ namespace PleaseIgnore.IntelMap {
                     return;
                 try {
                     var request = WebRequest.Create(this.serviceUri);
+                    Contract.Assert(request != null);
                     var response = request.Post(new Dictionary<string, string>() {
                     { "username", this.username },
                     { "session", this.session },

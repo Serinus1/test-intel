@@ -266,16 +266,13 @@ namespace PleaseIgnore.IntelMap {
         /// </summary>
         [DefaultValue(typeof(TimeSpan), IntelChannelContainer.defaultUpdateInterval)]
         [Category("Behavior")]
-        public TimeSpan? ChannelUpdateInterval {
+        public TimeSpan ChannelUpdateInterval {
             get {
-                Contract.Ensures(!Contract.Result<TimeSpan?>().HasValue 
-                    || (Contract.Result<TimeSpan?>() > TimeSpan.Zero));
+                Contract.Ensures(Contract.Result<TimeSpan>() > TimeSpan.Zero);
                 return this.channels.ChannelUpdateInterval;
             }
             set {
-                Contract.Requires<ArgumentOutOfRangeException>(
-                        !value.HasValue || (value > TimeSpan.Zero),
-                        "value");
+                Contract.Requires<ArgumentOutOfRangeException>(value > TimeSpan.Zero, "value");
                 Contract.Requires<InvalidOperationException>(!IsRunning);
                 this.channels.ChannelUpdateInterval = value;
             }

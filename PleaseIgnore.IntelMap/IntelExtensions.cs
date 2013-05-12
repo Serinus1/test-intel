@@ -149,6 +149,13 @@ namespace PleaseIgnore.IntelMap {
         /// </remarks>
         [Pure]
         public static bool IsRunning(this IntelStatus status) {
+            Contract.Ensures(Contract.Result<bool>()
+                == ((status == IntelStatus.Active)
+                || (status == IntelStatus.InvalidPath)
+                || (status == IntelStatus.Starting)
+                || (status == IntelStatus.Waiting)
+                || (status == IntelStatus.NetworkError)
+                || (status == IntelStatus.AuthenticationError)));
             switch (status) {
             case IntelStatus.Active:
             case IntelStatus.InvalidPath:
@@ -179,6 +186,11 @@ namespace PleaseIgnore.IntelMap {
         /// </remarks>
         [Pure]
         public static bool IsError(this IntelStatus status) {
+            Contract.Ensures(Contract.Result<bool>()
+                == ((status == IntelStatus.InvalidPath)
+                || (status == IntelStatus.NetworkError)
+                || (status == IntelStatus.AuthenticationError)
+                || (status == IntelStatus.InvalidPath)));
             switch (status) {
             case IntelStatus.NetworkError:
             case IntelStatus.AuthenticationError:
@@ -241,7 +253,9 @@ namespace PleaseIgnore.IntelMap {
                     stream.Write(payload, offset, count);
                 }
 
-                return webRequest.GetResponse();
+                var response = webRequest.GetResponse();
+                Contract.Assert(response != null);
+                return response;
             } catch (Exception e) {
                 Trace.WriteLine("!! " + e.Message, WebTraceCategory);
                 throw;
@@ -277,6 +291,7 @@ namespace PleaseIgnore.IntelMap {
             // Compute an upper bounds on the payload length
             var maxLength = variables.Sum(x => 2 + 9 * x.Key.Length
                 + 9 * (x.Value ?? String.Empty).Length);
+            Contract.Assert(maxLength >= 0);
             // Build up the POST payload
             using (var stream = new MemoryStream(maxLength)) {
                 bool first = true;
@@ -371,8 +386,8 @@ namespace PleaseIgnore.IntelMap {
             } else {
                 StringBuilder builder = new StringBuilder(array.Length * 2);
                 foreach (var current in array) {
-                    builder.Append(HexLowerString[current / 16]);
-                    builder.Append(HexLowerString[current % 16]);
+                    builder.Append(HexLowerString[(current / 16) % 16]);
+                    builder.Append(HexLowerString[(current % 16)]);
                 }
                 return builder.ToString();
             }
