@@ -3,24 +3,18 @@ using System.Diagnostics.Contracts;
 using System.Globalization;
 
 namespace PleaseIgnore.IntelMap {
-    /// <summary>
-    ///     Provides data for the intel reporting events.
-    /// </summary>
-    /// <threadsafety static="true" instance="true"/>
+    /// <summary>Provides data for the intel reporting events.</summary>
+    /// <threadsafety static="true" instance="true" />
     [Serializable]
     public class IntelEventArgs : EventArgs {
         /// <summary>
-        ///     Initializes a new instance of <see cref="IntelEventArgs"/> class.
+        /// Initializes a new instance of <see cref="IntelEventArgs" /> class.
         /// </summary>
-        /// <param name="channel">
-        ///     The <see cref="IntelChannel"/> that provided this log entry.
-        /// </param>
-        /// <param name="timestamp">
-        ///     The date and time this log entry was generated.
-        /// </param>
-        /// <param name="message">
-        ///     The content of the log entry.
-        /// </param>
+        /// <param name="channel">The base name of the <see cref="IntelChannel"/>
+        /// that initially reported this log entry.</param>
+        /// <param name="timestamp">The date and time this log entry was
+        /// generated.</param>
+        /// <param name="message">The content of the log entry.</param>
         public IntelEventArgs(string channel, DateTime timestamp,
                 string message) {
             Contract.Requires<ArgumentException>(!String.IsNullOrEmpty(channel));
@@ -32,30 +26,32 @@ namespace PleaseIgnore.IntelMap {
             this.Message = message;
         }
 
-        /// <summary>
-        ///     Gets the log file that generated this event.
-        /// </summary>
+        /// <summary>Gets the log file that generated this event.</summary>
         /// <value>
-        ///     The instance of <see cref="IntelChannel"/> that parsed and reported
-        ///     this log entry.
+        /// The base name of the <see cref="IntelChannel"/> that reported this
+        /// log entry.
         /// </value>
         public string Channel { get; private set; }
 
-        /// <summary>
-        ///     Gets the timestamp of the log entry.
-        /// </summary>
+        /// <summary>Gets the timestamp of the log entry.</summary>
         /// <value>
-        ///     A value of <see cref="DateTime"/> that encodes the log entry's time
-        ///     stamp in the UTC time zone.
+        /// A value of <see cref="DateTime" /> that encodes the log entry's time
+        /// stamp in the UTC time zone.
         /// </value>
         public DateTime Timestamp { get; private set; }
 
-        /// <summary>
-        ///     Gets the content of the log entry.
-        /// </summary>
+        /// <summary>Gets the content of the log entry.</summary>
+        /// <value>The payload of the log entry.</value>
         public string Message { get; private set; }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Returns a <see cref="System.String" /> that represents this
+        /// instance of <see cref="IntelChannel" />.
+        /// </summary>
+        /// <returns>
+        /// A <see cref="System.String" /> that represents this instance
+        /// of <see cref="IntelChannel" />.
+        /// </returns>
         public override string ToString() {
             return string.Format(
                 CultureInfo.CurrentCulture,
@@ -66,6 +62,9 @@ namespace PleaseIgnore.IntelMap {
                 this.Message);
         }
 
+        /// <summary>
+        /// Invariant method for Code Contracts.
+        /// </summary>
         [ContractInvariantMethod]
         private void ObjectInvariant() {
             Contract.Invariant(!String.IsNullOrEmpty(this.Channel));
