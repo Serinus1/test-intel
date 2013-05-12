@@ -55,7 +55,7 @@ namespace PleaseIgnore.IntelMap {
         private int uploadCount;
         /// <summary>URI to use when fetching the channel list</summary>
         [ContractPublicPropertyName("ChannelListUri")]
-        private string channelListUri = IntelExtensions.ChannelsUrl;
+        private Uri channelListUri = new Uri(IntelExtensions.ChannelsUrl);
         /// <summary>Directory to use when overriding the IntelChannel's
         /// <see cref="IntelChannel.Path"/></summary>
         [ContractPublicPropertyName("Path")]
@@ -101,7 +101,7 @@ namespace PleaseIgnore.IntelMap {
                 Contract.Ensures(Status == value);
                 if (this.status != value) {
                     this.status = value;
-                    this.OnPropertyChanged(new PropertyChangedEventArgs("Status"));
+                    this.OnPropertyChanged("Status");
                 }
             }
         }
@@ -153,7 +153,7 @@ namespace PleaseIgnore.IntelMap {
                 Contract.Ensures(ChannelUpdateInterval == value);
                 if (this.updateInterval != value) {
                     this.updateInterval = value;
-                    this.OnPropertyChanged(new PropertyChangedEventArgs("ChannelUpdatePeriod"));
+                    this.OnPropertyChanged("ChannelUpdatePeriod");
                 }
             }
         }
@@ -180,7 +180,7 @@ namespace PleaseIgnore.IntelMap {
                 Contract.Ensures(RetryInterval == value);
                 if (this.retryInterval != value) {
                     this.retryInterval = value;
-                    this.OnPropertyChanged(new PropertyChangedEventArgs("RetryInterval"));
+                    this.OnPropertyChanged("RetryInterval");
                 }
             }
         }
@@ -191,19 +191,19 @@ namespace PleaseIgnore.IntelMap {
         /// </summary>
         /// <value>The channel list URI.</value>
         /// <exception cref="System.ArgumentException"></exception>
-        [DefaultValue(IntelExtensions.ChannelsUrl)]
-        public string ChannelListUri {
+        [DefaultValue(typeof(Uri), IntelExtensions.ChannelsUrl)]
+        public Uri ChannelListUri {
             get {
-                Contract.Ensures(!String.IsNullOrEmpty(Contract.Result<string>()));
+                Contract.Ensures(Contract.Result<Uri>() != null);
                 return this.channelListUri;
             }
             set {
                 Contract.Requires<ArgumentNullException>(value != null, "value");
-                Contract.Requires<ArgumentException>(Uri.IsWellFormedUriString(value, UriKind.Absolute));
+                Contract.Requires<ArgumentException>(value.IsAbsoluteUri);
                 Contract.Requires<InvalidOperationException>(!this.IsRunning);
                 if (this.channelListUri != value) {
                     this.channelListUri = value;
-                    this.OnPropertyChanged(new PropertyChangedEventArgs("ChannelListUri"));
+                    this.OnPropertyChanged("ChannelListUri");
                 }
             }
         }
@@ -275,7 +275,7 @@ namespace PleaseIgnore.IntelMap {
                         this.Status = IntelStatus.Starting;
                         this.OnStart();
                         this.Status = IntelStatus.Waiting;
-                        this.OnPropertyChanged(new PropertyChangedEventArgs("IsRunning"));
+                        this.OnPropertyChanged("IsRunning");
                     } catch {
                         this.Status = IntelStatus.FatalError;
                         throw;
@@ -301,7 +301,7 @@ namespace PleaseIgnore.IntelMap {
                         this.Status = IntelStatus.FatalError;
                         throw;
                     } finally {
-                        this.OnPropertyChanged(new PropertyChangedEventArgs("IsRunning"));
+                        this.OnPropertyChanged("IsRunning");
                     }
                 }
             }
@@ -396,7 +396,7 @@ namespace PleaseIgnore.IntelMap {
             Contract.Requires<ArgumentNullException>(e != null, "e");
 
             Interlocked.Increment(ref this.uploadCount);
-            this.OnPropertyChanged(new PropertyChangedEventArgs("IntelCount"));
+            this.OnPropertyChanged("IntelCount");
 
             var handler = this.IntelReported;
             if (handler != null) {
@@ -423,6 +423,13 @@ namespace PleaseIgnore.IntelMap {
                     handler(this, e);
                 });
             }
+        }
+
+        /// <summary>Raises the <see cref="PropertyChanged" /> event.</summary>
+        /// <param name="propertyName">Name of the property which was just
+        /// modified.</param>
+        private void OnPropertyChanged(string propertyName) {
+            this.OnPropertyChanged(new PropertyChangedEventArgs(propertyName));
         }
 
         /// <summary>
@@ -478,7 +485,7 @@ namespace PleaseIgnore.IntelMap {
                     this.channels.AddRange(list.Select(x => this.CreateChannel(x)));
                     this.channelList = list;
                     this.channels.ForEach(x => x.Start());
-                    this.OnPropertyChanged(new PropertyChangedEventArgs("Channels"));
+                    this.OnPropertyChanged("Channels");
                 } else {
                     // Patching the existing channel list
                     var toAdd = list
@@ -493,12 +500,32 @@ namespace PleaseIgnore.IntelMap {
                     toRemove.ForEach(x => x.Dispose());
                     toAdd.ForEach(x => x.Start());
                     if ((toAdd.Count > 0) || (toRemove.Count > 0)) {
-                        this.OnPropertyChanged(new PropertyChangedEventArgs("Channels"));
+                        this.OnPropertyChanged("Channels");
                     }
                 }
                 // Schedule the next update
                 this.OnUpdateStatus();
                 this.updateTimer.Change(this.updateInterval, TimeSpan.Zero);
+            }
+        }
+
+        /// <summary>
+        /// If the user attempts to <see cref="IDispose.Dispose"/> an
+        /// <see cref="IntelChannel"/> this function will be part of the
+        /// <see cref="IComponent"/> tear-down process.
+        /// </summary>
+        /// <param name="channel">
+        /// The instance of <see cref="IntelChannel"/> being removed.
+        /// </param>
+        protected virtual void OnRemoveChannel(IntelChannel channel) {
+            // Called when the channel is being disposed
+            if (this.status != IntelStatus.Disposing) {
+                lock (this.syncRoot) {
+                    var count = this.channels.RemoveAll(x => x == channel);
+                    if (count > 0) {
+                        this.OnPropertyChanged(new PropertyChangedEventArgs("Channels"));
+                    }
+                }
             }
         }
 
@@ -588,13 +615,7 @@ namespace PleaseIgnore.IntelMap {
 
         /// <summary>Gets all the components in the
         /// <see cref="IContainer" />.</summary>
-        ComponentCollection IContainer.Components {
-            get {
-                lock (this.syncRoot) {
-                    return new ComponentCollection(channels.ToArray());
-                }
-            }
-        }
+        ComponentCollection IContainer.Components { get { return this.Channels; } }
 
         /// <summary>
         /// Adds the specified <see cref="IComponent" /> to the
@@ -632,15 +653,7 @@ namespace PleaseIgnore.IntelMap {
         /// </summary>
         /// <param name="component">The <see cref="IComponent" /> to remove.</param>
         void IContainer.Remove(IComponent component) {
-            // Called when the channel is being disposed
-            if (this.status != IntelStatus.Disposing) {
-                lock (this.syncRoot) {
-                    var count = this.channels.RemoveAll(x => x == component);
-                    if (count > 0) {
-                        this.OnPropertyChanged(new PropertyChangedEventArgs("Channels"));
-                    }
-                }
-            }
+            this.OnRemoveChannel(component as IntelChannel);
         }
 
         /// <summary>
@@ -656,7 +669,7 @@ namespace PleaseIgnore.IntelMap {
         public static string[] GetChannelList() {
             Contract.Ensures(Contract.Result<string[]>() != null);
             Contract.Ensures(Contract.Result<string[]>().Length > 0);
-            return GetChannelList(IntelExtensions.ChannelsUrl);
+            return GetChannelList(new Uri(IntelExtensions.ChannelsUrl));
         }
 
         /// <summary>

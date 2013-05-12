@@ -52,7 +52,7 @@ namespace PleaseIgnore.IntelMap {
         /// <exception cref="WebException">Error in contacting the web
         /// server.</exception>
         public IntelSession(string username, string passwordHash)
-            : this(username, passwordHash, IntelExtensions.ReportUrl) {
+            : this(username, passwordHash, new Uri(IntelExtensions.ReportUrl)) {
             Contract.Requires<ArgumentException>(!String.IsNullOrEmpty(username));
             Contract.Requires<ArgumentException>(!String.IsNullOrEmpty(passwordHash));
         }

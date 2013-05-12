@@ -57,7 +57,7 @@ namespace PleaseIgnore.IntelMap {
             CultureInfo.InvariantCulture);
         // Field backing the ServiceUri property
         [ContractPublicPropertyName("ServiceUri")]
-        private string serviceUri = IntelExtensions.ReportUrl;
+        private Uri serviceUri = new Uri(IntelExtensions.ReportUrl);
         // The session used to contact the intel server
         private IntelSession session;
         // Field backing the Username property
@@ -358,15 +358,15 @@ namespace PleaseIgnore.IntelMap {
         ///     Gets or sets the <see cref="Uri"/> to use when downloading
         ///     the channel list.
         /// </summary>
-        [DefaultValue(IntelExtensions.ChannelsUrl)]
-        public string ChannelListUri {
+        [DefaultValue(typeof(Uri), IntelExtensions.ChannelsUrl)]
+        public Uri ChannelListUri {
             get {
-                Contract.Ensures(!String.IsNullOrEmpty(Contract.Result<string>()));
+                Contract.Ensures(Contract.Result<Uri>() != null);
                 return this.channels.ChannelListUri;
             }
             set {
                 Contract.Requires<ArgumentNullException>(value != null, "value");
-                Contract.Requires<ArgumentException>(Uri.IsWellFormedUriString(value, UriKind.Absolute));
+                Contract.Requires<ArgumentException>(value.IsAbsoluteUri);
                 Contract.Requires<InvalidOperationException>(!IsRunning);
                 this.channels.ChannelListUri = value;
             }
@@ -377,14 +377,14 @@ namespace PleaseIgnore.IntelMap {
         ///     intel reporting service.
         /// </summary>
         [DefaultValue(IntelExtensions.ReportUrl)]
-        public string ServiceUri {
+        public Uri ServiceUri {
             get {
-                Contract.Ensures(!String.IsNullOrEmpty(Contract.Result<string>()));
+                Contract.Ensures(Contract.Result<Uri>() != null);
                 return this.serviceUri;
             }
             set {
                 Contract.Requires<ArgumentNullException>(value != null, "value");
-                Contract.Requires<ArgumentException>(Uri.IsWellFormedUriString(value, UriKind.Absolute));
+                Contract.Requires<ArgumentException>(value.IsAbsoluteUri);
                 Contract.Requires<InvalidOperationException>(!IsRunning);
                 if (this.serviceUri != value) {
                     this.serviceUri = value;
@@ -471,9 +471,9 @@ namespace PleaseIgnore.IntelMap {
                 } else {
                     // Cannot safely clean up
                 }
-                base.Dispose(disposing);
             } finally {
                 this.status = IntelStatus.Disposed;
+                base.Dispose(disposing);
             }
         }
 

@@ -53,10 +53,10 @@ namespace PleaseIgnore.IntelMap.Tests {
                     reporter.Username = "username";
                     reporter.PasswordHash = "password";
 
-                    reporter.ChannelListUri = channelListUri.OriginalString;
+                    reporter.ChannelListUri = channelListUri;
                     TestHelpers.CreateRequestMock(channelListUri, String.Join("\r\n", channelList));
 
-                    reporter.ServiceUri = serviceUri.OriginalString;
+                    reporter.ServiceUri = serviceUri;
                     var requestBody = TestHelpers.CreateRequestMock(serviceUri, "200 AUTH 0123456789ABCDEF 5");
 
                     reporter.Start();
@@ -95,10 +95,10 @@ namespace PleaseIgnore.IntelMap.Tests {
                     reporter.Username = "username";
                     reporter.PasswordHash = "password";
 
-                    reporter.ChannelListUri = channelListUri.OriginalString;
+                    reporter.ChannelListUri = channelListUri;
                     TestHelpers.CreateRequestError<WebException>(channelListUri);
 
-                    reporter.ServiceUri = serviceUri.OriginalString;
+                    reporter.ServiceUri = serviceUri;
                     var requestBody = TestHelpers.CreateRequestError<WebException>(serviceUri);
 
                     reporter.Start();
@@ -123,10 +123,10 @@ namespace PleaseIgnore.IntelMap.Tests {
                     reporter.Username = "username";
                     reporter.PasswordHash = "password";
 
-                    reporter.ChannelListUri = channelListUri.OriginalString;
+                    reporter.ChannelListUri = channelListUri;
                     TestHelpers.CreateRequestMock(channelListUri, String.Join("\r\n", channelList));
 
-                    reporter.ServiceUri = serviceUri.OriginalString;
+                    reporter.ServiceUri = serviceUri;
                     var requestBody = TestHelpers.CreateRequestMock(serviceUri, "500 ERROR AUTH");
 
                     reporter.Start();
@@ -149,7 +149,7 @@ namespace PleaseIgnore.IntelMap.Tests {
                 using (var reporter = new IntelReporter()) {
                     reporter.Path = testDir.FullName;
 
-                    reporter.ChannelListUri = channelListUri.OriginalString;
+                    reporter.ChannelListUri = channelListUri;
                     TestHelpers.CreateRequestMock(channelListUri, String.Join("\r\n", channelList));
 
                     reporter.Start();
@@ -173,7 +173,7 @@ namespace PleaseIgnore.IntelMap.Tests {
                     IntelEventArgs received = null;
                     reporter.IntelReported += (sender, e) => received = e;
 
-                    reporter.ChannelListUri = channelListUri.OriginalString;
+                    reporter.ChannelListUri = channelListUri;
                     TestHelpers.CreateRequestMock(channelListUri, String.Join("\r\n", channelList));
 
                     reporter.Start();
@@ -224,8 +224,8 @@ namespace PleaseIgnore.IntelMap.Tests {
                     reporter.Username = "username";
                     reporter.PasswordHash = "password";
 
-                    reporter.ServiceUri = serviceUri.OriginalString;
-                    reporter.ChannelListUri = channelListUri.OriginalString;
+                    reporter.ServiceUri = serviceUri;
+                    reporter.ChannelListUri = channelListUri;
 
                     reporter.Start();
                     Thread.Sleep(100);
@@ -280,8 +280,8 @@ namespace PleaseIgnore.IntelMap.Tests {
                     reporter.PasswordHash = "password";
                     reporter.AuthenticationRetryTimeout = new TimeSpan(0, 0, 0, 0, 10);
 
-                    reporter.ServiceUri = serviceUri.OriginalString;
-                    reporter.ChannelListUri = channelListUri.OriginalString;
+                    reporter.ServiceUri = serviceUri;
+                    reporter.ChannelListUri = channelListUri;
 
                     reporter.Start();
                     Thread.Sleep(100);
@@ -331,8 +331,8 @@ namespace PleaseIgnore.IntelMap.Tests {
                     reporter.PasswordHash = "password";
                     reporter.AuthenticationRetryTimeout = new TimeSpan(0, 0, 0, 0, 10);
 
-                    reporter.ServiceUri = serviceUri.OriginalString;
-                    reporter.ChannelListUri = channelListUri.OriginalString;
+                    reporter.ServiceUri = serviceUri;
+                    reporter.ChannelListUri = channelListUri;
 
                     reporter.Start();
                     Thread.Sleep(100);
@@ -382,8 +382,8 @@ namespace PleaseIgnore.IntelMap.Tests {
                     reporter.PasswordHash = "password";
                     reporter.AuthenticationRetryTimeout = new TimeSpan(0, 0, 0, 0, 10);
 
-                    reporter.ServiceUri = serviceUri.OriginalString;
-                    reporter.ChannelListUri = channelListUri.OriginalString;
+                    reporter.ServiceUri = serviceUri;
+                    reporter.ChannelListUri = channelListUri;
 
                     reporter.Start();
                     Thread.Sleep(100);
@@ -427,8 +427,8 @@ namespace PleaseIgnore.IntelMap.Tests {
                     reporter.Username = "username2";
                     reporter.PasswordHash = "password";
 
-                    reporter.ServiceUri = serviceUri.OriginalString;
-                    reporter.ChannelListUri = channelListUri.OriginalString;
+                    reporter.ServiceUri = serviceUri;
+                    reporter.ChannelListUri = channelListUri;
 
                     reporter.Start();
                     Thread.Sleep(100);
@@ -466,8 +466,8 @@ namespace PleaseIgnore.IntelMap.Tests {
                 using (var reporter = reporterMock.Object) {
                     reporter.Path = testDir.FullName;
 
-                    reporter.ServiceUri = serviceUri.OriginalString;
-                    reporter.ChannelListUri = channelListUri.OriginalString;
+                    reporter.ServiceUri = serviceUri;
+                    reporter.ChannelListUri = channelListUri;
 
                     reporter.Start();
                     Thread.Sleep(100);
@@ -499,8 +499,8 @@ namespace PleaseIgnore.IntelMap.Tests {
                 using (var reporter = reporterMock.Object) {
                     reporter.Path = testDir.FullName;
 
-                    reporter.ServiceUri = serviceUri.OriginalString;
-                    reporter.ChannelListUri = channelListUri.OriginalString;
+                    reporter.ServiceUri = serviceUri;
+                    reporter.ChannelListUri = channelListUri;
 
                     reporter.Start();
                     Thread.Sleep(100);

@@ -912,7 +912,6 @@ namespace PleaseIgnore.IntelMap {
             Contract.Invariant(!String.IsNullOrEmpty(this.channelFileName)
                     || !this.IsRunning);
             Contract.Invariant(!String.IsNullOrEmpty(this.logDirectory));
-
             Contract.Invariant(this.IntelCount >= 0);
         }
     }

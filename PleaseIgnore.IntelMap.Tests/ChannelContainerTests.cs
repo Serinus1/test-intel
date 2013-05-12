@@ -69,7 +69,7 @@ namespace PleaseIgnore.IntelMap.Tests {
                 .Verifiable();
 
             using (var container = containerMock.Object) {
-                container.ChannelListUri = channelUri.OriginalString;
+                container.ChannelListUri = channelUri;
                 containerMock.Protected().Verify("OnStart", Times.Never());
 
                 container.Start();
@@ -99,7 +99,7 @@ namespace PleaseIgnore.IntelMap.Tests {
                 .Verifiable();
 
             var container = containerMock.Object;
-            container.ChannelListUri = channelUri.OriginalString;
+            container.ChannelListUri = channelUri;
             containerMock.Protected().Verify("OnStop", Times.Never());
 
             container.Start();
@@ -144,7 +144,7 @@ namespace PleaseIgnore.IntelMap.Tests {
                 .Returns(chan2Mock.Object);
 
             using (var container = containerMock.Object) {
-                container.ChannelListUri = channelUri.OriginalString;
+                container.ChannelListUri = channelUri;
                 container.Start();
                 Thread.Sleep(100);
 
@@ -226,7 +226,7 @@ namespace PleaseIgnore.IntelMap.Tests {
                 "test message");
 
             using (var container = containerMock.Object) {
-                container.ChannelListUri = channelUri.OriginalString;
+                container.ChannelListUri = channelUri;
                 container.IntelReported += delegate(object sender, IntelEventArgs e) {
                     Assert.AreEqual(container, sender);
                     Assert.IsNotNull(e);
