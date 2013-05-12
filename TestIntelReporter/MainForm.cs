@@ -152,8 +152,10 @@ namespace TestIntelReporter {
                 panelStatus.Visible = false;
                 panelAuthError.Visible = false;
                 panelChannels.Visible = false;
+                panelUpdate.Visible = false;
                 labelStatusTitle.Text = title;
                 labelStatus.Text = message;
+                this.AcceptButton = null;
                 this.ShowPanel(this.panelStatus, null);
             }
         }
@@ -162,11 +164,19 @@ namespace TestIntelReporter {
         ///     Displays the channel list pseudo-dialog.
         /// </summary>
         private void ShowChannelList() {
-            if (!panelChannels.Visible) {
+            if (!panelAuthentication.Visible) {
                 panelStatus.Visible = false;
                 panelAuthError.Visible = false;
                 panelChannels.Visible = false;
-                this.ShowPanel(this.panelChannels, null);
+                if (this.updateEvent != null) {
+                    this.panelChannels.Visible = false;
+                    this.ShowPanel(this.panelUpdate, this.buttonUpdate);
+                    this.AcceptButton = this.buttonUpdate;
+                } else {
+                    this.panelUpdate.Visible = false;
+                    this.AcceptButton = null;
+                    this.ShowPanel(this.panelChannels, null);
+                }
             }
         }
 
@@ -217,49 +227,50 @@ namespace TestIntelReporter {
                 intelReporter.Path);
 
             // Status changes
-            if (this.oldStatus != status) {
-                this.oldStatus = status;
-                switch (status) {
-                case IntelStatus.Active:
-                    // Normal operation
+            switch (status) {
+            case IntelStatus.Active:
+                // Normal operation
+                this.ShowChannelList();
+                break;
+            case IntelStatus.Waiting:
+                // Normal operation
+                if (this.updateEvent != null) {
                     this.ShowChannelList();
-                    break;
-                case IntelStatus.Waiting:
-                    // Normal operation
+                } else {
                     this.ShowStatus(
                         Resources.IntelStatus_IdleTitle,
                         Resources.IntelStatus_Idle);
-                    break;
-                case IntelStatus.AuthenticationError:
-                    // Doesn't like our password
-                    if (!this.configError) {
-                        this.ShowAuthError(
-                            Resources.IntelStatus_AuthTitle,
-                            Resources.IntelStatus_Auth);
-                    }
-                    break;
-                case IntelStatus.InvalidPath:
-                    // Couldn't find the log directory
-                    this.ShowStatus(
-                        Resources.IntelStatus_MissingTitle,
-                        Resources.IntelStatus_Missing);
-                    break;
-                case IntelStatus.NetworkError:
-                    // Unable to contact the network server
-                    this.ShowStatus(
-                        Resources.IntelStatus_ErrorTitle,
-                        Resources.IntelStatus_Error);
-                    break;
-                default:
-                    // This represents a pretty critical failure of the
-                    // system, so it gets priority over everything, including
-                    // user entry.
-                    panelAuthentication.Visible = false;
-                    this.ShowStatus(
-                        Resources.IntelStatus_FatalTitle,
-                        Resources.IntelStatus_Fatal);
-                    break;
                 }
+                break;
+            case IntelStatus.AuthenticationError:
+                // Doesn't like our password
+                if (!this.configError) {
+                    this.ShowAuthError(
+                        Resources.IntelStatus_AuthTitle,
+                        Resources.IntelStatus_Auth);
+                }
+                break;
+            case IntelStatus.InvalidPath:
+                // Couldn't find the log directory
+                this.ShowStatus(
+                    Resources.IntelStatus_MissingTitle,
+                    Resources.IntelStatus_Missing);
+                break;
+            case IntelStatus.NetworkError:
+                // Unable to contact the network server
+                this.ShowStatus(
+                    Resources.IntelStatus_ErrorTitle,
+                    Resources.IntelStatus_Error);
+                break;
+            default:
+                // This represents a pretty critical failure of the
+                // system, so it gets priority over everything, including
+                // user entry.
+                panelAuthentication.Visible = false;
+                this.ShowStatus(
+                    Resources.IntelStatus_FatalTitle,
+                    Resources.IntelStatus_Fatal);
+                break;
             }
         }
 
@@ -511,6 +522,23 @@ namespace TestIntelReporter {
         /// </summary>
         private void updateCheck_UpdateAvailable(object sender, UpdateEventArgs e) {
             this.updateEvent = e;
+            this.buttonUpdate.Enabled = (e.UpdateUri != null)
+                && e.UpdateUri.StartsWith("http");
+            this.labelUpdateTitle.Text = Resources.IntelStatus_VersionTitle;
+            this.labelUpdate.Text = String.Format(
+                CultureInfo.CurrentCulture,
+                Resources.IntelStatus_Version,
+                e.OldVersion,
+                e.NewVersion,
+                e.UpdateUri);
+            this.UpdateStatus();
+        }
+
+        /// <summary>
+        ///     User has requested we go to the update website.
+        /// </summary>
+        private void buttonUpdate_Click(object sender, EventArgs e) {
+            Process.Start(this.updateEvent.UpdateUri);
         }
         #endregion
     }

@@ -13,7 +13,7 @@ internal static class ProductInfo {
     internal const string ProductVersionPrefix = "0.4.";
 
     // Content for AssemblyVersion*Attribute
-    internal const string ProductVersion = ProductVersionPrefix + "0.30";
+    internal const string ProductVersion = ProductVersionPrefix + "0.32";
 
     // Content for AssemblyConfigurationAttribute
 #if DEBUG

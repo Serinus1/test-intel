@@ -55,6 +55,10 @@
             this.imageList = new System.Windows.Forms.ImageList(this.components);
             this.intelReporter = new PleaseIgnore.IntelMap.IntelReporter(this.components);
             this.updateCheck = new TestIntelReporter.UpdateCheck(this.components);
+            this.panelUpdate = new System.Windows.Forms.TableLayoutPanel();
+            this.buttonUpdate = new System.Windows.Forms.Button();
+            this.labelUpdate = new System.Windows.Forms.Label();
+            this.labelUpdateTitle = new System.Windows.Forms.Label();
             labelUsername = new System.Windows.Forms.Label();
             labelPassword = new System.Windows.Forms.Label();
             labelAuthenticationTitle = new System.Windows.Forms.Label();
@@ -65,6 +69,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxDino)).BeginInit();
             this.panelStatus.SuspendLayout();
             this.panelChannels.SuspendLayout();
+            this.panelUpdate.SuspendLayout();
             this.SuspendLayout();
             // 
             // labelUsername
@@ -85,7 +90,6 @@
             // labelChannelsTitle
             // 
             resources.ApplyResources(labelChannelsTitle, "labelChannelsTitle");
-            this.panelChannels.SetColumnSpan(labelChannelsTitle, 3);
             labelChannelsTitle.Name = "labelChannelsTitle";
             // 
             // labelStatus
@@ -241,14 +245,42 @@
             this.updateCheck.SynchronizationObject = this;
             this.updateCheck.UpdateAvailable += new System.EventHandler<TestIntelReporter.UpdateEventArgs>(this.updateCheck_UpdateAvailable);
             // 
+            // panelUpdate
+            // 
+            resources.ApplyResources(this.panelUpdate, "panelUpdate");
+            this.panelUpdate.BackColor = System.Drawing.Color.DimGray;
+            this.panelUpdate.Controls.Add(this.buttonUpdate, 0, 2);
+            this.panelUpdate.Controls.Add(this.labelUpdate, 0, 1);
+            this.panelUpdate.Controls.Add(this.labelUpdateTitle, 0, 0);
+            this.panelUpdate.Name = "panelUpdate";
+            this.panelUpdate.Paint += new System.Windows.Forms.PaintEventHandler(this.DrawBorder);
+            // 
+            // buttonUpdate
+            // 
+            resources.ApplyResources(this.buttonUpdate, "buttonUpdate");
+            this.buttonUpdate.Name = "buttonUpdate";
+            this.buttonUpdate.UseVisualStyleBackColor = true;
+            this.buttonUpdate.Click += new System.EventHandler(this.buttonUpdate_Click);
+            // 
+            // labelUpdate
+            // 
+            resources.ApplyResources(this.labelUpdate, "labelUpdate");
+            this.labelUpdate.Name = "labelUpdate";
+            // 
+            // labelUpdateTitle
+            // 
+            resources.ApplyResources(this.labelUpdateTitle, "labelUpdateTitle");
+            this.labelUpdateTitle.Name = "labelUpdateTitle";
+            // 
             // MainForm
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(40)))), ((int)(((byte)(40)))), ((int)(((byte)(45)))));
+            this.Controls.Add(this.panelUpdate);
+            this.Controls.Add(this.panelAuthentication);
             this.Controls.Add(this.panelChannels);
             this.Controls.Add(this.panelAuthError);
-            this.Controls.Add(this.panelAuthentication);
             this.Controls.Add(this.panelStatus);
             this.Controls.Add(this.tableLayoutPanel);
             this.ForeColor = System.Drawing.Color.White;
@@ -265,7 +297,8 @@
             this.panelStatus.ResumeLayout(false);
             this.panelStatus.PerformLayout();
             this.panelChannels.ResumeLayout(false);
-            this.panelChannels.PerformLayout();
+            this.panelUpdate.ResumeLayout(false);
+            this.panelUpdate.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -294,6 +327,10 @@
         private System.Windows.Forms.ImageList imageList;
         private System.Windows.Forms.Label labelStatusString;
         private UpdateCheck updateCheck;
+        private System.Windows.Forms.TableLayoutPanel panelUpdate;
+        private System.Windows.Forms.Button buttonUpdate;
+        private System.Windows.Forms.Label labelUpdate;
+        private System.Windows.Forms.Label labelUpdateTitle;
 
     }
 }
