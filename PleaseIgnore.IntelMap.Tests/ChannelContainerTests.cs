@@ -14,6 +14,7 @@ namespace PleaseIgnore.IntelMap.Tests {
     [TestClass]
     public class ChannelContainerTests {
         private readonly static string[] channelList = new string[] { "Channel1", "ChannelA" };
+        private readonly static string channelBody = string.Join("\r\n", channelList.Select(x => x + ",No Longer Used"));
         // For routing into our Mock WebRequest
         private readonly static Uri channelUri = new Uri(TestHelpers.TestScheme + "://blah-blah-blah");
 
@@ -51,7 +52,7 @@ namespace PleaseIgnore.IntelMap.Tests {
         /// </summary>
         [TestMethod]
         public void GetChannelList() {
-            TestHelpers.CreateRequestMock(channelUri, String.Join("\r\n", channelList));
+            TestHelpers.CreateRequestMock(channelUri, channelBody);
             var list = IntelChannelContainer.GetChannelList(channelUri);
             CollectionAssert.AreEqual(channelList, list);
         }
@@ -61,7 +62,7 @@ namespace PleaseIgnore.IntelMap.Tests {
         /// </summary>
         [TestMethod]
         public void Start() {
-            TestHelpers.CreateRequestMock(channelUri, String.Join("\r\n", channelList));
+            TestHelpers.CreateRequestMock(channelUri, channelBody);
             var containerMock = new Mock<IntelChannelContainer>(MockBehavior.Loose) {
                 CallBase = true
             };
@@ -79,7 +80,7 @@ namespace PleaseIgnore.IntelMap.Tests {
                 container.Start();
                 containerMock.Protected().Verify("OnStart", Times.Once());
 
-                Assert.AreEqual(IntelStatus.Waiting, container.Status);
+                Assert.AreEqual(IntelStatus.Starting, container.Status);
                 Assert.IsTrue(container.IsRunning);
             }
         }
@@ -121,7 +122,7 @@ namespace PleaseIgnore.IntelMap.Tests {
         /// </summary>
         [TestMethod]
         public void Channels() {
-            TestHelpers.CreateRequestMock(channelUri, String.Join("\r\n", channelList));
+            TestHelpers.CreateRequestMock(channelUri, channelBody);
 
             var chan1Mock = new Mock<IntelChannel>(MockBehavior.Loose);
             chan1Mock.Object.Name = channelList[0];
@@ -178,7 +179,7 @@ namespace PleaseIgnore.IntelMap.Tests {
         /// </summary>
         [TestMethod]
         public void IntelReported() {
-            TestHelpers.CreateRequestMock(channelUri, String.Join("\r\n", channelList));
+            TestHelpers.CreateRequestMock(channelUri, channelBody);
 
             var chan1Mock = new Mock<IntelChannel>(MockBehavior.Loose);
             chan1Mock.Object.Name = channelList[0];

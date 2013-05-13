@@ -16,6 +16,7 @@ namespace PleaseIgnore.IntelMap.Tests {
     [TestClass]
     public class IntelReporterTests {
         private readonly static string[] channelList = new string[] { "Channel1", "ChannelA" };
+        private readonly static string channelBody = string.Join("\r\n", channelList.Select(x => x + ",No Longer Used"));
         private static readonly Uri channelListUri = new Uri(TestHelpers.TestScheme + "://channels");
         private static readonly Uri serviceUri = new Uri(TestHelpers.TestScheme + "://service");
 
@@ -54,7 +55,7 @@ namespace PleaseIgnore.IntelMap.Tests {
                     reporter.PasswordHash = "password";
 
                     reporter.ChannelListUri = channelListUri;
-                    TestHelpers.CreateRequestMock(channelListUri, String.Join("\r\n", channelList));
+                    TestHelpers.CreateRequestMock(channelListUri, channelBody);
 
                     reporter.ServiceUri = serviceUri;
                     var requestBody = TestHelpers.CreateRequestMock(serviceUri, "200 AUTH 0123456789ABCDEF 5");
@@ -174,7 +175,7 @@ namespace PleaseIgnore.IntelMap.Tests {
                     reporter.IntelReported += (sender, e) => received = e;
 
                     reporter.ChannelListUri = channelListUri;
-                    TestHelpers.CreateRequestMock(channelListUri, String.Join("\r\n", channelList));
+                    TestHelpers.CreateRequestMock(channelListUri, channelBody);
 
                     reporter.Start();
                     var testEvent = new IntelEventArgs(channelList[0], DateTime.UtcNow, "Test Message");
@@ -203,7 +204,7 @@ namespace PleaseIgnore.IntelMap.Tests {
             };
 
             TestHelpers.CreateRequestMock(serviceUri, "200 AUTH 0123456789ABCDEF 5");
-            TestHelpers.CreateRequestMock(channelListUri, String.Join("\r\n", channelList));
+            TestHelpers.CreateRequestMock(channelListUri, channelBody);
 
             var testEvent = new IntelEventArgs(channelList[0], DateTime.UtcNow, "Test Message");
             var sessionMock = new Mock<IntelSession>(MockBehavior.Loose, "username", "password", serviceUri);
@@ -258,7 +259,7 @@ namespace PleaseIgnore.IntelMap.Tests {
             };
 
             TestHelpers.CreateRequestMock(serviceUri, "200 AUTH 0123456789ABCDEF 5");
-            TestHelpers.CreateRequestMock(channelListUri, String.Join("\r\n", channelList));
+            TestHelpers.CreateRequestMock(channelListUri, channelBody);
 
             var testEvent = new IntelEventArgs(channelList[0], DateTime.UtcNow, "Test Message");
             var sessionMock = new Mock<IntelSession>(MockBehavior.Loose, "username", "password", serviceUri);
@@ -419,7 +420,7 @@ namespace PleaseIgnore.IntelMap.Tests {
                 .Throws<AuthenticationException>();
 
             TestHelpers.CreateRequestMock(serviceUri, "200 AUTH 0123456789ABCDEF 5");
-            TestHelpers.CreateRequestMock(channelListUri, String.Join("\r\n", channelList));
+            TestHelpers.CreateRequestMock(channelListUri, channelBody);
 
             using (var testDir = new TempDirectory()) {
                 using (var reporter = reporterMock.Object) {
@@ -460,7 +461,7 @@ namespace PleaseIgnore.IntelMap.Tests {
                 .Throws<AuthenticationException>();
 
             TestHelpers.CreateRequestMock(serviceUri, "500 ERROR AUTH");
-            TestHelpers.CreateRequestMock(channelListUri, String.Join("\r\n", channelList));
+            TestHelpers.CreateRequestMock(channelListUri, channelBody);
 
             using (var testDir = new TempDirectory()) {
                 using (var reporter = reporterMock.Object) {

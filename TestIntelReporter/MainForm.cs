@@ -257,6 +257,9 @@ namespace TestIntelReporter {
 
             // Status changes
             switch (status) {
+            case IntelStatus.Starting:
+                // Starting up...
+                break;
             case IntelStatus.Active:
                 // Normal operation
                 this.ShowChannelList();

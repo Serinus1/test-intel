@@ -11,6 +11,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Text.RegularExpressions;
 using System.Threading;
 
 namespace PleaseIgnore.IntelMap {
@@ -26,6 +27,15 @@ namespace PleaseIgnore.IntelMap {
         /// <summary>Default value of the <see cref="RetryInterval"/>
         /// property</summary>
         internal const string defaultRetryInterval = "00:15:00";
+        /// <summary>Regular expression to parse the channel list from the
+        /// server.</summary>
+        private static readonly Regex parseChannelName = new Regex(
+            @"^(\w+),",
+            RegexOptions.CultureInvariant | RegexOptions.IgnoreCase | RegexOptions.Singleline);
+        /// <summary>List of channels we refuse to monitor.</summary>
+        private static readonly List<string> forbiddenChannels = new List<string>() {
+            "Alliance", "Corp", "Local"
+        };
         
         /// <summary>Thread Synchronization object</summary>
         private readonly object syncRoot = new object();
@@ -274,7 +284,9 @@ namespace PleaseIgnore.IntelMap {
                     try {
                         this.Status = IntelStatus.Starting;
                         this.OnStart();
-                        this.Status = IntelStatus.Waiting;
+                        this.Status = (this.channelList != null)
+                            ? IntelStatus.Waiting
+                            : IntelStatus.Starting;
                         this.OnPropertyChanged("IsRunning");
                     } catch {
                         this.Status = IntelStatus.FatalError;
@@ -471,6 +483,9 @@ namespace PleaseIgnore.IntelMap {
                     if (this.IsRunning) {
                         this.updateTimer.Change(this.retryInterval, TimeSpan.Zero);
                     }
+                    if (this.status == IntelStatus.Starting) {
+                        this.Status = IntelStatus.NetworkError;
+                    }
                 }
                 return;
             }
@@ -479,6 +494,8 @@ namespace PleaseIgnore.IntelMap {
             lock (this.syncRoot) {
                 if (!this.IsRunning) {
                     return;
+                } else if (this.status == IntelStatus.Starting) {
+                    this.Status = IntelStatus.Waiting;
                 }
                 if (this.channelList == null) {
                     // Initializing the channel list
@@ -688,7 +705,6 @@ namespace PleaseIgnore.IntelMap {
             Contract.Ensures(Contract.Result<string[]>() != null);
             Contract.Ensures(Contract.Result<string[]>().Length > 0);
 
-            // TODO: More thorough sanity check of the server response
             var request = WebRequest.Create(serviceUri);
             Contract.Assert(request != null);
             var response = request.GetResponse();
@@ -696,17 +712,19 @@ namespace PleaseIgnore.IntelMap {
 
             var channels = response
                 .ReadContent()
-                .Split('\n', '\r')
-                .Select(x => x.Trim())
-                .Where(x => x.Length > 0)
-                .Select(x => x.Split(',')[0])
-                .ToArray();
+                .Split(new char[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(x => parseChannelName.Match(x))
+                .ToList();
 
-            if (channels.Length == 0) {
+            if ((channels.Count == 0) || channels.Any(x => !x.Success)
+                    || (channels.Any(x => forbiddenChannels.Contains(x.Groups[1].Value,
+                        StringComparer.OrdinalIgnoreCase)))) {
                 throw new WebException(Resources.IntelException,
                     WebExceptionStatus.ProtocolError);
             } else {
-                return channels;
+                return channels
+                    .Select(x => x.Groups[1].Value)
+                    .ToArray();
             }
         }
 

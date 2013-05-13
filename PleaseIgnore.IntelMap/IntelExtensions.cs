@@ -32,8 +32,9 @@ namespace PleaseIgnore.IntelMap {
         private static readonly IntelStatus[] StatusPriority = new IntelStatus[] {
             IntelStatus.FatalError,
             IntelStatus.AuthenticationError,
-            IntelStatus.NetworkError,
             IntelStatus.InvalidPath,
+            IntelStatus.NetworkError,
+            IntelStatus.Starting,
             IntelStatus.Active,
             IntelStatus.Waiting
         };
