@@ -376,7 +376,7 @@ namespace PleaseIgnore.IntelMap {
         ///     Gets or sets the <see cref="Uri"/> to use when accessing the
         ///     intel reporting service.
         /// </summary>
-        [DefaultValue(IntelExtensions.ReportUrl)]
+        [DefaultValue(typeof(Uri), IntelExtensions.ReportUrl)]
         public Uri ServiceUri {
             get {
                 Contract.Ensures(Contract.Result<Uri>() != null);

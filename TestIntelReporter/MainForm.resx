@@ -658,7 +658,7 @@
     <value>64, 64</value>
   </data>
   <data name="pictureBoxDino.SizeMode" type="System.Windows.Forms.PictureBoxSizeMode, System.Windows.Forms">
-    <value>StretchImage</value>
+    <value>Zoom</value>
   </data>
   <data name="pictureBoxDino.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -757,7 +757,7 @@
     <value>messageView</value>
   </data>
   <data name="&gt;&gt;messageView.Type" xml:space="preserve">
-    <value>TestIntelReporter.MessageView, TestIntelReporter, Version=0.4.0.0, Culture=neutral, PublicKeyToken=e646930e7fe9a812</value>
+    <value>TestIntelReporter.MessageView, TestIntelReporter, Version=0.5.0.0, Culture=neutral, PublicKeyToken=e646930e7fe9a812</value>
   </data>
   <data name="&gt;&gt;messageView.Parent" xml:space="preserve">
     <value>tableLayoutPanel</value>
@@ -917,7 +917,7 @@
         AAEAAAD/////AQAAAAAAAAAMAgAAAFdTeXN0ZW0uV2luZG93cy5Gb3JtcywgVmVyc2lvbj00LjAuMC4w
         LCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODkFAQAAACZTeXN0
         ZW0uV2luZG93cy5Gb3Jtcy5JbWFnZUxpc3RTdHJlYW1lcgEAAAAERGF0YQcCAgAAAAkDAAAADwMAAABA
-        BgAAAk1TRnQBSQFMAgEBAgEAAbgBAAG4AQABEAEAARABAAT/ARkBAAj/AUIBTQE2BwABNgMAASgDAAFA
+        BgAAAk1TRnQBSQFMAgEBAgEAAcgBAAHIAQABEAEAARABAAT/ARkBAAj/AUIBTQE2BwABNgMAASgDAAFA
         AwABEAMAAQEBAAEYBgABDOEAA/0D/iQAAuoB9QL9Af4SAAL9Af4C6AH1dQAD/QE3AYMBPQE2AX4BPAP+
         HgAC6wH2AU8BTAHyAkIB7QL9Af4MAAL9Af4BKQEnAeMBMQEvAeoC6AH1bwAD/QFAAY4BRwFUAaMBXAFP
         AZ8BVwE0AX4BOgH9Af4B/RgAAusB9gFYAVYB9QFjAWEB+gFYAVUB9gFEAUIB7AL9Af4GAAL9Af4BLwEu
@@ -1133,13 +1133,13 @@
     <value>intelReporter</value>
   </data>
   <data name="&gt;&gt;intelReporter.Type" xml:space="preserve">
-    <value>PleaseIgnore.IntelMap.IntelReporter, PleaseIgnore.IntelMap, Version=0.4.0.0, Culture=neutral, PublicKeyToken=e646930e7fe9a812</value>
+    <value>PleaseIgnore.IntelMap.IntelReporter, PleaseIgnore.IntelMap, Version=0.5.0.0, Culture=neutral, PublicKeyToken=e646930e7fe9a812</value>
   </data>
   <data name="&gt;&gt;updateCheck.Name" xml:space="preserve">
     <value>updateCheck</value>
   </data>
   <data name="&gt;&gt;updateCheck.Type" xml:space="preserve">
-    <value>TestIntelReporter.UpdateCheck, TestIntelReporter, Version=0.4.0.0, Culture=neutral, PublicKeyToken=e646930e7fe9a812</value>
+    <value>TestIntelReporter.UpdateCheck, TestIntelReporter, Version=0.5.0.0, Culture=neutral, PublicKeyToken=e646930e7fe9a812</value>
   </data>
   <data name="&gt;&gt;timerChannels.Name" xml:space="preserve">
     <value>timerChannels</value>

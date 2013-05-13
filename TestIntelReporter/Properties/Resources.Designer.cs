@@ -61,16 +61,6 @@ namespace TestIntelReporter.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap AboutImage {
-            get {
-                object obj = ResourceManager.GetObject("AboutImage", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
         /// </summary>
         internal static System.Drawing.Icon AppIcon {
@@ -261,6 +251,16 @@ namespace TestIntelReporter.Properties {
         internal static string IntelStatus_VersionTitle {
             get {
                 return ResourceManager.GetString("IntelStatus_VersionTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Imaging.Metafile.
+        /// </summary>
+        internal static System.Drawing.Imaging.Metafile MiddleManagementDino {
+            get {
+                object obj = ResourceManager.GetObject("MiddleManagementDino", resourceCulture);
+                return ((System.Drawing.Imaging.Metafile)(obj));
             }
         }
         

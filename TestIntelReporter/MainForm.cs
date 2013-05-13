@@ -58,6 +58,7 @@ namespace TestIntelReporter {
             // Update some fields
             this.Icon = Resources.AppIcon;
             this.notifyIcon.Icon = Resources.AppIcon;
+            this.pictureBoxDino.Image = Resources.MiddleManagementDino;
             labelAppName.Text = string.Format(
                 Application.CurrentCulture,
                 labelAppName.Text,

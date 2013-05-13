@@ -177,7 +177,6 @@
             // 
             // pictureBoxDino
             // 
-            this.pictureBoxDino.Image = global::TestIntelReporter.Properties.Resources.AboutImage;
             resources.ApplyResources(this.pictureBoxDino, "pictureBoxDino");
             this.pictureBoxDino.Name = "pictureBoxDino";
             this.tableLayoutPanel.SetRowSpan(this.pictureBoxDino, 3);
