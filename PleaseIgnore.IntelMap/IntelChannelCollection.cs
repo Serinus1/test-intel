@@ -154,9 +154,9 @@ namespace PleaseIgnore.IntelMap {
         /// <param name="item">The object to remove from the
         /// <see cref="ICollection{T}" />.</param>
         /// <returns>
-        /// <see cref="true"/> if <paramref name="item" /> was successfully
+        /// <see langword="true"/> if <paramref name="item" /> was successfully
         /// removed from the <see cref="ICollection{T}" />; otherwise,
-        /// <see cref="false"/>.  This method also returns <see cref="false"/>
+        /// <see langword="false"/>.  This method also returns <see langword="false"/>
         /// if <paramref name="item" /> is not found in the original
         /// <see cref="ICollection{T}" />.
         /// </returns>

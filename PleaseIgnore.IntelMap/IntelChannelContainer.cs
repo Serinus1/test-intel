@@ -525,7 +525,7 @@ namespace PleaseIgnore.IntelMap {
         }
 
         /// <summary>
-        /// If the user attempts to <see cref="IDispose.Dispose"/> an
+        /// If the user attempts to <see cref="IDisposable.Dispose"/> an
         /// <see cref="IntelChannel"/> this function will be part of the
         /// <see cref="IComponent"/> tear-down process.
         /// </summary>

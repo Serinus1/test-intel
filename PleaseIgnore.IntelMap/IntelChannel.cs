@@ -548,9 +548,10 @@ namespace PleaseIgnore.IntelMap {
         /// </summary>
         /// <param name="e">Arguments for the event being raised.</param>
         /// <remarks>
-        /// <see cref="OnPropertyChanged" /> will be called from within
-        /// a synchronized context so derived classes should not attempt to
-        /// perform any additional synchronization themselves.
+        /// <see cref="OnPropertyChanged(PropertyChangedEventArgs)" />
+        /// will be called from within a synchronized context so derived
+        /// classes should not attempt to perform any additional
+        /// synchronization themselves.
         /// </remarks>
         internal protected void OnPropertyChanged(PropertyChangedEventArgs e) {
             Contract.Requires<ArgumentNullException>(e != null, "e");
