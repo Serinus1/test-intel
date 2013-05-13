@@ -71,6 +71,24 @@ namespace TestIntelReporter.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The Intel Server rejected your username and password.  Click to change your login information..
+        /// </summary>
+        internal static string Auth_NotificationText {
+            get {
+                return ResourceManager.GetString("Auth_NotificationText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Test Intel Reporting Tool.
+        /// </summary>
+        internal static string Auth_NotificationTitle {
+            get {
+                return ResourceManager.GetString("Auth_NotificationTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The server seems to be convinced that you are a Goon spy.  Of course, there are more mundane explainations like you changed your password or AUTH is simply having a bad day.  Check your username and password then try again..
         /// </summary>
         internal static string Authenticate_Auth {
@@ -405,6 +423,24 @@ namespace TestIntelReporter.Properties {
         internal static string StatusString_Waiting {
             get {
                 return ResourceManager.GetString("StatusString_Waiting", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An update to the reporting tool has been released.  Click to download the new version..
+        /// </summary>
+        internal static string Update_NotificationText {
+            get {
+                return ResourceManager.GetString("Update_NotificationText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Test Intel Reporting Tool.
+        /// </summary>
+        internal static string Update_NotificationTitle {
+            get {
+                return ResourceManager.GetString("Update_NotificationTitle", resourceCulture);
             }
         }
         

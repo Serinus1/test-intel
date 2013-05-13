@@ -29,6 +29,8 @@ namespace TestIntelReporter {
         // Message we receive from Main() when another instance is run
         private readonly uint wakeupMessage;
 
+        // Last time the "authentication invalid" balloon was shown
+        private DateTime? lastAuthBalloon;
         // Number of times DaBigRedBoat has shown up in a message
         private int noveltyCount;
         // The most recently reported forum status
@@ -287,6 +289,14 @@ namespace TestIntelReporter {
                     this.ShowAuthError(
                         Resources.IntelStatus_AuthTitle,
                         Resources.IntelStatus_Auth);
+                }
+                if (!this.lastAuthBalloon.HasValue
+                    || (this.lastAuthBalloon + new TimeSpan(TimeSpan.TicksPerDay) < DateTime.Now)) {
+                    this.notifyIcon.ShowBalloonTip(10000,
+                        Resources.Auth_NotificationTitle,
+                        Resources.Auth_NotificationText,
+                        ToolTipIcon.Error);
+                    this.lastAuthBalloon = DateTime.Now;
                 }
                 this.notifyIcon.Text = Resources.NotifyIcon_AuthError;
                 break;
@@ -606,6 +616,11 @@ namespace TestIntelReporter {
                 e.NewVersion,
                 e.UpdateUri);
             this.UpdateStatus();
+
+            this.notifyIcon.ShowBalloonTip(10000,
+                Resources.Update_NotificationTitle,
+                Resources.Update_NotificationText,
+                ToolTipIcon.Info);
         }
 
         /// <summary>

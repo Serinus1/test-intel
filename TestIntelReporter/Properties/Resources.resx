@@ -127,6 +127,12 @@
   <data name="Authenticate_Network" xml:space="preserve">
     <value>I wasn't able to make it to the fight in time due to traffic control.  Try again and if you keep having this problem, spam Awol Aurix until this message disappears.</value>
   </data>
+  <data name="Auth_NotificationText" xml:space="preserve">
+    <value>The Intel Server rejected your username and password.  Click to change your login information.</value>
+  </data>
+  <data name="Auth_NotificationTitle" xml:space="preserve">
+    <value>Test Intel Reporting Tool</value>
+  </data>
   <data name="DropCount_Many" xml:space="preserve">
     <value>{0:N0} Lost</value>
   </data>
@@ -235,6 +241,12 @@ Download URL: {2}</value>
   </data>
   <data name="StatusString_Waiting" xml:space="preserve">
     <value>Waiting for EVE online to start.</value>
+  </data>
+  <data name="Update_NotificationText" xml:space="preserve">
+    <value>An update to the reporting tool has been released.  Click to download the new version.</value>
+  </data>
+  <data name="Update_NotificationTitle" xml:space="preserve">
+    <value>Test Intel Reporting Tool</value>
   </data>
   <data name="UserCount_Many" xml:space="preserve">
     <value>{0:N0} People Reporting</value>
