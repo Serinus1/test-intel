@@ -163,7 +163,7 @@ namespace PleaseIgnore.IntelMap {
                 Contract.Ensures(ChannelUpdateInterval == value);
                 if (this.updateInterval != value) {
                     this.updateInterval = value;
-                    this.OnPropertyChanged("ChannelUpdatePeriod");
+                    this.OnPropertyChanged("ChannelUpdateInterval");
                 }
             }
         }
@@ -494,8 +494,6 @@ namespace PleaseIgnore.IntelMap {
             lock (this.syncRoot) {
                 if (!this.IsRunning) {
                     return;
-                } else if (this.status == IntelStatus.Starting) {
-                    this.Status = IntelStatus.Waiting;
                 }
                 if (this.channelList == null) {
                     // Initializing the channel list

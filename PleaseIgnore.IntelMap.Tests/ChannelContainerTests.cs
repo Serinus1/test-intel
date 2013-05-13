@@ -250,5 +250,63 @@ namespace PleaseIgnore.IntelMap.Tests {
                 new IntelEventArgs[] { e1, e2, e3 },
                 raised);
         }
+
+        /// <summary>
+        ///     Tests that the <see cref="IntelChannelContainer"/> properly
+        ///     adjusts its child objects in response to a change from the
+        ///     server.
+        /// </summary>
+        [TestMethod]
+        public void ChannelListChange() {
+            using (var container = new IntelChannelContainer()) {
+                container.ChannelListUri = channelUri;
+                container.ChannelUpdateInterval = new TimeSpan(0, 0, 1);
+
+                // Fetch Channel List #1
+                TestHelpers.CreateRequestMock(channelUri, channelBody);
+                container.Start();
+                Thread.Sleep(100);
+
+                // Make sure all the appropriate channels are present
+                var channels = container.Channels;
+                Assert.IsNotNull(channels);
+                CollectionAssert.AllItemsAreUnique(channels);
+                Assert.AreEqual(2, channels.Count);
+                var channel0a = channels[channelList[0]] as IntelChannel;
+                Assert.IsNotNull(channel0a);
+                var channel1a = channels[channelList[1]] as IntelChannel;
+                Assert.IsNotNull(channel1a);
+
+                // Fetch Channel List #2
+                int calls = 0;
+                TestHelpers.CreateRequestMock(channelUri,
+                    channelList[1] + ",No Longer Used\r\nNewChannel,No Longer Used\r\n");
+                container.PropertyChanged += (sender, e) => {
+                    if (e.PropertyName == "Channels") {
+                        Interlocked.Increment(ref calls);
+                    }
+                };
+                Thread.Sleep(1000);
+
+                // Make sure the channels are present again
+                Assert.IsTrue(calls > 0);
+                Assert.IsTrue(container.IsRunning);
+                channels = container.Channels;
+                Assert.IsNotNull(channels);
+                CollectionAssert.AllItemsAreUnique(channels);
+                Assert.AreEqual(2, channels.Count);
+                var channel0b = channels[channelList[0]] as IntelChannel;
+                Assert.IsNull(channel0b);
+                Assert.IsFalse(channel0a.IsRunning);
+                Assert.AreEqual(IntelStatus.Disposed, channel0a.Status);
+                var channel1b = channels[channelList[1]] as IntelChannel;
+                Assert.IsNotNull(channel1b);
+                Assert.AreEqual(channel1a, channel1b);
+                Assert.IsTrue(channel1b.IsRunning);
+                var channel2b = channels["NewChannel"] as IntelChannel;
+                Assert.IsNotNull(channel2b);
+                Assert.IsTrue(channel2b.IsRunning);
+            }
+        }
     }
 }
