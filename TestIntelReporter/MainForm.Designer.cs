@@ -241,7 +241,7 @@
             // 
             // updateCheck
             // 
-            this.updateCheck.CheckUri = "http://minecraft.etherealwake.com/updates.xml";
+            this.updateCheck.CheckUri = "https://files.pleaseignore.com/intel/updates.xml";
             this.updateCheck.SynchronizationObject = this;
             this.updateCheck.UpdateAvailable += new System.EventHandler<TestIntelReporter.UpdateEventArgs>(this.updateCheck_UpdateAvailable);
             // 

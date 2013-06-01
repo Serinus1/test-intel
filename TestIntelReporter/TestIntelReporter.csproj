@@ -138,7 +138,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>"$(SolutionDir)PostBuild.exe" "$(TargetPath)" "$(SolutionDir)ProductInfo.cs" "$(SolutionDir)updates.xml" "http://minecraft.etherealwake.com/test-intel.exe"</PostBuildEvent>
+    <PostBuildEvent>"$(SolutionDir)PostBuild.exe" "$(TargetPath)" "$(SolutionDir)ProductInfo.cs" "$(SolutionDir)updates.xml" "https://files.pleaseignore.com/intel/test-intel.exe"</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
