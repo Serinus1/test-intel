@@ -149,6 +149,10 @@ namespace PleaseIgnore.IntelMap {
         private TimeSpan expireLog = TimeSpan.Parse(
             defaultExpireLog,
             CultureInfo.InvariantCulture);
+        /// <summary>
+        /// "User" that sends the channel MOTD (and should be ignored).
+        /// </summary>
+        private const string MotdPrefix = " EVE System >";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="IntelChannel" /> class.
@@ -674,7 +678,7 @@ namespace PleaseIgnore.IntelMap {
                     while ((line = reader.ReadLine()) != null) {
                         Trace.WriteLine("R " + line, IntelExtensions.WebTraceCategory);
                         var match = Parser.Match(line);
-                        if (match.Success) {
+                        if (match.Success && !match.Groups[7].Value.StartsWith(MotdPrefix)) {
                             var e = new IntelEventArgs(
                                 this.Name,
                                 new DateTime(
