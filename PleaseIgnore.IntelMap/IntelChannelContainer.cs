@@ -30,7 +30,7 @@ namespace PleaseIgnore.IntelMap {
         /// <summary>Regular expression to parse the channel list from the
         /// server.</summary>
         private static readonly Regex parseChannelName = new Regex(
-            @"^(\w+),",
+            @"^([\w\s]+),",
             RegexOptions.CultureInvariant | RegexOptions.IgnoreCase | RegexOptions.Singleline);
         /// <summary>List of channels we refuse to monitor.</summary>
         private static readonly List<string> forbiddenChannels = new List<string>() {
