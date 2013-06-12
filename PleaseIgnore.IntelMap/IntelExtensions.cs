@@ -40,7 +40,7 @@ namespace PleaseIgnore.IntelMap {
         };
 
         /// <summary>The base URL for requests on the intel map server</summary>
-        public const string BaseUrl = "http://map.pleaseignore.com/";
+        public const string BaseUrl = "http://test.intelmap.net/";
         /// <summary>The URL for quering the channel list</summary>
         public const string ChannelsUrl = BaseUrl + "intelchannels.pl";
         /// <summary>The URL for reporting intel</summary>
