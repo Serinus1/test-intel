@@ -27,11 +27,6 @@ namespace PleaseIgnore.IntelMap {
         /// <summary>Default value of the <see cref="RetryInterval"/>
         /// property</summary>
         internal const string defaultRetryInterval = "00:15:00";
-        /// <summary>Regular expression to parse the channel list from the
-        /// server.</summary>
-        private static readonly Regex parseChannelName = new Regex(
-            @"^([\w\s]+),",
-            RegexOptions.CultureInvariant | RegexOptions.IgnoreCase | RegexOptions.Singleline);
         /// <summary>List of channels we refuse to monitor.</summary>
         private static readonly List<string> forbiddenChannels = new List<string>() {
             "Alliance", "Corp", "Local"
@@ -710,19 +705,14 @@ namespace PleaseIgnore.IntelMap {
 
             var channels = response
                 .ReadContent()
-                .Split(new char[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries)
-                .Select(x => parseChannelName.Match(x))
+                .Split(new char[] { '\n', '\r', ',' }, StringSplitOptions.RemoveEmptyEntries)
                 .ToList();
-
-            if ((channels.Count == 0) || channels.Any(x => !x.Success)
-                    || (channels.Any(x => forbiddenChannels.Contains(x.Groups[1].Value,
-                        StringComparer.OrdinalIgnoreCase)))) {
+            channels.Remove("No Longer Used");
+            if (channels.Count == 0) {
                 throw new WebException(Resources.IntelException,
                     WebExceptionStatus.ProtocolError);
             } else {
-                return channels
-                    .Select(x => x.Groups[1].Value)
-                    .ToArray();
+                return channels.ToArray();
             }
         }
 
