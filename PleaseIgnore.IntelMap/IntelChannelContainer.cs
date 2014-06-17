@@ -707,7 +707,7 @@ namespace PleaseIgnore.IntelMap {
                 .ReadContent()
                 .Split(new char[] { '\n', '\r', ',' }, StringSplitOptions.RemoveEmptyEntries)
                 .ToList();
-            channels.Remove("No Longer Used");
+            channels.RemoveAll(str => str.ToLower() == "no longer used");
             if (channels.Count == 0) {
                 throw new WebException(Resources.IntelException,
                     WebExceptionStatus.ProtocolError);
