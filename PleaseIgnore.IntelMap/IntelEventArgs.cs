@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using System.Globalization;
@@ -8,6 +9,8 @@ namespace PleaseIgnore.IntelMap {
     /// <threadsafety static="true" instance="true" />
     [Serializable]
     public class IntelEventArgs : EventArgs {
+        public static Dictionary<string, string> RegionSpecificPhrases = new Dictionary<string, string>();
+
         /// <summary>
         /// Initializes a new instance of <see cref="IntelEventArgs" /> class.
         /// </summary>
@@ -17,14 +20,39 @@ namespace PleaseIgnore.IntelMap {
         /// generated.</param>
         /// <param name="message">The content of the log entry.</param>
         public IntelEventArgs(string channel, DateTime timestamp,
-                string message) {
+                string message)
+        {
             Contract.Requires<ArgumentException>(!String.IsNullOrEmpty(channel));
             Contract.Requires<ArgumentException>(timestamp.Kind == DateTimeKind.Utc);
             Contract.Requires<ArgumentException>(!String.IsNullOrEmpty(message));
 
             this.Channel = channel;
             this.Timestamp = timestamp;
+
+            message = RegionSpecificParsing(message);
+
+            // Filter out status requests
+            string[] filterlist = new string[2];
+            filterlist[0] = "status?";
+            filterlist[1] = "clear?";
+            foreach (string filteredPhrase in filterlist)
+            {
+                if (message.ToLowerInvariant().Contains(filteredPhrase)) message = "[status request removed]";
+            }
+
             this.Message = message;
+        }
+
+        private string RegionSpecificParsing(string message)
+        {
+            foreach (string key in RegionSpecificPhrases.Keys)
+            {
+                string replacement = key + " " + RegionSpecificPhrases[key] + " ";
+                if (message.ToLowerInvariant().Contains(" " + key + " ")) message = message.ToLowerInvariant().Replace(key, replacement);
+                if (message.ToLowerInvariant().EndsWith(" " + key)) message = message.ToLowerInvariant().Replace(key, replacement);
+                if (message.ToLowerInvariant().StartsWith(key + " ")) message = message.ToLowerInvariant().Replace(key, replacement);
+            }
+            return message;
         }
 
         /// <summary>Gets the log file that generated this event.</summary>

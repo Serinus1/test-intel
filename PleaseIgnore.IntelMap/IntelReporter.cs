@@ -91,6 +91,14 @@ namespace PleaseIgnore.IntelMap {
             this.channels.IntelReported += channels_IntelReported;
             this.channels.PropertyChanged += channels_PropertyChanged;
             this.timerSession = new Timer(this.timer_Callback);
+            
+            // Catch region specific hacks
+            IntelEventArgs.RegionSpecificPhrases.Add("ge-", "(ge-8jv)");
+            IntelEventArgs.RegionSpecificPhrases.Add("ge", "(ge-8jv)");
+            IntelEventArgs.RegionSpecificPhrases.Add("v3", "(v-3yg7)");
+            IntelEventArgs.RegionSpecificPhrases.Add("mb", "(mb-nke)");
+            IntelEventArgs.RegionSpecificPhrases.Add("b3", "(b-3qpd)");
+            IntelEventArgs.RegionSpecificPhrases.Add("f4", "(f4r2-q)");
 
             if (container != null) {
                 container.Add(this);
