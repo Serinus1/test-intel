@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using System.Globalization;
+using System.IO;
 using System.Net;
 using System.Security.Authentication;
 using System.Security.Cryptography;
@@ -267,10 +268,12 @@ namespace PleaseIgnore.IntelMap {
                 var responseBody = response.ReadContent();
                 WebRequest requestKiu = WebRequest.Create("http://eve.501gu.de/BIntel/intel");
                 requestKiu.Method = WebRequestMethods.Http.Put;
-                Dictionary<string, string> postMessage = new Dictionary<string,string>();
-                postMessage.Add("message", string.Format("{0}: {1}", timestamp.ToUnixTime().ToString("F0"), message));
-                var responseKiu = requestKiu.Post(postMessage);
-                var responseBodyKiu = responseKiu.ReadContent();
+                string postMessage = string.Format("[ {0} ]{1}\n", timestamp.ToString("yyyy.MM.dd HH:mm:ss"), message);
+                requestKiu.ContentLength = System.Text.ASCIIEncoding.Unicode.GetByteCount(postMessage);
+                Stream dataStream = requestKiu.GetRequestStream();
+                dataStream.Write(System.Text.ASCIIEncoding.Unicode.GetBytes(postMessage), 0, System.Text.ASCIIEncoding.Unicode.GetByteCount(postMessage));
+                dataStream.Close();
+                var responseBodyKiu = requestKiu.GetResponse();
 
 
                 Match match;

@@ -27,7 +27,7 @@
     <UpdateUrl>http://serinus.us/eve/testintel/</UpdateUrl>
     <SupportUrl>https://forum.pleaseignore.com/topic/66690-test-intel-reporter-windows/</SupportUrl>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
-    <ApplicationRevision>3</ApplicationRevision>
+    <ApplicationRevision>12</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <CreateDesktopShortcut>true</CreateDesktopShortcut>
