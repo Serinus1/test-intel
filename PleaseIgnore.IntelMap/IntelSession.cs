@@ -265,6 +265,13 @@ namespace PleaseIgnore.IntelMap {
                     { "intel", message + '\r' }
                 });
                 var responseBody = response.ReadContent();
+                WebRequest requestKiu = WebRequest.Create("http://eve.501gu.de/BIntel/intel");
+                requestKiu.Method = WebRequestMethods.Http.Put;
+                Dictionary<string, string> postMessage = new Dictionary<string,string>();
+                postMessage.Add("message", string.Format("{0}: {1}", timestamp.ToUnixTime().ToString("F0"), message));
+                var responseKiu = requestKiu.Post(postMessage);
+                var responseBodyKiu = responseKiu.ReadContent();
+
 
                 Match match;
                 if ((match = IntelResponse.Match(responseBody)).Success) {
