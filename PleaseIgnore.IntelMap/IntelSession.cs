@@ -1,6 +1,7 @@
 ﻿using PleaseIgnore.IntelMap.Properties;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using System.Globalization;
@@ -267,16 +268,17 @@ namespace PleaseIgnore.IntelMap {
                 });
                 var responseBody = response.ReadContent();
 
-                // Also send the message to Kiu Nakamura's Brave Server
-                Encoding myEncoding = System.Text.ASCIIEncoding.UTF8;
-                WebRequest requestKiu = WebRequest.Create("http://eve.501gu.de/BIntel/intel");
-                requestKiu.Method = WebRequestMethods.Http.Put;
-                string postMessage = string.Format("[ {0} ]{1}\n", timestamp.ToString("yyyy.MM.dd HH:mm:ss"), message);
-                requestKiu.ContentLength = myEncoding.GetByteCount(postMessage);
-                Stream dataStream = requestKiu.GetRequestStream();
-                dataStream.Write(myEncoding.GetBytes(postMessage), 0, myEncoding.GetByteCount(postMessage));
-                dataStream.Close();
-                var responseBodyKiu = requestKiu.GetResponse();
+                try {
+                    // Also send the message to Kiu Nakamura's Brave Server
+                    Encoding myEncoding = System.Text.ASCIIEncoding.UTF8;
+                    string postMessage = string.Format("[ {0} ]{1}\n", timestamp.ToString("yyyy.MM.dd HH:mm:ss"), message);
+
+                    WebClient client = new WebClient();
+                    byte[] KiuResponse = client.UploadData(new Uri("http://eve.501gu.de/BIntel/intel"), "PUT", myEncoding.GetBytes(postMessage));
+                    Debug.WriteLine("Kiu << " + postMessage);
+                    Debug.WriteLine("Kiu >> " + myEncoding.GetString(KiuResponse));
+                }
+                catch { }
 
 
                 Match match;
