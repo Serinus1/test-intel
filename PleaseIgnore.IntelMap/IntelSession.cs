@@ -266,12 +266,15 @@ namespace PleaseIgnore.IntelMap {
                     { "intel", message + '\r' }
                 });
                 var responseBody = response.ReadContent();
+
+                // Also send the message to Kiu Nakamura's Brave Server
+                Encoding myEncoding = System.Text.ASCIIEncoding.UTF8;
                 WebRequest requestKiu = WebRequest.Create("http://eve.501gu.de/BIntel/intel");
                 requestKiu.Method = WebRequestMethods.Http.Put;
                 string postMessage = string.Format("[ {0} ]{1}\n", timestamp.ToString("yyyy.MM.dd HH:mm:ss"), message);
-                requestKiu.ContentLength = System.Text.ASCIIEncoding.Unicode.GetByteCount(postMessage);
+                requestKiu.ContentLength = myEncoding.GetByteCount(postMessage);
                 Stream dataStream = requestKiu.GetRequestStream();
-                dataStream.Write(System.Text.ASCIIEncoding.Unicode.GetBytes(postMessage), 0, System.Text.ASCIIEncoding.Unicode.GetByteCount(postMessage));
+                dataStream.Write(myEncoding.GetBytes(postMessage), 0, myEncoding.GetByteCount(postMessage));
                 dataStream.Close();
                 var responseBodyKiu = requestKiu.GetResponse();
 
