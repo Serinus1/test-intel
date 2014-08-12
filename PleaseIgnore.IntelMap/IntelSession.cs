@@ -268,19 +268,6 @@ namespace PleaseIgnore.IntelMap {
                 });
                 var responseBody = response.ReadContent();
 
-                try {
-                    // Also send the message to Kiu Nakamura's Brave Server
-                    Encoding myEncoding = System.Text.ASCIIEncoding.UTF8;
-                    string postMessage = string.Format("[ {0} ]{1}\n", timestamp.ToString("yyyy.MM.dd HH:mm:ss"), message);
-
-                    WebClient client = new WebClient();
-                    byte[] KiuResponse = client.UploadData(new Uri("http://eve.501gu.de/BIntel/intel"), "PUT", myEncoding.GetBytes(postMessage));
-                    Debug.WriteLine("Kiu << " + postMessage);
-                    Debug.WriteLine("Kiu >> " + myEncoding.GetString(KiuResponse));
-                }
-                catch { }
-
-
                 Match match;
                 if ((match = IntelResponse.Match(responseBody)).Success) {
                     // Successfully reported intel

@@ -26,8 +26,8 @@
     <InstallUrl>http://serinus.us/eve/testintel/</InstallUrl>
     <UpdateUrl>http://serinus.us/eve/testintel/</UpdateUrl>
     <SupportUrl>https://forum.pleaseignore.com/topic/66690-test-intel-reporter-windows/</SupportUrl>
-    <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
-    <ApplicationRevision>12</ApplicationRevision>
+    <AutorunEnabled>true</AutorunEnabled>
+    <ApplicationRevision>14</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <CreateDesktopShortcut>true</CreateDesktopShortcut>

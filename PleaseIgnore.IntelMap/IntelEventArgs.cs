@@ -32,13 +32,13 @@ namespace PleaseIgnore.IntelMap {
             message = RegionSpecificParsing(message);
 
             // Filter out status requests
-            string[] filterlist = new string[2];
-            filterlist[0] = "status?";
-            filterlist[1] = "clear?";
-            foreach (string filteredPhrase in filterlist)
-            {
-                if (message.ToLowerInvariant().Contains(filteredPhrase)) message = "[status request removed]";
-            }
+                //string[] filterlist = new string[2];
+                //filterlist[0] = "status?";
+                //filterlist[1] = "clear?";
+                //foreach (string filteredPhrase in filterlist)
+                //{
+                //    if (message.ToLowerInvariant().Contains(filteredPhrase)) message = "[status request removed]";
+                //}
 
             this.Message = message;
         }
